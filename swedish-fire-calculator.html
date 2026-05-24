@@ -1,0 +1,4739 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Svensk FIRE-kalkylator</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2318181d'/%3E%3Cpath d='M18 45V19h28v7H27v6h15v7H27v6z' fill='%23e8c97a'/%3E%3Cpath d='M45 18l4 8 9 1-6.5 6 1.7 9-8.2-4.4L36.8 42l1.7-9-6.5-6 9-1z' fill='%233dbfa0'/%3E%3C/svg%3E">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f0f11;
+    --bg-card: #18181d;
+    --bg-input: #1f1f26;
+    --bg-accent: #1a2230;
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.15);
+    --row-border: rgba(255,255,255,0.03);
+    --row-hover: rgba(255,255,255,0.02);
+    --input-inset: rgba(0,0,0,0.15);
+    --chart-grid: rgba(255,255,255,0.04);
+    --chart-tick: #555350;
+    --tooltip-bg: #1f1f26;
+    --tooltip-border: rgba(255,255,255,0.1);
+    --tooltip-title: #e8e6e0;
+    --tooltip-body: #8a8780;
+    --notice-strong: #8dc0e8;
+    --text: #e8e6e0;
+    --text-muted: #8a8780;
+    --text-dim: #555350;
+    --gold: #c9a84c;
+    --gold-light: #e8c97a;
+    --gold-dim: rgba(201,168,76,0.15);
+    --teal: #3dbfa0;
+    --teal-dim: rgba(61,191,160,0.12);
+    --coral: #e06b5a;
+    --coral-dim: rgba(224,107,90,0.12);
+    --blue: #5a9fd4;
+    --blue-dim: rgba(90,159,212,0.12);
+    --purple: #9d79c8;
+    --purple-dim: rgba(157,121,200,0.12);
+    --green: #6ab87a;
+    --font-display: 'DM Serif Display', serif;
+    --font-body: 'Syne', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+    --radius: 10px;
+    --radius-lg: 16px;
+  }
+
+  body[data-theme="light"] {
+    --bg: #f5f7f4;
+    --bg-card: #ffffff;
+    --bg-input: #eef2f4;
+    --bg-accent: #e9f0f6;
+    --border: rgba(30,42,54,0.10);
+    --border-strong: rgba(30,42,54,0.20);
+    --row-border: rgba(30,42,54,0.06);
+    --row-hover: rgba(30,42,54,0.04);
+    --input-inset: rgba(255,255,255,0.75);
+    --chart-grid: rgba(30,42,54,0.10);
+    --chart-tick: #68717a;
+    --tooltip-bg: #ffffff;
+    --tooltip-border: rgba(30,42,54,0.14);
+    --tooltip-title: #1d252d;
+    --tooltip-body: #5f6872;
+    --notice-strong: #2e74a5;
+    --text: #1d252d;
+    --text-muted: #5f6872;
+    --text-dim: #87909a;
+    --gold: #a27b1e;
+    --gold-light: #7b5c14;
+    --gold-dim: rgba(201,168,76,0.18);
+    --teal: #197f70;
+    --teal-dim: rgba(25,127,112,0.11);
+    --coral: #b84e42;
+    --coral-dim: rgba(184,78,66,0.11);
+    --blue: #3179ad;
+    --blue-dim: rgba(49,121,173,0.11);
+    --purple: #7650a7;
+    --purple-dim: rgba(118,80,167,0.11);
+    --green: #417e50;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* LAYOUT */
+  .app { display: grid; grid-template-columns: 340px 1fr; min-height: 100vh; }
+
+  /* SIDEBAR */
+  .sidebar {
+    background: var(--bg-card);
+    border-right: 1px solid var(--border);
+    padding: 0;
+    overflow-y: auto;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+  }
+
+  .sidebar-header {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .settings-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .settings-action-btn {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    padding: 5px 8px;
+  }
+
+  .settings-action-btn:hover {
+    border-color: var(--border-strong);
+    color: var(--text);
+  }
+
+  .settings-transfer-status {
+    color: var(--text-dim);
+    font-size: 10px;
+    line-height: 1.4;
+    margin-top: 8px;
+    min-height: 14px;
+  }
+
+  .settings-transfer-status.good { color: var(--teal); }
+  .settings-transfer-status.bad { color: var(--coral); }
+
+  .logo {
+    font-family: var(--font-display);
+    font-size: 26px;
+    color: var(--gold-light);
+    letter-spacing: -0.5px;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .logo-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+
+  .section {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-title {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2.5px;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+  }
+
+  .field { margin-bottom: 14px; }
+  .field:last-child { margin-bottom: 0; }
+
+  label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+  }
+
+  label .val {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--gold-light);
+    font-weight: 500;
+    cursor: pointer;
+    border-bottom: 1px dashed rgba(201,168,76,0.4);
+    transition: border-color 0.15s;
+  }
+  label .val:hover { border-bottom-color: var(--gold-light); }
+  label .val.editing { border-bottom: none; }
+  .val-input {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--gold-light);
+    font-weight: 500;
+    background: rgba(201,168,76,0.1);
+    border: 1px solid var(--gold-light);
+    border-radius: 3px;
+    padding: 0 4px;
+    width: 80px;
+    text-align: right;
+    outline: none;
+  }
+
+  input[type=range] {
+    width: 100%;
+    height: 3px;
+    appearance: none;
+    background: var(--border-strong);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  input[type=range]::-webkit-slider-thumb {
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--gold);
+    border: 2px solid var(--bg-card);
+    cursor: pointer;
+  }
+
+  input[type=range]::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--gold);
+    border: 2px solid var(--bg-card);
+    cursor: pointer;
+    border: none;
+  }
+
+  input[type=number], input[type=text], select {
+    width: 100%;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    padding: 7px 10px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input[type=number]:focus, select:focus {
+    border-color: var(--gold);
+  }
+
+  select {
+    font-family: var(--font-body);
+    cursor: pointer;
+  }
+
+  select option { background: var(--bg-card); }
+
+  .toggle-group {
+    display: flex;
+    background: var(--bg-input);
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .toggle-group button {
+    flex: 1;
+    padding: 7px 8px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-family: var(--font-body);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-right: 1px solid var(--border);
+  }
+
+  .toggle-group button:last-child { border-right: none; }
+  .toggle-group button.active {
+    background: var(--gold-dim);
+    color: var(--gold-light);
+    font-weight: 600;
+  }
+
+  /* MAIN */
+  .main { padding: 32px; overflow-y: auto; }
+
+  .results-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+
+  .optimizer-grid { grid-template-columns: repeat(5, 1fr); }
+
+  .metric-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px 18px;
+    transition: border-color 0.2s;
+  }
+
+  .metric-card:hover { border-color: var(--border-strong); }
+
+  .metric-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.8px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+
+  .metric-value {
+    font-family: var(--font-mono);
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .metric-value.good { color: var(--teal); }
+  .metric-value.warn { color: var(--gold-light); }
+  .metric-value.bad { color: var(--coral); }
+
+  .metric-sub {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  .value-key {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: -10px 0 20px;
+  }
+
+  .value-chip,
+  .value-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border: 1px solid var(--border-strong);
+    border-radius: 4px;
+    color: var(--text-muted);
+    background: var(--bg-input);
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    white-space: nowrap;
+  }
+
+  .value-chip { padding: 5px 7px; }
+  .value-badge { padding: 2px 5px; margin-left: 5px; vertical-align: middle; }
+  .value-chip.net, .value-badge.net { color: var(--teal); border-color: rgba(61,191,160,0.28); background: var(--teal-dim); }
+  .value-chip.gross, .value-badge.gross { color: var(--gold-light); border-color: rgba(201,168,76,0.3); background: var(--gold-dim); }
+  .value-chip.capital, .value-badge.capital { color: var(--blue); border-color: rgba(90,159,212,0.3); background: var(--blue-dim); }
+  .value-chip.tax, .value-badge.tax { color: var(--coral); border-color: rgba(224,107,90,0.3); background: var(--coral-dim); }
+
+  .mc-diagnostics {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(120px, 1fr));
+    gap: 8px;
+    min-width: 280px;
+    max-width: 360px;
+  }
+
+  .mc-stat {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 9px 10px;
+  }
+
+  .mc-stat .metric-label {
+    font-size: 8px;
+    letter-spacing: 1.2px;
+    margin-bottom: 5px;
+  }
+
+  .mc-stat .metric-value {
+    font-size: 14px;
+    line-height: 1.15;
+  }
+
+  .mc-stat .metric-sub {
+    font-size: 9px;
+  }
+
+  .mc-stat .value-badge {
+    font-size: 7px;
+    padding: 1px 4px;
+    letter-spacing: 0.7px;
+  }
+
+  .control-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+
+  .select-input {
+    appearance: none;
+    background: var(--bg-input);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 7px 32px 7px 10px;
+    font-family: var(--font-body);
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  .pension-source-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .pension-source {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px;
+  }
+
+  .pension-source-head {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .text-input,
+  .mini-input {
+    width: 100%;
+    background: var(--input-inset);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 6px 8px;
+    font-family: var(--font-body);
+    font-size: 11px;
+  }
+
+  .mini-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .mini-field label {
+    display: block;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }
+
+  .icon-btn {
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    border-radius: 4px;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    flex: 0 0 auto;
+  }
+
+  .add-source-btn {
+    width: 100%;
+    margin-top: 8px;
+    border: 1px dashed var(--border-strong);
+    background: transparent;
+    color: var(--gold-light);
+    border-radius: var(--radius);
+    padding: 8px 10px;
+    font-family: var(--font-body);
+    font-size: 11px;
+    cursor: pointer;
+  }
+
+  .chart-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+    margin-bottom: 20px;
+  }
+
+  .chart-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .chart-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 18px;
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .strategy-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .strategy-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .strategy-card:hover { border-color: var(--border-strong); }
+  .strategy-card.active { border-color: var(--gold); background: var(--gold-dim); }
+
+  .strategy-name {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: var(--text);
+  }
+
+  .strategy-desc {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  .strategy-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 4px;
+    background: var(--gold-dim);
+    color: var(--gold-light);
+    border: 1px solid rgba(201,168,76,0.25);
+  }
+
+  .table-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+
+  .table-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    font-family: var(--font-mono);
+  }
+
+  th {
+    padding: 8px 14px;
+    text-align: right;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-dim);
+    background: var(--bg-input);
+    border-bottom: 1px solid var(--border);
+  }
+
+  th:first-child { text-align: left; }
+
+  td {
+    padding: 8px 14px;
+    text-align: right;
+    border-bottom: 1px solid var(--row-border);
+    color: var(--text-muted);
+  }
+
+  td:first-child { text-align: left; color: var(--text); font-weight: 500; }
+
+  tr:hover td { background: var(--row-hover); }
+  tr.fire-year td { background: var(--gold-dim) !important; color: var(--gold-light); }
+  tr.fire-year td:first-child { color: var(--gold-light); }
+
+  .positive { color: var(--teal) !important; }
+  .negative { color: var(--coral) !important; }
+
+  .notice {
+    background: var(--blue-dim);
+    border: 1px solid rgba(90,159,212,0.2);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--blue);
+    margin-bottom: 16px;
+  }
+
+  .notice strong { color: var(--notice-strong); }
+
+  .preview-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+
+  .table-action-btn,
+  .preview-action-btn {
+    border: 1px solid var(--border-strong);
+    background: var(--bg-input);
+    color: var(--text-muted);
+    border-radius: 5px;
+    padding: 5px 9px;
+    font-family: var(--font-body);
+    font-size: 10px;
+    cursor: pointer;
+  }
+
+  .table-action-btn.active,
+  .preview-action-btn.primary {
+    background: var(--gold-dim);
+    border-color: rgba(201,168,76,0.35);
+    color: var(--gold-light);
+    font-weight: 600;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .section-header h2 {
+    font-family: var(--font-display);
+    font-size: 22px;
+    color: var(--text);
+  }
+
+  .top-controls {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .compact-toggle {
+    width: auto;
+    min-width: 148px;
+  }
+
+  .section-header .tag {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--gold-light);
+    background: var(--gold-dim);
+    border: 1px solid rgba(201,168,76,0.2);
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+
+  .phase-indicator {
+    display: flex;
+    gap: 0;
+    margin-bottom: 28px;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .phase {
+    flex: 1;
+    padding: 10px 14px;
+    font-size: 11px;
+    text-align: center;
+    border-right: 1px solid var(--border);
+  }
+
+  .phase:last-child { border-right: none; }
+
+  .phase-label {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-dim);
+    margin-bottom: 2px;
+  }
+
+  .phase-value {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .phase.p1 { background: var(--teal-dim); }
+  .phase.p1 .phase-value { color: var(--teal); }
+  .phase.p2 { background: var(--gold-dim); }
+  .phase.p2 .phase-value { color: var(--gold-light); }
+  .phase.p3 { background: var(--blue-dim); }
+  .phase.p3 .phase-value { color: var(--blue); }
+  .phase.p4 { background: var(--purple-dim); }
+  .phase.p4 .phase-value { color: var(--purple); }
+
+  @media (max-width: 1100px) {
+    .results-grid { grid-template-columns: repeat(2, 1fr); }
+    .strategy-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 800px) {
+    .app { grid-template-columns: 1fr; }
+    .sidebar { position: static; height: auto; }
+    .results-grid { grid-template-columns: repeat(2, 1fr); }
+    .strategy-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  @media (max-width: 600px) {
+    .main { padding: 20px 14px; }
+    .results-grid,
+    .strategy-grid { grid-template-columns: 1fr; }
+    .section-header { align-items: flex-start; flex-direction: column; }
+    .top-controls { margin-left: 0; width: 100%; }
+    .compact-toggle { flex: 1 1 150px; min-width: 0; }
+    .phase-indicator { flex-direction: column; }
+    .phase {
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+    }
+    .phase:last-child { border-bottom: none; }
+    #pension-details { grid-template-columns: 1fr !important; }
+  }
+
+  .scroll-table { max-height: 360px; overflow: auto; }
+  .scroll-table::-webkit-scrollbar { width: 4px; }
+  .scroll-table::-webkit-scrollbar-track { background: transparent; }
+  .scroll-table::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
+
+  .info-icon {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 1px solid var(--text-dim);
+    color: var(--text-dim);
+    font-size: 9px;
+    text-align: center;
+    line-height: 13px;
+    cursor: help;
+    margin-left: 4px;
+    vertical-align: middle;
+  }
+
+  .has-tip {
+    position: relative;
+    cursor: help;
+    text-decoration: underline dotted var(--border-strong);
+    text-underline-offset: 3px;
+  }
+
+  .has-tip::after {
+    content: attr(data-tip);
+    position: absolute;
+    left: 0;
+    top: calc(100% + 7px);
+    z-index: 60;
+    width: min(280px, calc(100vw - 36px));
+    padding: 9px 10px;
+    border: 1px solid var(--tooltip-border);
+    border-radius: 6px;
+    background: var(--tooltip-bg);
+    color: var(--tooltip-body);
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0;
+    line-height: 1.45;
+    text-transform: none;
+    text-align: left;
+    white-space: normal;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.28);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(4px);
+    transition: opacity 0.14s ease, transform 0.14s ease;
+  }
+
+  .has-tip::before {
+    content: '';
+    position: absolute;
+    left: 12px;
+    top: calc(100% + 2px);
+    z-index: 61;
+    border: 6px solid transparent;
+    border-bottom-color: var(--tooltip-bg);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(4px);
+    transition: opacity 0.14s ease, transform 0.14s ease;
+  }
+
+  .has-tip:hover::after,
+  .has-tip:hover::before,
+  .has-tip:focus-visible::after,
+  .has-tip:focus-visible::before {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .metric-label.has-tip,
+  .chart-title.has-tip,
+  .section-title.has-tip {
+    display: inline-block;
+  }
+
+  .pension-info {
+    background: var(--teal-dim);
+    border: 1px solid rgba(61,191,160,0.2);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    margin-top: 10px;
+    font-size: 11px;
+    color: rgba(61,191,160,0.85);
+    line-height: 1.6;
+  }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+  @media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SIDEBAR: INPUTS -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <span class="logo">Eldsjälen</span>
+    <span class="logo-sub">Svensk FIRE-kalkylator</span>
+    <div class="settings-actions">
+      <button id="settings-export-btn" class="settings-action-btn" onclick="exportSettings()" title="Ladda ner alla aktuella inställningar som JSON.">Exportera</button>
+      <button id="settings-import-btn" class="settings-action-btn" onclick="openSettingsImport()" title="Läs in en tidigare exporterad JSON-fil.">Importera</button>
+      <button class="settings-action-btn" onclick="resetSettings()" title="Återställ kalkylatorn till standardvärden.">Återställ</button>
+    </div>
+    <input id="settings-import-file" type="file" accept="application/json,.json" onchange="importSettingsFile(this)" hidden>
+    <div id="settings-transfer-status" class="settings-transfer-status" role="status" aria-live="polite"></div>
+  </div>
+
+  <!-- PERSONAL -->
+  <div class="section">
+    <div class="section-title">Personligt</div>
+
+    <div class="field">
+      <label>Födelseår <span class="val" id="v-birth-year">1991</span></label>
+      <input type="range" id="birth-year" min="1958" max="2006" value="1991" step="1">
+    </div>
+
+    <div class="field">
+      <label>Nuvarande ålder <span class="val" id="v-age">35</span></label>
+      <input type="range" id="age" min="20" max="68" value="35" step="1">
+    </div>
+
+    <div class="field">
+      <label>Planerad FIRE-ålder <span class="val" id="v-fire-age">50</span></label>
+      <input type="range" id="fire-age" min="30" max="70" value="50" step="1">
+    </div>
+
+    <div class="field">
+      <label>Förväntad livslängd <span class="val" id="v-life-exp">90</span></label>
+      <input type="range" id="life-exp" min="70" max="100" value="90" step="1">
+    </div>
+  </div>
+
+  <!-- INCOME & SAVINGS -->
+  <div class="section">
+    <div class="section-title">Inkomst &amp; sparande</div>
+
+    <div class="field">
+      <label>Bruttolön idag (kr/år) <span class="val" id="v-salary">600 000</span></label>
+      <input type="range" id="salary" min="200000" max="2000000" value="600000" step="10000">
+    </div>
+
+    <div class="field">
+      <label>Årlig löneökning (nominell %) <span class="val" id="v-salary-growth">0.0</span>%</label>
+      <input type="range" id="salary-growth" min="0" max="10" value="0" step="0.1">
+    </div>
+
+    <div class="field">
+      <label>Sparmodell</label>
+      <div class="toggle-group">
+        <button id="btn-savings-fixed" class="active" onclick="setSavingsMode('fixed')">kr/mån</button>
+        <button id="btn-savings-percent" onclick="setSavingsMode('percentNet')">% netto</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label><span id="savings-label-text">Privat sparande (kr/mån)</span> <span><span class="val" id="v-savings">10 000</span><span id="savings-unit"></span></span></label>
+      <input type="range" id="savings" min="0" max="80000" value="10000" step="500">
+    </div>
+
+    <div class="field">
+      <label>Nuvarande privat förmögenhet <span class="val" id="v-wealth">500 000</span></label>
+      <input type="range" id="wealth" min="0" max="10000000" value="500000" step="50000">
+    </div>
+
+    <div class="field">
+      <label>Typ av privat sparande</label>
+      <div class="toggle-group">
+        <button id="btn-isk" class="active" onclick="setSavingType('ISK')">ISK</button>
+        <button id="btn-af" onclick="setSavingType('AF')">Aktiefond</button>
+        <button id="btn-kf" onclick="setSavingType('KF')">KF</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAX -->
+  <div class="section">
+    <div class="section-title">Skatt</div>
+
+    <div class="field">
+      <label>Skatteprofil</label>
+      <div class="toggle-group">
+        <button id="tax-preset-stockholm" class="active" onclick="setTaxPreset('stockholm')">Stockholm</button>
+        <button id="tax-preset-custom" onclick="setTaxPreset('custom')">Anpassad</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Kommun + region (%) <span class="val" id="v-tax-muni">30.55</span>%</label>
+      <input type="range" id="tax-muni" min="25" max="38" value="30.55" step="0.01">
+    </div>
+
+    <div class="field">
+      <label>Begravningsavgift (%) <span class="val" id="v-tax-burial">0.07</span>%</label>
+      <input type="range" id="tax-burial" min="0" max="0.5" value="0.07" step="0.001">
+    </div>
+
+    <div class="field">
+      <label>Public service max (kr/år) <span class="val" id="v-tax-public">1 184</span></label>
+      <input type="range" id="tax-public" min="0" max="3000" value="1184" step="10">
+    </div>
+
+    <div class="field">
+      <label>Avkastningsskatt tjänstepension (%) <span class="val" id="v-occ-pension-tax">0.354</span>%</label>
+      <input type="range" id="occ-pension-tax" min="0" max="1" value="0.354" step="0.001">
+    </div>
+
+    <div class="field">
+      <label>Indexera framtida gränser</label>
+      <div class="toggle-group">
+        <button id="idx-on" class="active" onclick="setIndexThresholds(true)">På</button>
+        <button id="idx-off" onclick="setIndexThresholds(false)">Av</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PENSION -->
+  <div class="section">
+    <div class="section-title">Pension</div>
+
+    <div class="field">
+      <label>Inkomstpensionssaldo (kr) <span class="val" id="v-ip-bal">400 000</span></label>
+      <input type="range" id="ip-balance" min="0" max="4000000" value="400000" step="10000">
+    </div>
+
+    <div class="field">
+      <label>Premiepensionssaldo (kr) <span class="val" id="v-pp-bal">100 000</span></label>
+      <input type="range" id="pp-balance" min="0" max="1000000" value="100000" step="5000">
+    </div>
+
+    <div class="field">
+      <label>Start allmän pension (ålder) <span class="val" id="v-public-start">66</span></label>
+      <input type="range" id="public-pension-start" min="62" max="75" value="66" step="1">
+    </div>
+
+    <div class="field">
+      <label>Tjänste- och privat pension</label>
+      <div id="occupational-pension-list" class="pension-source-list"></div>
+      <button class="add-source-btn" onclick="addPensionSource()">+ Lägg till pensionskälla</button>
+    </div>
+
+    <div class="pension-info">
+      Hämta aktuellt saldo från <strong>minpension.se</strong>. Använd Nuvarande ITP1 för din aktiva tjänstepension med framtida löneintjäning. Gamla fribrev läggs som Kapital/fribrev. Fast belopp behandlas som bruttopension från vald startålder.
+    </div>
+  </div>
+
+  <!-- SPENDING -->
+  <div class="section">
+    <div class="section-title">Utgifter &amp; inflation</div>
+
+    <div class="field">
+      <label>Utgifter idag (kr/mån) <span class="val" id="v-spend">35 000</span></label>
+      <input type="range" id="spend" min="10000" max="150000" value="35000" step="1000">
+    </div>
+
+    <div class="field">
+      <label>Inflation (%) <span class="val" id="v-infl">2.0</span>%</label>
+      <input type="range" id="infl" min="0" max="8" value="2.0" step="0.1">
+    </div>
+  </div>
+
+  <!-- RETURNS -->
+  <div class="section">
+    <div class="section-title">Avkastning</div>
+
+    <div class="field">
+      <label>Portföljavkastning (nominell) <span class="val" id="v-ret">7.0</span>%</label>
+      <input type="range" id="ret" min="0" max="15" value="7.0" step="0.1">
+    </div>
+
+    <div class="field">
+      <label>Pensionskapital avkastning brutto <span class="val" id="v-pret">6.0</span>%</label>
+      <input type="range" id="pret" min="0" max="12" value="6.0" step="0.1">
+    </div>
+  </div>
+
+  <!-- POST-FIRE DE-RISKING -->
+  <div class="section">
+    <div class="section-title">Risknedtrappning efter FIRE</div>
+
+    <div class="field">
+      <label>Flytta till räntebärande</label>
+      <div class="toggle-group">
+        <button id="derisk-off" class="active" onclick="setDeRisking(false)">Av</button>
+        <button id="derisk-on" onclick="setDeRisking(true)">På</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Mål ränteandel <span class="val" id="v-derisk-target">60</span>%</label>
+      <input type="range" id="derisk-target" min="0" max="100" value="60" step="5">
+    </div>
+
+    <div class="field">
+      <label>Över antal år <span class="val" id="v-derisk-years">10</span></label>
+      <input type="range" id="derisk-years" min="0" max="30" value="10" step="1">
+    </div>
+
+    <div class="field">
+      <label>Ränteavkastning (nominell) <span class="val" id="v-interest-ret">3.0</span>%</label>
+      <input type="range" id="interest-ret" min="0" max="10" value="3" step="0.1">
+    </div>
+
+    <div class="field">
+      <label>Räntevolatilitet (σ) <span class="val" id="v-interest-vol">4.0</span>%</label>
+      <input type="range" id="interest-vol" min="0" max="15" value="4" step="0.5">
+    </div>
+
+    <div class="field">
+      <label>Tillämpa på kapitalpension</label>
+      <div class="toggle-group">
+        <button id="derisk-pension-on" class="active" onclick="setDeRiskPensions(true)">På</button>
+        <button id="derisk-pension-off" onclick="setDeRiskPensions(false)">Av</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MONTE CARLO VOLATILITY -->
+  <div class="section">
+    <div class="section-title">Monte Carlo — volatilitet</div>
+
+    <div class="field">
+      <label>Portfölj volatilitet (σ) <span class="val" id="v-vol-priv">18.0</span>%</label>
+      <input type="range" id="vol-priv" min="5" max="35" value="18" step="0.5">
+    </div>
+
+    <div class="field">
+      <label>Tjänstepension volatilitet (σ) <span class="val" id="v-vol-itp">12.0</span>%</label>
+      <input type="range" id="vol-itp" min="5" max="25" value="12" step="0.5">
+    </div>
+
+    <div class="field">
+      <label>Korrelation portfölj/tjänstepension <span class="val" id="v-mc-corr">60</span>%</label>
+      <input type="range" id="mc-corr" min="-100" max="100" value="60" step="5">
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="main">
+
+  <div class="section-header" style="margin-bottom:20px">
+    <h2>Din FIRE-plan</h2>
+    <span class="tag" id="fire-verdict">Beräknar...</span>
+    <div class="top-controls">
+      <div class="toggle-group compact-toggle">
+        <button id="btn-theme-dark" class="active" onclick="setTheme('dark')">Mörkt</button>
+        <button id="btn-theme-light" onclick="setTheme('light')">Ljust</button>
+      </div>
+      <div class="toggle-group compact-toggle">
+        <button id="btn-mode-nominal" class="active" onclick="setDisplayMode('nominal')">Nominellt</button>
+        <button id="btn-mode-real" onclick="setDisplayMode('real')">Dagens pengar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="value-key" aria-label="Beloppsdefinitioner">
+    <span class="value-chip net">Netto = efter skatt</span>
+    <span class="value-chip gross">Brutto = före skatt</span>
+    <span class="value-chip capital">Kapital = saldo</span>
+    <span class="value-chip tax">Skatt = kostnad</span>
+  </div>
+
+  <!-- PHASE INDICATOR -->
+  <div class="phase-indicator" id="phase-bar">
+    <div class="phase p1">
+      <div class="phase-label">Ackumulering</div>
+      <div class="phase-value" id="ph-accum">–</div>
+    </div>
+    <div class="phase p2">
+      <div class="phase-label">FIRE ålder</div>
+      <div class="phase-value" id="ph-fire">–</div>
+    </div>
+    <div class="phase p3">
+      <div class="phase-label">Tidig uttagsfas</div>
+      <div class="phase-value" id="ph-early">–</div>
+    </div>
+    <div class="phase p4">
+      <div class="phase-label" id="ph-full-label">Full pension</div>
+      <div class="phase-value" id="ph-full">–</div>
+    </div>
+  </div>
+
+  <!-- METRIC CARDS -->
+  <div class="results-grid" id="metric-cards">
+    <div class="metric-card">
+      <div class="metric-label">Privat kapital vid FIRE <span class="value-badge capital">Kapital</span></div>
+      <div class="metric-value" id="m-fire-wealth">–</div>
+      <div class="metric-sub">investerbart privat kapital</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Första uttagsgrad <span class="value-badge gross">Brutto</span></div>
+      <div class="metric-value" id="m-wr">–</div>
+      <div class="metric-sub" id="m-wr-sub">privat bruttouttag / privat kapital vid FIRE</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Inkomstbrist <span class="value-badge net">Netto</span></div>
+      <div class="metric-value" id="m-depletion">–</div>
+      <div class="metric-sub" id="m-depletion-sub">första år målinkomst missas</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Pensionstäckning <span class="value-badge net">Netto</span></div>
+      <div class="metric-value" id="m-coverage">–</div>
+      <div class="metric-sub" id="m-coverage-sub">netto vid allmän pension</div>
+    </div>
+  </div>
+
+  <!-- SECOND ROW OF METRICS -->
+  <div class="results-grid optimizer-grid" style="margin-bottom:28px">
+    <div class="metric-card">
+      <div class="metric-label">Kapital kvar vid <span id="m-life-label">90</span> <span class="value-badge capital">Kapital</span></div>
+      <div class="metric-value" id="m-end-capital">–</div>
+      <div class="metric-sub">Privat kapital vid livets slut</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Bundet pensionskapital vid FIRE <span class="value-badge capital">Kapital</span></div>
+      <div class="metric-value" id="m-pension-capital">–</div>
+      <div class="metric-sub">tjänstepension + PPM, ej fritt uttagbart</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Månadslön vid FIRE <span class="value-badge gross">Brutto</span></div>
+      <div class="metric-value" id="m-fire-salary">–</div>
+      <div class="metric-sub" id="m-fire-salary-sub">månadslön före skatt</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Bästa optimizer-val</div>
+      <div class="metric-value" id="m-optimizer-choice">–</div>
+      <div class="metric-sub" id="m-optimizer-sub">allmän / tjänste / uttag</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Skatt under FIRE-fas <span class="value-badge tax">Skatt</span></div>
+      <div class="metric-value" id="m-total-tax">–</div>
+      <div class="metric-sub" id="m-tax-sub">–</div>
+    </div>
+  </div>
+
+  <!-- WITHDRAWAL STRATEGY -->
+  <div class="section-header" style="margin-bottom:14px">
+    <h2>Uttagsstrategi</h2>
+  </div>
+
+  <div class="notice" id="strategy-notice">
+    Välj en strategi nedan för att se hur ditt kapital utvecklas.
+  </div>
+
+  <div class="strategy-grid">
+    <div class="strategy-card active" id="sc-1" onclick="setStrategy(1)">
+      <div class="strategy-badge">Stabil</div>
+      <div class="strategy-name">Målbelopp</div>
+      <div class="strategy-desc">Sikta på valt månadsbehov. Pensioner räknas av först och privat kapital fyller nettogapet.</div>
+    </div>
+    <div class="strategy-card" id="sc-2" onclick="setStrategy(2)">
+      <div class="strategy-badge">Balanserad</div>
+      <div class="strategy-name">Guardrails</div>
+      <div class="strategy-desc">Justera privat bruttouttag efter uttagsgrad. Kan ge lägre eller högre netto än målbeloppet.</div>
+    </div>
+    <div class="strategy-card" id="sc-3" onclick="setStrategy(3)">
+      <div class="strategy-badge">Planerad</div>
+      <div class="strategy-name">Jämn nettoinkomst</div>
+      <div class="strategy-desc">Beräkna högsta jämna reala månadsinkomst som planen klarar från FIRE till slutålder.</div>
+    </div>
+  </div>
+
+  <!-- PHASE INCOME BREAKDOWN -->
+  <div class="chart-card" style="margin-bottom:20px">
+    <div class="chart-title">Inkomst per livsfas</div>
+    <div class="chart-sub">Genomsnittlig månadsinkomst per fas (kr/mån netto). Skatt visas separat.</div>
+    <div class="scroll-table" style="max-height:none">
+      <table id="phase-table">
+        <thead>
+          <tr>
+            <th style="text-align:left">Fas</th>
+            <th style="text-align:left">Ålder</th>
+            <th>Portfölj netto</th>
+            <th>Tjänste netto</th>
+            <th>Allmän netto</th>
+            <th>Total netto</th>
+            <th>Skatt/mån</th>
+          </tr>
+        </thead>
+        <tbody id="phase-table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- PORTFOLIO CHART -->
+  <div class="chart-card">
+    <div class="chart-title">Kapitalutveckling över tid</div>
+    <div class="chart-sub">Privat kapital och tjänstepension visas som kapital. PPM visas bara före allmän pensionsstart eftersom det därefter modelleras som pension, inte fritt kapital.</div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#c9a84c"></div>Privat portfölj</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#3dbfa0"></div>Tjänstepension</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#5a9fd4"></div>PPM före start</div>
+      <div class="legend-item"><div class="legend-dot" style="border: 1.5px dashed var(--text-dim); background: transparent;"></div>Totalt exkl. PPM</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#9d79c8; border: 1.5px dashed #9d79c8; background: transparent;"></div>FIRE-datum</div>
+    </div>
+    <div style="position:relative; height:300px;">
+      <canvas id="chartWealth" role="img" aria-label="Kapitalutveckling från nuläge till livets slut"></canvas>
+    </div>
+  </div>
+
+  <!-- INCOME CHART -->
+  <div class="two-col">
+    <div class="chart-card">
+      <div class="chart-title">Månadsinkomst per fas</div>
+      <div class="chart-sub">Netto efter skatt (kr/mån)</div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#c9a84c"></div>Lön/portfölj netto</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#3dbfa0"></div>Allmän pension netto</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#5a9fd4"></div>Tjänstepension netto</div>
+      </div>
+      <div style="position:relative; height:220px;">
+        <canvas id="chartIncome" role="img" aria-label="Nettoinkomst per fas"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">Skatteeffekt</div>
+      <div class="chart-sub">Netto efter skatt och skattekomponenter (kr/mån)</div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#3dbfa0"></div>Netto efter skatt</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#e06b5a"></div>Kommunal</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#9d79c8"></div>Statlig</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#c9a84c"></div>Kapital/ISK/TP</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#5a9fd4"></div>Avgifter</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#8a8780"></div>Pensionsavgift netto</div>
+      </div>
+      <div style="position:relative; height:220px;">
+        <canvas id="chartTax" role="img" aria-label="Netto och skattekomponenter per ålder"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- MONTE CARLO -->
+  <div class="chart-card" style="margin-bottom:20px">
+    <div style="display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; margin-bottom:8px">
+      <div class="chart-title">Monte Carlo-analys</div>
+      <div class="chart-sub" style="margin:0">1 000 slumpmässiga marknadsscenarier. P10 = svagt utfall där 10 % är sämre och 90 % är bättre.</div>
+    </div>
+
+    <!-- Unified legend -->
+    <div class="legend" style="margin-bottom:12px; flex-wrap:wrap; gap:10px">
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(201,168,76,0.45)"></div>Privat portfölj</div>
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(61,191,160,0.45)"></div>Tjänstepensionskapital</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#5a9fd4"></div>Allmän pension netto (statisk)</div>
+      <div class="legend-item"><div style="width:10px;height:2px;border-top:2px dashed rgba(201,168,76,0.7);margin-right:6px"></div>Nettomål</div>
+    </div>
+
+    <!-- Income fan chart — full width, most prominent -->
+    <div class="chart-sub" style="margin-bottom:4px">Månadsinkomst — alla inkomstkällor netto (kr/mån)</div>
+    <div style="position:relative; height:220px; margin-bottom:16px">
+      <canvas id="chartMCIncome" role="img" aria-label="Monte Carlo månadsinkomst"></canvas>
+    </div>
+
+    <!-- Capital fans (two-col) + metric cards -->
+    <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:flex-start">
+      <div style="flex:1; min-width:160px">
+        <div style="font-size:10px; color:var(--text-muted); margin-bottom:4px; text-align:center">Privat kapital (kr)</div>
+        <div style="position:relative; height:180px">
+          <canvas id="chartMC" role="img" aria-label="Monte Carlo privat portfölj"></canvas>
+        </div>
+      </div>
+      <div style="flex:1; min-width:160px">
+        <div style="font-size:10px; color:var(--text-muted); margin-bottom:4px; text-align:center">Tjänstepensionskapital (kr)</div>
+        <div style="position:relative; height:180px">
+          <canvas id="chartMCITP" role="img" aria-label="Monte Carlo tjänstepensionskapital"></canvas>
+        </div>
+      </div>
+      <div class="mc-diagnostics">
+        <div class="mc-stat">
+          <div class="metric-label">Klarar målet</div>
+          <div class="metric-value" id="mc-success-rate">–</div>
+          <div class="metric-sub">scenarier med full målinkomst</div>
+        </div>
+        <div class="mc-stat">
+          <div class="metric-label">Typiskt pensionsår</div>
+          <div class="metric-value" id="mc-inc-median">–</div>
+          <div class="metric-sub">median netto/mån vid pension</div>
+        </div>
+        <div class="mc-stat">
+          <div class="metric-label">Svagt pensionsår</div>
+          <div class="metric-value" id="mc-inc-p10">–</div>
+          <div class="metric-sub">P10 netto/mån vid pension</div>
+        </div>
+        <div class="mc-stat">
+          <div class="metric-label">Mål missas</div>
+          <div class="metric-value" id="mc-failure-age">–</div>
+          <div class="metric-sub">medianålder om planen missar</div>
+        </div>
+        <div class="mc-stat">
+          <div class="metric-label">Kapital vid slut <span class="value-badge capital">Kapital</span></div>
+          <div class="metric-value" id="mc-final-capital">–</div>
+          <div class="metric-sub">P10 / median / P90 privat kapital</div>
+        </div>
+        <div class="mc-stat">
+          <div class="metric-label">Svagaste 10 år</div>
+          <div class="metric-value" id="mc-worst-decade">–</div>
+          <div class="metric-sub">P10 snitt netto/mån</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:10px; font-size:10px; color:var(--text-dim); line-height:1.7">
+      Avkastning modelleras som lognormalt fördelad (Box-Muller) med angiven σ/år och vald korrelation mellan privat portfölj och tjänstepension. Allmän pension räknas deterministiskt utifrån intjänande, inkomstindex och pensionskapitalets avkastningsantagande. Tjänstepensionsutbetalningar och portföljuttag varierar med respektive kapitals marknadsutveckling.
+    </div>
+  </div>
+
+  <!-- STRESS SCENARIOS -->
+  <div class="chart-card" style="margin-bottom:20px">
+    <div class="chart-title">Stresscenarier</div>
+    <div class="chart-sub">Deterministiska stresstester som visar hur planen påverkas av koncentrerade risker.</div>
+    <div class="scroll-table" style="max-height:none">
+      <table>
+        <thead>
+          <tr>
+            <th style="text-align:left">Scenario</th>
+            <th>Kapital vid FIRE</th>
+            <th>Kapital kvar</th>
+            <th>Pension brutto/mån</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="stress-table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- PENSION START OPTIMIZER -->
+  <div class="chart-card" style="margin-bottom:20px">
+    <div style="display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:8px">
+      <div>
+        <div class="chart-title">Pensionsstart-optimizer</div>
+        <div class="chart-sub" style="margin:0">Statisk sökning över startålder för allmän pension samt startålder och uttagstid för samlad tjänstepension.</div>
+      </div>
+      <div class="legend" style="margin:0">
+        <div class="legend-item"><div class="legend-dot" style="background:#3dbfa0"></div>Rekommenderad</div>
+      </div>
+    </div>
+    <div class="results-grid optimizer-grid" style="margin-bottom:14px">
+      <div class="metric-card">
+        <div class="metric-label">Allmän pension</div>
+        <div class="metric-value" id="opt-public">–</div>
+        <div class="metric-sub">startålder</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Tjänstepension</div>
+        <div class="metric-value" id="opt-occupational">–</div>
+        <div class="metric-sub">gemensam start</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Uttagstid</div>
+        <div class="metric-value" id="opt-payout">–</div>
+        <div class="metric-sub">tjänstepension</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Kapital kvar <span class="value-badge capital">Kapital</span></div>
+        <div class="metric-value" id="opt-final">–</div>
+        <div class="metric-sub">vid livets slut</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Status</div>
+        <div class="metric-value" id="opt-status">–</div>
+        <div class="metric-sub">deterministisk plan</div>
+      </div>
+    </div>
+    <div class="scroll-table" style="max-height:none">
+      <table>
+        <thead>
+          <tr>
+            <th style="text-align:left">Rank</th>
+            <th>Allmän start</th>
+            <th>Tjänste start</th>
+            <th>Uttag</th>
+            <th>Kapital kvar</th>
+            <th>Pension brutto/mån</th>
+            <th>Status</th>
+            <th>Testa</th>
+          </tr>
+        </thead>
+        <tbody id="optimizer-table-body"></tbody>
+      </table>
+    </div>
+    <div id="optimizer-preview" class="notice" style="display:none; margin-top:14px; margin-bottom:0">
+      <div id="optimizer-preview-text">Förhandsvisar optimizer-rad.</div>
+      <div class="preview-actions">
+        <button class="preview-action-btn" onclick="restoreOptimizerPreview()">Återställ</button>
+        <button class="preview-action-btn primary" onclick="keepOptimizerPreview()">Behåll inställningar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SENSITIVITY SIMULATION -->
+  <div class="chart-card" style="margin-bottom:20px">
+    <div style="display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:8px">
+      <div>
+        <div class="chart-title">Simulering per antagande</div>
+        <div class="chart-sub" style="margin:0">Statisk känslighetsanalys för ett valt reglage</div>
+      </div>
+      <div class="control-row" style="margin-bottom:0">
+        <label for="sensitivity-metric" style="margin:0">Visa</label>
+        <select id="sensitivity-metric" class="select-input" onchange="setSensitivityMetric(this.value)">
+          <option value="fireAge">FIRE-ålder</option>
+          <option value="ret">Portföljavkastning</option>
+          <option value="pret">Pensionsavkastning</option>
+          <option value="salaryGrowth">Löneökning</option>
+          <option value="spend">Utgifter</option>
+          <option value="savings">Sparande</option>
+          <option value="publicPensionStartAge">Start allmän pension</option>
+          <option value="occupationalStartAge">Start tjänstepension</option>
+        </select>
+      </div>
+    </div>
+    <div class="legend">
+      <div class="legend-item" id="sens-final-legend"><div class="legend-dot" style="background:#3dbfa0"></div>Kapital kvar vid slut</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#c9a84c"></div>Privat kapital vid FIRE</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#e06b5a"></div>Lägsta nettotäckning efter FIRE</div>
+    </div>
+    <div style="position:relative; height:260px;">
+      <canvas id="chartSensitivity" role="img" aria-label="Känslighetsanalys"></canvas>
+    </div>
+  </div>
+
+  <!-- TAX BREAKDOWN TABLE -->
+  <div class="chart-card" style="margin-bottom:20px">
+    <div class="chart-title">Skatteanalys per fas</div>
+    <div class="chart-sub">Genomsnittlig skatteuppdelning per fas (kr/mån). Kapitalskatt inkluderar ISK-schablon, AF-kapitalvinstskatt och avkastningsskatt på tjänstepensionskapital.</div>
+    <div class="scroll-table" style="max-height:none">
+      <table id="tax-breakdown-table">
+        <thead>
+          <tr>
+            <th style="text-align:left">Fas</th>
+            <th style="text-align:left">Ålder</th>
+            <th>Kommunalskatt</th>
+            <th>Statlig skatt</th>
+            <th>Kapitalskatt</th>
+            <th>Avgifter</th>
+            <th>Skattereduktion</th>
+            <th>Total skatt</th>
+            <th>Eff. skattesats</th>
+          </tr>
+        </thead>
+        <tbody id="tax-breakdown-body"></tbody>
+      </table>
+    </div>
+    <div style="margin-top:10px; font-size:10px; color:var(--text-dim); line-height:1.7">
+      <span id="tax-breakdown-note">Skattereduktion omfattar jobbskatteavdrag och skattereduktion för förvärvsinkomst. Kommunalskatt: Stockholm 30,55 %. Avgifter: begravningsavgift 0,07 % och public service max 1 184 kr/år. Avkastningsskatt tjänstepension: 0,354 %/år.</span>
+      Statlig skatt: 20 % av beskattningsbar inkomst (efter grundavdrag) över 643 000 kr. ISK/KF 2026: 3,55 % × 30 % på kapitalunderlag över skattefri grundnivå 300 000 kr.
+    </div>
+  </div>
+
+  <!-- ANNUAL TABLE -->
+  <div class="table-card">
+    <div class="table-header">
+      <div class="chart-title">Årsvis projektion</div>
+      <div style="font-size:11px; color:var(--text-muted)">Gulmarkerad rad = FIRE-år</div>
+    </div>
+    <div class="scroll-table">
+      <table id="proj-table">
+        <thead>
+          <tr>
+            <th>Ålder</th>
+            <th>Privat kapital</th>
+            <th>Tjänstep. kapital</th>
+            <th>Portföljuttag brutto/år</th>
+            <th>Inkomstp. brutto/mån</th>
+            <th>Premiep. brutto/mån</th>
+            <th>Tjänstep. brutto/mån</th>
+            <th>Total netto/mån</th>
+            <th>Uttagsgrad brutto</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- PENSION DETAILS -->
+  <div class="chart-card">
+    <div class="chart-title" style="margin-bottom:14px">Pensionsdetaljer</div>
+    <div style="display:grid; grid-template-columns: repeat(4,1fr); gap:14px;" id="pension-details">
+      <div class="metric-card">
+        <div class="metric-label">Inkomstpension <span class="value-badge gross">Brutto</span></div>
+        <div class="metric-value" id="pd-income">–</div>
+        <div class="metric-sub" id="pd-income-sub">kr/mån brutto vid start</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Premiepension <span class="value-badge gross">Brutto</span></div>
+        <div class="metric-value" id="pd-premium">–</div>
+        <div class="metric-sub" id="pd-premium-sub">kr/mån brutto vid start</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Tjänstepension <span class="value-badge gross">Brutto</span></div>
+        <div class="metric-value" id="pd-itp">–</div>
+        <div class="metric-sub" id="pd-itp-end">kr/mån brutto</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Total pension <span class="value-badge gross">Brutto</span></div>
+        <div class="metric-value" id="pd-total">–</div>
+        <div class="metric-sub" id="pd-total-sub">kr/mån brutto</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding: 16px 0; font-size:11px; color:var(--text-dim); line-height:1.8; border-top:1px solid var(--border); margin-top:10px;">
+    <strong style="color:var(--text-muted)">Ansvarsfriskrivning:</strong> Kalkylatorn är ett pedagogiskt verktyg. Pensionsberäkningarna är förenklade uppskattningar. Kontakta en licensierad finansrådgivare för personlig rådgivning.
+    <span id="tax-disclaimer-note">Skatteberäkningar baseras på 2026 års regler: IBB 83 400 kr · PBB 59 200 kr · skiktgräns 643 000 kr · Stockholm kommun + region 30,55 % · begravningsavgift 0,07 % · public service max 1 184 kr · ISK/KF-skatt 1,065 % på kapitalunderlag över 300 000 kr · avkastningsskatt tjänstepension 0,354 %/år.</span>
+    Kalkylen förenklar delningstal, kapitalunderlag och framtida skatteregler och ersätter inte en prognos från Pensionsmyndigheten/minPension.
+  </div>
+
+</main>
+</div>
+
+<script>
+// ============================================================
+// SWEDISH CONSTANTS (2026)
+// ============================================================
+const TAX_YEAR = 2026;
+const IBB = 83400;              // Inkomstbasbelopp 2026
+const PBB = 59200;              // Prisbasbelopp 2026
+const INKOMSTINDEX_RATE = 0.0356; // Inkomstindex 2026 (used as long-term wage-index assumption)
+const IP_PAYOUT_ADVANCE_RATE = 0.016; // Inkomstpension has a 1.6% advance interest in delningstalet
+const PP_PAYOUT_ADVANCE_RATE = 0.0175; // Premiepension annual recalculation is reduced by advance interest
+const STATE_TAX_THRESHOLD = 643000; // Skiktgräns statlig inkomstskatt 2026
+const STATE_TAX_RATE = 0.20;    // Statlig inkomstskatt (20 % över skiktgränsen)
+const PUBLIC_SERVICE_FEE_RATE = 0.01;
+const DEFAULT_PUBLIC_SERVICE_FEE_MAX = Math.floor(1.42 * IBB * PUBLIC_SERVICE_FEE_RATE);
+const CAPITAL_TAX_RATE = 0.30;  // Kapitalskattesats (30 %)
+const SENIOR_TAX_AGE = 67;      // Förhöjt grundavdrag från året man fyller 67 enligt 2026-regler
+const PUBLIC_PENSION_FEE_RATE = 0.07;
+const PUBLIC_PENSION_MIN_INCOME = 0.423 * PBB;
+const PUBLIC_PENSION_FEE_CEILING_GROSS = 8.07 * IBB;
+const PUBLIC_PENSION_PGI_CEILING = 7.5 * IBB;
+const AF_FUND_TAX_RATE = 0.004 * CAPITAL_TAX_RATE; // Fondschablon: 0,4 % × 30 %
+const DEFAULT_OCC_PENSION_AVKASTNINGSSKATT = 0.354; // 2026: genomsnittlig SLR 2025 2,36 % × 15 %
+
+// Minimum pension age for inkomstpension (lägsta uttagsålder).
+// Later cohorts are based on Pensionsmyndigheten's current riktålder forecast.
+function calcPensionMinAgeFromBirthYear(birthYear) {
+  if (birthYear <= 1958) return 61;
+  if (birthYear <= 1960) return 62;
+  if (birthYear <= 1962) return 63;
+  if (birthYear <= 1969) return 64;
+  if (birthYear <= 1984) return 65;
+  if (birthYear <= 2000) return 66;
+  return 67;
+}
+
+function calcPensionMinAge(currentAge) {
+  return calcPensionMinAgeFromBirthYear(TAX_YEAR - currentAge);
+}
+const ITP1_MIN_AGE = 55;        // Tjänstepension lägsta utbetalningsålder i kalkylen
+const MAX_PENSION_SOURCE_CAPITAL = 500000000;
+const MAX_PENSION_SOURCE_MONTHLY = 5000000;
+
+// ISK/KF: schablonintäkt = (SLR + 1 %) × kapital, beskattas med 30 % kapitalskatt
+const ISK_SCHABLONINTAKT_RATE = 0.0355; // SLR 30 nov 2025 2,55 % + 1 % = 3,55 %
+const ISK_TAX_FREE_BASE = 300000;       // Skattefri grundnivå 2026 för ISK/KF/PEPP
+
+const TAX_PRESETS = {
+  stockholm: {
+    label: 'Stockholm',
+    municipalTax: 30.55,
+    burialFee: 0.07,
+    publicServiceMax: DEFAULT_PUBLIC_SERVICE_FEE_MAX
+  }
+};
+
+// ============================================================
+// STATE
+// ============================================================
+let state = {
+  birthYear: 1986, age: 40, fireAge: 55, lifeExp: 90,
+  salary: 720000, salaryGrowth: 3.0, savingsMode: 'fixed', savings: 10000, savingsRate: 20, wealth: 2000000,
+  savingType: 'ISK',
+	  taxPreset: 'stockholm', municipalTax: 30.55, burialFee: 0.07, publicServiceMax: DEFAULT_PUBLIC_SERVICE_FEE_MAX, indexThresholds: true,
+	  occupationalPensionTax: DEFAULT_OCC_PENSION_AVKASTNINGSSKATT,
+	  ipBalance: 1000000, ppBalance: 350000,
+  itp: 1000000, itpStartAge: 55, privPension: 0, itpPayout: 10,
+  occupationalPensions: [
+    { id: 'tp-itp1', name: 'ITP1', type: 'itp1', capital: 1000000, monthlyAmount: 0, startAge: 55, payout: 10 }
+  ],
+  publicPensionStartAge: 66,
+  spend: 35000, infl: 2.0,
+  ret: 7.0, pret: 5.0,
+  deRiskEnabled: false, deRiskTarget: 60, deRiskYears: 10, interestRet: 3.0, interestVol: 4.0, deRiskPensions: false,
+  volPrivate: 18, volITP: 12, mcCorrelation: 60,
+  strategy: 1,
+  sensitivityMetric: 'fireAge',
+  displayMode: 'real',
+  theme: 'light'
+};
+const DEFAULT_STATE = JSON.parse(JSON.stringify(state));
+
+// Plugin: vertical dashed line at FIRE year on the wealth chart
+Chart.register({
+  id: 'fireLine',
+  afterDraw(chart) {
+    const cfg = chart.options.plugins.fireLine;
+    if (!cfg || cfg.fireIdx < 0) return;
+    const meta = chart.getDatasetMeta(0);
+    const point = meta.data[cfg.fireIdx];
+    if (!point) return;
+    const { ctx, chartArea } = chart;
+    ctx.save();
+    ctx.setLineDash([5, 4]);
+    ctx.strokeStyle = '#9d79c8';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(point.x, chartArea.top);
+    ctx.lineTo(point.x, chartArea.bottom);
+    ctx.stroke();
+    ctx.restore();
+  }
+});
+
+let wealthChart = null, incomeChart = null, taxChart = null, sensitivityChart = null;
+let mcChart = null, mcChartITP = null, mcChartIncome = null;
+let optimizerPreviewSnapshot = null;
+let optimizerPreviewTargetSpendMonthly = null;
+
+function cssVar(name, fallback) {
+  if (typeof getComputedStyle !== 'function' || !document.body) return fallback;
+  return getComputedStyle(document.body).getPropertyValue(name).trim() || fallback;
+}
+
+function chartTheme() {
+  return {
+    grid: cssVar('--chart-grid', 'rgba(255,255,255,0.04)'),
+    tick: cssVar('--chart-tick', '#555350'),
+    tooltipBg: cssVar('--tooltip-bg', '#1f1f26'),
+    tooltipBorder: cssVar('--tooltip-border', 'rgba(255,255,255,0.1)'),
+    tooltipTitle: cssVar('--tooltip-title', '#e8e6e0'),
+    tooltipBody: cssVar('--tooltip-body', '#8a8780'),
+    teal: cssVar('--teal', '#3dbfa0')
+  };
+}
+
+function chartTooltipTheme() {
+  const c = chartTheme();
+  return {
+    backgroundColor: c.tooltipBg,
+    borderColor: c.tooltipBorder,
+    borderWidth: 1,
+    titleColor: c.tooltipTitle,
+    bodyColor: c.tooltipBody
+  };
+}
+
+function applyTheme() {
+  if (document.body) {
+    document.body.dataset.theme = state.theme === 'light' ? 'light' : 'dark';
+  }
+}
+
+// ============================================================
+// FORMATTERS
+// ============================================================
+const fmt = (n, decimals=0) => {
+  if (isNaN(n) || !isFinite(n)) return '–';
+  return Math.round(n).toLocaleString('sv-SE') + (decimals > 0 ? ',' + n.toFixed(decimals).split('.')[1] : '');
+};
+const fmtM = n => {
+  if (isNaN(n) || !isFinite(n)) return '–';
+  if (Math.abs(n) >= 1e6) return (n/1e6).toFixed(1) + ' Mkr';
+  return fmt(n) + ' kr';
+};
+const fmtPct = n => isFinite(n) ? n.toFixed(1) + '%' : '–';
+const fmtDec = (n, decimals = 2) => Number(n).toLocaleString('sv-SE', {
+  minimumFractionDigits: decimals,
+  maximumFractionDigits: decimals
+});
+
+// Deflate a nominal value to today's purchasing power
+function toReal(v, yearsFromNow) {
+  if (!isFinite(v) || state.displayMode !== 'real') return v;
+  return v / Math.pow(1 + state.infl / 100, yearsFromNow);
+}
+// fmt wrapper that applies real/nominal conversion
+const fmtR = (v, years) => fmtM(toReal(v, years));
+
+// ============================================================
+// SETTINGS PERSISTENCE
+// ============================================================
+function cloneSettings(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
+function importedSettingsFromPayload(payload) {
+  const settings = payload && typeof payload === 'object' && !Array.isArray(payload) &&
+    payload.settings && typeof payload.settings === 'object' && !Array.isArray(payload.settings)
+      ? payload.settings
+      : payload;
+  if (!settings || typeof settings !== 'object' || Array.isArray(settings)) {
+    throw new Error('Importfilen saknar inställningar.');
+  }
+  const knownKeys = ['age', 'birthYear', 'fireAge', 'lifeExp', 'salary', 'wealth', 'occupationalPensions'];
+  if (!knownKeys.some(key => Object.prototype.hasOwnProperty.call(settings, key))) {
+    throw new Error('Importfilen ser inte ut som en Eldsjälen-export.');
+  }
+  return settings;
+}
+
+function applySettingsObject(settings) {
+  const imported = importedSettingsFromPayload(settings);
+  const next = cloneSettings(DEFAULT_STATE);
+  Object.assign(next, cloneSettings(imported));
+  if (!Object.prototype.hasOwnProperty.call(imported, 'birthYear') && isFinite(Number(imported.age))) {
+    next.birthYear = TAX_YEAR - Number(imported.age);
+  }
+  if (!Object.prototype.hasOwnProperty.call(imported, 'publicPensionStartAge')) {
+    next.publicPensionStartAge = null;
+  }
+  if (!Object.prototype.hasOwnProperty.call(imported, 'itpStartAge')) {
+    next.itpStartAge = null;
+  }
+  if (!Object.prototype.hasOwnProperty.call(imported, 'occupationalPensions')) {
+    next.occupationalPensions = null;
+  }
+  state = next;
+}
+
+function showSettingsTransferStatus(message, type = '') {
+  const el = document.getElementById('settings-transfer-status');
+  if (!el) return;
+  el.textContent = message;
+  el.className = 'settings-transfer-status' + (type ? ' ' + type : '');
+  if (message) {
+    setTimeout(() => {
+      if (el.textContent === message) el.textContent = '';
+    }, 6000);
+  }
+}
+
+function saveSettings() {
+  if (optimizerPreviewSnapshot) return;
+  try { localStorage.setItem('fire-settings', JSON.stringify(state)); } catch(e) {}
+}
+
+function resetSettings() {
+  optimizerPreviewSnapshot = null;
+  optimizerPreviewTargetSpendMonthly = null;
+  state = cloneSettings(DEFAULT_STATE);
+  syncUI();
+  render();
+  showSettingsTransferStatus('Återställde standardvärden.', 'good');
+}
+
+function loadSettings() {
+  try {
+    const saved = localStorage.getItem('fire-settings');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      applySettingsObject(parsed);
+    }
+  } catch(e) {}
+}
+
+function exportSettings() {
+  try {
+    normalizeState();
+    const payload = {
+      app: 'eldsjalen-fire-calculator',
+      schemaVersion: 1,
+      taxYear: TAX_YEAR,
+      exportedAt: new Date().toISOString(),
+      settings: cloneSettings(state)
+    };
+    const json = JSON.stringify(payload, null, 2);
+    const date = new Date().toISOString().slice(0, 10);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `eldsjalen-fire-settings-${date}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+    showSettingsTransferStatus('Exporterade inställningar som JSON.', 'good');
+  } catch(e) {
+    showSettingsTransferStatus('Kunde inte exportera inställningar.', 'bad');
+  }
+}
+
+function openSettingsImport() {
+  document.getElementById('settings-import-file')?.click();
+}
+
+function importSettingsPayload(payload, sourceName = 'fil') {
+  const imported = importedSettingsFromPayload(payload);
+  optimizerPreviewSnapshot = null;
+  optimizerPreviewTargetSpendMonthly = null;
+  applySettingsObject(imported);
+  normalizeState();
+  syncUI();
+  render();
+  showSettingsTransferStatus(`Importerade inställningar från ${sourceName}.`, 'good');
+}
+
+function importSettingsFile(input) {
+  const file = input?.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      importSettingsPayload(JSON.parse(String(reader.result || '')), file.name);
+    } catch(e) {
+      showSettingsTransferStatus(e.message || 'Kunde inte importera JSON-filen.', 'bad');
+    } finally {
+      input.value = '';
+    }
+  };
+  reader.onerror = () => {
+    showSettingsTransferStatus('Kunde inte läsa importfilen.', 'bad');
+    input.value = '';
+  };
+  reader.readAsText(file);
+}
+
+function clampNumber(value, min, max, fallback = min) {
+  const n = Number(value);
+  if (!isFinite(n)) return fallback;
+  return Math.min(Math.max(n, min), max);
+}
+
+function escapeHTML(value) {
+  return String(value).replace(/[&<>"']/g, ch => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  })[ch]);
+}
+
+function addHelpTip(el, text) {
+  if (!el || !text || el.dataset.tip) return;
+  el.classList.add('has-tip');
+  el.dataset.tip = text;
+  if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '0');
+}
+
+function setupHelpTooltips() {
+  if (typeof document.querySelector !== 'function') return;
+
+  const controlTip = (id, text) => {
+    const control = document.getElementById(id);
+    const label = control?.closest?.('.field')?.querySelector('label');
+    addHelpTip(label, text);
+  };
+  const buttonGroupTip = (id, text) => {
+    const button = document.getElementById(id);
+    const label = button?.closest?.('.field')?.querySelector('label');
+    addHelpTip(label, text);
+  };
+  const metricTip = (valueId, text) => {
+    const value = document.getElementById(valueId);
+    const label = value?.closest?.('.metric-card, .mc-stat')?.querySelector('.metric-label');
+    addHelpTip(label, text);
+  };
+  const chartTip = (canvasId, text) => {
+    const canvas = document.getElementById(canvasId);
+    const title = canvas?.closest?.('.chart-card')?.querySelector('.chart-title');
+    addHelpTip(title, text);
+  };
+
+  [
+    ['birth-year', 'Styr pensionsåldersregler och grundålder i simuleringen. Ålder räknas från 2026 års kalenderår.'],
+    ['age', 'Nuvarande ålder i planen. Ändras tillsammans med födelseår.'],
+    ['fire-age', 'Åldern när lön och nytt sparande upphör och portföljuttag börjar.'],
+    ['life-exp', 'Sista ålder som planen behöver finansiera. Kapital kvar visas vid året före denna ålder.'],
+    ['salary', 'Årlig bruttolön idag före skatt. Används för skatt, sparande som procent av nettolön, pension och ITP1-intjäning.'],
+    ['salary-growth', 'Förväntad nominell löneökning per år före FIRE. Påverkar lön, skatt, allmän pension och aktiv ITP1-intjäning.'],
+    ['savings', 'Privat sparande fram till FIRE. Kan vara fast kr/mån eller procent av beräknad nettolön.'],
+    ['wealth', 'Privat investerbart kapital idag, utanför allmän pension och tjänstepension.'],
+    ['tax-muni', 'Kommun- och regionskatt som används i inkomst- och pensionsskatten. Stockholm-profilen låser detta värde.'],
+    ['tax-burial', 'Begravningsavgift som ingår i skatteberäkningen.'],
+    ['tax-public', 'Maximal public service-avgift per år.'],
+    ['occ-pension-tax', 'Årlig avkastningsskatt som dras från kapitalbaserad tjänstepension. 2026-approximationen är 2,36 % × 15 % = 0,354 %.'],
+    ['ip-balance', 'Inkomstpensionens pensionsbehållning. Den visas som månadsinkomst, inte som fritt uttagbart kapital.'],
+    ['pp-balance', 'Premiepensionssaldo. Modelleras som bundet kapital fram till allmän pensionsstart och omräknas sedan till månadsbelopp. Det är inte fritt uttagbart kapital.'],
+    ['public-pension-start', 'Ålder när allmän pension börjar tas ut. Senare start ger högre beräknad månadsutbetalning.'],
+    ['spend', 'Önskade utgifter idag efter skatt. Simuleringen indexerar detta med inflation efter FIRE.'],
+    ['infl', 'Årlig inflation som höjer framtida utgifter och vissa skatte-/pensionsgränser när indexering är på.'],
+    ['ret', 'Nominell förväntad årsavkastning på privat portfölj före inflation.'],
+    ['pret', 'Nominell förväntad bruttoavkastning på kapitalbaserad pension och premiepension. Avkastningsskatt dras separat från tjänstepensionskapital.'],
+    ['derisk-target', 'Målandel av portfölj och valda pensioner som ska behandlas som räntebärande efter FIRE.'],
+    ['derisk-years', 'Antal år efter FIRE som övergången till mål-ränteandel ska ta. 0 år betyder direkt övergång.'],
+    ['interest-ret', 'Nominell årsavkastning för den räntebärande delen i risknedtrappningen.'],
+    ['interest-vol', 'Volatilitet för den räntebärande delen i Monte Carlo. Lägre värde ger stabilare scenarier.'],
+    ['vol-priv', 'Årlig standardavvikelse för privat portfölj i Monte Carlo. Högre värde ger större spridning.'],
+    ['vol-itp', 'Årlig standardavvikelse för tjänstepensionskapital i Monte Carlo.'],
+    ['mc-corr', 'Korrelation mellan privat portfölj och tjänstepension i Monte Carlo. 100 % rör sig helt tillsammans, 0 % oberoende.']
+  ].forEach(([id, text]) => controlTip(id, text));
+
+  [
+    ['btn-savings-fixed', 'Välj om sparandet anges som fast belopp per månad eller som procent av beräknad nettolön.'],
+    ['btn-isk', 'Typ av konto styr schablonskatt eller kapitalvinstskatt på privata uttag.'],
+    ['tax-preset-stockholm', 'Stockholm fyller i fördefinierade skattevärden. Anpassad låter dig ändra dem själv.'],
+    ['idx-on', 'När detta är på räknas framtida beloppsgränser upp i simuleringen i stället för att hållas nominellt fasta.'],
+    ['derisk-on', 'Aktiverar en glidepath där riskfylld avkastning gradvis blandas med räntebärande avkastning efter FIRE.'],
+    ['derisk-pension-on', 'Styr om risknedtrappningen även ska gälla kapitalbaserade pensioner och premiepension.'],
+    ['btn-theme-dark', 'Växlar mellan mörkt och ljust gränssnitt. Påverkar inte beräkningar.'],
+    ['btn-mode-nominal', 'Nominellt visar framtida kronor. Dagens pengar diskonterar med inflation till 2026 års köpkraft.']
+  ].forEach(([id, text]) => buttonGroupTip(id, text));
+
+  [
+    ['m-fire-wealth', 'Privat investerbart kapital vid FIRE, före pensioner. Detta är kapitalet som finansierar bryggåren.'],
+    ['m-wr', 'Första årets privata bruttouttag dividerat med privat kapital vid FIRE. För ISK/KF är bruttouttag normalt samma som nettouttag, men AF-uttag kan beskattas.'],
+    ['m-depletion', 'Första ålder då total nettoinkomst hamnar under strategins målbelopp. Ingen betyder att målet nås till livslängden.'],
+    ['m-coverage', 'Netto pension vid allmän pensionsstart som andel av inflationsjusterade utgifter vid samma ålder.'],
+    ['m-end-capital', 'Privat kapital kvar vid slutet av planeringshorisonten. Pensioner räknas inte med här.'],
+    ['m-pension-capital', 'Kapitalbaserad tjänstepension plus premiepension vid FIRE. Detta är bundet pensionskapital, inte fritt uttagbart privat kapital. Inkomstpension visas inte som kapital.'],
+    ['m-fire-salary', 'Förväntad bruttolön per månad vid FIRE baserat på dagens lön och årlig löneökning. Värdet visas nominellt eller i dagens pengar beroende på visningsläge.'],
+    ['m-optimizer-choice', 'Bästa kombinationen i optimizer: start allmän pension, start tjänstepension och tjänstepensionens uttagstid.'],
+    ['m-total-tax', 'Summerad skatt under FIRE-fasen, inklusive pensionsskatt, kapitalskatt och ISK/KF-schablon.'],
+    ['mc-success-rate', 'Andel Monte Carlo-scenarier där planen kan betala målinkomsten varje år efter FIRE.'],
+    ['mc-inc-median', 'Median nettoinkomst per månad vid allmän pensionsstart i Monte Carlo-scenarierna.'],
+    ['mc-inc-p10', 'Svagt men inte extremt utfall: 10 % av scenarierna är sämre och 90 % bättre.'],
+    ['mc-failure-age', 'Medianålder för första missad målinkomst bland scenarier som missar målet.'],
+    ['mc-final-capital', 'Privat kapital vid slutet i svagt, typiskt och starkt Monte Carlo-utfall.'],
+    ['mc-worst-decade', 'Sämsta tioårsperiodens genomsnittliga nettoinkomst i P10-utfallet.'],
+    ['opt-public', 'Optimizerns föreslagna startålder för allmän pension.'],
+    ['opt-occupational', 'Optimizerns föreslagna gemensamma startålder för kapitalbaserade tjänstepensioner.'],
+    ['opt-payout', 'Optimizerns föreslagna uttagstid för kapitalbaserad tjänstepension.'],
+    ['opt-final', 'Privat kapital kvar vid livets slut för bästa optimizer-raden.'],
+    ['opt-status', 'Om bästa optimizer-raden klarar målinkomsten i den deterministiska planen.']
+  ].forEach(([id, text]) => metricTip(id, text));
+
+  [
+    ['chartMCIncome', 'Visar osäkerhet i total nettoinkomst per månad över tid. Färgbanden visar spridningen mellan svaga och starka marknadsutfall.'],
+    ['chartWealth', 'Visar privat kapital och tjänstepension som kapital. Premiepension visas bara före allmän pensionsstart; därefter visas den som pensionsinkomst eftersom kvarvarande PPM-balance är en förenklad modell, inte fritt kapital.'],
+    ['chartSensitivity', 'Kör om den statiska simuleringen för olika värden på valt antagande och visar hur planen påverkas.'],
+    ['chartTax', 'Visar total nettoinkomst efter skatt samt skattekomponenter vid några valda åldrar. Kapital/ISK/TP inkluderar avkastningsskatt som dras från tjänstepensionskapital.'],
+    ['chartIncome', 'Visar genomsnittlig nettoinkomst per fas, uppdelad efter portfölj, allmän pension och tjänstepension.']
+  ].forEach(([id, text]) => chartTip(id, text));
+}
+
+function makePensionSource(overrides = {}) {
+  const id = overrides.id || ('tp-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6));
+  return {
+    id,
+    name: overrides.name || 'Tjänstepension',
+    type: overrides.type || 'capital', // itp1, capital, fixed
+    capital: overrides.capital ?? 0,
+    monthlyAmount: overrides.monthlyAmount ?? 0,
+    startAge: overrides.startAge ?? Math.max(ITP1_MIN_AGE, state.fireAge || DEFAULT_STATE.fireAge),
+    payout: overrides.payout ?? 'lifetime'
+  };
+}
+
+function legacyPensionSources() {
+  const startAge = state.itpStartAge || Math.max(ITP1_MIN_AGE, state.fireAge || DEFAULT_STATE.fireAge);
+  const payout = state.itpPayout || 'lifetime';
+  const sources = [makePensionSource({
+    id: 'tp-itp1',
+    name: 'ITP1',
+    type: 'itp1',
+    capital: state.itp || 0,
+    startAge,
+    payout
+  })];
+  if ((state.privPension || 0) > 0) {
+    sources.push(makePensionSource({
+      id: 'tp-private',
+      name: 'Privat pension',
+      type: 'capital',
+      capital: state.privPension,
+      startAge,
+      payout
+    }));
+  }
+  return sources;
+}
+
+function normalizePensionSources() {
+  if (!Array.isArray(state.occupationalPensions)) {
+    state.occupationalPensions = legacyPensionSources();
+  }
+  const minStart = Math.max(ITP1_MIN_AGE, state.fireAge);
+  state.occupationalPensions = state.occupationalPensions.map((source, idx) => {
+    const type = ['itp1', 'capital', 'fixed'].includes(source.type) ? source.type : 'capital';
+    const payout = source.payout === 'lifetime' ? 'lifetime' : Number(source.payout);
+    const rawId = String(source.id || ('tp-' + idx));
+    return {
+      id: /^[A-Za-z0-9_-]+$/.test(rawId) ? rawId : ('tp-' + idx),
+      name: String(source.name || (type === 'itp1' ? 'ITP1' : 'Tjänstepension')).slice(0, 40),
+      type,
+      capital: clampNumber(source.capital, 0, MAX_PENSION_SOURCE_CAPITAL, 0),
+      monthlyAmount: clampNumber(source.monthlyAmount, 0, MAX_PENSION_SOURCE_MONTHLY, 0),
+      startAge: Math.round(clampNumber(source.startAge, minStart, state.lifeExp - 1, minStart)),
+      payout: [5, 10, 15, 20, 'lifetime'].includes(payout) ? payout : 'lifetime'
+    };
+  });
+}
+
+function pensionSourceCapitalTotal() {
+  return (state.occupationalPensions || []).reduce((sum, source) =>
+    sum + (source.type === 'fixed' ? 0 : source.capital), 0);
+}
+
+function earliestOccupationalStartAge() {
+  const sources = state.occupationalPensions || [];
+  return sources.length
+    ? Math.min(...sources.map(source => source.startAge))
+    : Math.max(ITP1_MIN_AGE, state.fireAge);
+}
+
+const MANUAL_LIMITS = {
+  salary:       { min: 0,     max: 50000000 },
+  'salary-growth': { min: -25, max: 50 },
+  savings:      { min: 0,     max: 1000000 },
+  'savings-rate': { min: 0,   max: 100 },
+  wealth:       { min: 0,     max: 500000000 },
+  'tax-muni':   { min: 0,     max: 60 },
+  'tax-burial': { min: 0,     max: 5 },
+  'tax-public': { min: 0,     max: 10000 },
+  'occ-pension-tax': { min: 0, max: 5 },
+  'ip-balance': { min: 0,     max: 100000000 },
+  'pp-balance': { min: 0,     max: 100000000 },
+  itp:          { min: 0,     max: 100000000 },
+  'priv-pension': { min: 0,   max: 100000000 },
+  spend:        { min: 0,     max: 1000000 },
+  infl:         { min: 0,     max: 25 },
+  ret:          { min: -50,   max: 50 },
+  pret:         { min: -50,   max: 50 },
+  'derisk-target': { min: 0,  max: 100 },
+  'derisk-years':  { min: 0,  max: 50 },
+  'interest-ret':  { min: -20, max: 50 },
+  'interest-vol':  { min: 0,  max: 100 },
+  'vol-priv':   { min: 0,     max: 100 },
+  'vol-itp':    { min: 0,     max: 100 },
+  'mc-corr':    { min: -100,  max: 100 }
+};
+
+function normalizeState() {
+  const d = DEFAULT_STATE;
+  if (isFinite(Number(state.age)) && state.birthYear === d.birthYear && Number(state.age) !== d.age) {
+    state.birthYear = TAX_YEAR - Number(state.age);
+  }
+  if (!isFinite(Number(state.birthYear))) {
+    state.birthYear = TAX_YEAR - clampNumber(state.age, 20, 68, d.age);
+  }
+  state.birthYear = Math.round(clampNumber(state.birthYear, 1958, 2006, d.birthYear));
+  state.age = TAX_YEAR - state.birthYear;
+  state.fireAge = Math.round(clampNumber(state.fireAge, Math.max(30, state.age), 70, d.fireAge));
+  state.lifeExp = Math.round(clampNumber(state.lifeExp, Math.max(70, state.fireAge + 1), 100, d.lifeExp));
+  const minPublicPensionStart = Math.max(calcPensionMinAgeFromBirthYear(state.birthYear), state.fireAge);
+  const minItpStart = Math.max(ITP1_MIN_AGE, state.fireAge);
+  state.publicPensionStartAge = Math.round(clampNumber(state.publicPensionStartAge, minPublicPensionStart, state.lifeExp - 1, minPublicPensionStart));
+  state.itpStartAge = Math.round(clampNumber(state.itpStartAge, minItpStart, state.lifeExp - 1, minItpStart));
+  normalizePensionSources();
+
+  state.salary = clampNumber(state.salary, MANUAL_LIMITS.salary.min, MANUAL_LIMITS.salary.max, d.salary);
+  state.salaryGrowth = clampNumber(state.salaryGrowth, MANUAL_LIMITS['salary-growth'].min, MANUAL_LIMITS['salary-growth'].max, d.salaryGrowth);
+  if (!['fixed', 'percentNet'].includes(state.savingsMode)) state.savingsMode = d.savingsMode;
+  state.savings = clampNumber(state.savings, MANUAL_LIMITS.savings.min, MANUAL_LIMITS.savings.max, d.savings);
+  state.savingsRate = clampNumber(state.savingsRate, MANUAL_LIMITS['savings-rate'].min, MANUAL_LIMITS['savings-rate'].max, d.savingsRate);
+  state.wealth = clampNumber(state.wealth, MANUAL_LIMITS.wealth.min, MANUAL_LIMITS.wealth.max, d.wealth);
+  state.municipalTax = clampNumber(state.municipalTax, MANUAL_LIMITS['tax-muni'].min, MANUAL_LIMITS['tax-muni'].max, d.municipalTax);
+  state.burialFee = clampNumber(state.burialFee, MANUAL_LIMITS['tax-burial'].min, MANUAL_LIMITS['tax-burial'].max, d.burialFee);
+  state.publicServiceMax = Math.round(clampNumber(state.publicServiceMax, MANUAL_LIMITS['tax-public'].min, MANUAL_LIMITS['tax-public'].max, d.publicServiceMax));
+  state.occupationalPensionTax = clampNumber(state.occupationalPensionTax, MANUAL_LIMITS['occ-pension-tax'].min, MANUAL_LIMITS['occ-pension-tax'].max, d.occupationalPensionTax);
+  state.indexThresholds = state.indexThresholds !== false;
+  state.ipBalance = clampNumber(state.ipBalance, MANUAL_LIMITS['ip-balance'].min, MANUAL_LIMITS['ip-balance'].max, d.ipBalance);
+  state.ppBalance = clampNumber(state.ppBalance, MANUAL_LIMITS['pp-balance'].min, MANUAL_LIMITS['pp-balance'].max, d.ppBalance);
+  state.itp = pensionSourceCapitalTotal();
+  state.privPension = 0;
+  state.spend = clampNumber(state.spend, MANUAL_LIMITS.spend.min, MANUAL_LIMITS.spend.max, d.spend);
+  state.infl = clampNumber(state.infl, MANUAL_LIMITS.infl.min, MANUAL_LIMITS.infl.max, d.infl);
+  state.ret = clampNumber(state.ret, MANUAL_LIMITS.ret.min, MANUAL_LIMITS.ret.max, d.ret);
+  state.pret = clampNumber(state.pret, MANUAL_LIMITS.pret.min, MANUAL_LIMITS.pret.max, d.pret);
+  state.deRiskEnabled = state.deRiskEnabled === true;
+  state.deRiskTarget = clampNumber(state.deRiskTarget, MANUAL_LIMITS['derisk-target'].min, MANUAL_LIMITS['derisk-target'].max, d.deRiskTarget);
+  state.deRiskYears = Math.round(clampNumber(state.deRiskYears, MANUAL_LIMITS['derisk-years'].min, MANUAL_LIMITS['derisk-years'].max, d.deRiskYears));
+  state.interestRet = clampNumber(state.interestRet, MANUAL_LIMITS['interest-ret'].min, MANUAL_LIMITS['interest-ret'].max, d.interestRet);
+  state.interestVol = clampNumber(state.interestVol, MANUAL_LIMITS['interest-vol'].min, MANUAL_LIMITS['interest-vol'].max, d.interestVol);
+  state.deRiskPensions = typeof state.deRiskPensions === 'boolean' ? state.deRiskPensions : d.deRiskPensions;
+  state.volPrivate = clampNumber(state.volPrivate, MANUAL_LIMITS['vol-priv'].min, MANUAL_LIMITS['vol-priv'].max, d.volPrivate);
+  state.volITP = clampNumber(state.volITP, MANUAL_LIMITS['vol-itp'].min, MANUAL_LIMITS['vol-itp'].max, d.volITP);
+  state.mcCorrelation = clampNumber(state.mcCorrelation, MANUAL_LIMITS['mc-corr'].min, MANUAL_LIMITS['mc-corr'].max, d.mcCorrelation);
+
+  if (!['ISK', 'AF', 'KF'].includes(state.savingType)) state.savingType = d.savingType;
+  if (!['stockholm', 'custom'].includes(state.taxPreset)) state.taxPreset = d.taxPreset;
+  if (state.taxPreset === 'stockholm') {
+    const p = TAX_PRESETS.stockholm;
+    state.municipalTax = p.municipalTax;
+    state.burialFee = p.burialFee;
+    state.publicServiceMax = p.publicServiceMax;
+  }
+  state.strategy = [1, 2, 3].includes(Number(state.strategy)) ? Number(state.strategy) : d.strategy;
+  if (!['fireAge', 'ret', 'pret', 'salaryGrowth', 'spend', 'savings', 'publicPensionStartAge', 'occupationalStartAge'].includes(state.sensitivityMetric)) {
+    state.sensitivityMetric = d.sensitivityMetric;
+  }
+  const payout = state.itpPayout === 'lifetime' ? 'lifetime' : Number(state.itpPayout);
+  state.itpPayout = [5, 10, 15, 20, 'lifetime'].includes(payout) ? payout : d.itpPayout;
+  if (!['nominal', 'real'].includes(state.displayMode)) state.displayMode = d.displayMode;
+  if (!['dark', 'light'].includes(state.theme)) state.theme = d.theme;
+}
+
+function syncUI() {
+  const s = state;
+  applyTheme();
+  const setSliderBounds = (id, min, max) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.min = min;
+    el.max = Math.max(min, max);
+  };
+  const setSlider = (id, dispId, val, formatter) => {
+    const el = document.getElementById(id);
+    const disp = document.getElementById(dispId);
+    if (el) {
+      const sliderMin = parseFloat(el.min);
+      const sliderMax = parseFloat(el.max);
+      el.value = clampNumber(val, sliderMin, sliderMax, sliderMin);
+    }
+    if (disp) disp.textContent = formatter ? formatter(val) : val;
+  };
+  setSliderBounds('age', 20, 68);
+  setSliderBounds('public-pension-start', Math.max(calcPensionMinAgeFromBirthYear(s.birthYear), s.fireAge), s.lifeExp - 1);
+  setSlider('birth-year',    'v-birth-year', s.birthYear);
+  setSlider('age',          'v-age',       s.age);
+  setSlider('fire-age',     'v-fire-age',  s.fireAge);
+  setSlider('life-exp',     'v-life-exp',  s.lifeExp);
+  setSlider('salary',       'v-salary',    s.salary,      fmt);
+  setSlider('salary-growth','v-salary-growth', s.salaryGrowth, v => v.toFixed(1));
+  const savingsEl = document.getElementById('savings');
+  if (savingsEl) {
+    if (s.savingsMode === 'percentNet') {
+      savingsEl.min = 0;
+      savingsEl.max = 100;
+      savingsEl.step = 1;
+    } else {
+      savingsEl.min = 0;
+      savingsEl.max = 80000;
+      savingsEl.step = 500;
+    }
+  }
+  document.getElementById('savings-label-text').textContent =
+    s.savingsMode === 'percentNet' ? 'Privat sparande (% av nettolön)' : 'Privat sparande (kr/mån)';
+  document.getElementById('savings-unit').textContent = s.savingsMode === 'percentNet' ? '%' : '';
+  setSlider('savings',      'v-savings',   s.savingsMode === 'percentNet' ? s.savingsRate : s.savings,
+    v => s.savingsMode === 'percentNet' ? v.toFixed(0) : fmt(v));
+  setSlider('wealth',       'v-wealth',    s.wealth,      fmt);
+  setSlider('tax-muni',     'v-tax-muni',  s.municipalTax, v => Number(v).toFixed(2));
+  setSlider('tax-burial',   'v-tax-burial', s.burialFee,   v => Number(v).toFixed(3).replace(/0+$/, '').replace(/\.$/, ''));
+  setSlider('tax-public',   'v-tax-public', s.publicServiceMax, fmt);
+  setSlider('occ-pension-tax', 'v-occ-pension-tax', s.occupationalPensionTax, v => Number(v).toFixed(3).replace(/0+$/, '').replace(/\.$/, ''));
+  setSlider('ip-balance',   'v-ip-bal',    s.ipBalance,   fmt);
+  setSlider('pp-balance',   'v-pp-bal',    s.ppBalance,   fmt);
+  setSlider('public-pension-start', 'v-public-start', s.publicPensionStartAge);
+  setSlider('spend',        'v-spend',     s.spend,       fmt);
+  setSlider('infl',         'v-infl',      s.infl,        v => v.toFixed(1));
+  setSlider('ret',          'v-ret',       s.ret,         v => v.toFixed(1));
+  setSlider('pret',         'v-pret',      s.pret,        v => v.toFixed(1));
+  setSlider('derisk-target','v-derisk-target', s.deRiskTarget, v => v.toFixed(0));
+  setSlider('derisk-years', 'v-derisk-years', s.deRiskYears, v => v.toFixed(0));
+  setSlider('interest-ret', 'v-interest-ret', s.interestRet, v => v.toFixed(1));
+  setSlider('interest-vol', 'v-interest-vol', s.interestVol, v => v.toFixed(1));
+  setSlider('vol-priv',     'v-vol-priv',  s.volPrivate,  v => v.toFixed(1));
+  setSlider('vol-itp',      'v-vol-itp',   s.volITP,      v => v.toFixed(1));
+  setSlider('mc-corr',      'v-mc-corr',   s.mcCorrelation, v => v.toFixed(0));
+  // Toggles (update DOM classes without triggering render)
+  ['ISK','AF','KF'].forEach(t =>
+    document.getElementById('btn-'+t.toLowerCase())?.classList.toggle('active', t === s.savingType));
+  ['stockholm','custom'].forEach(p =>
+    document.getElementById('tax-preset-'+p)?.classList.toggle('active', p === s.taxPreset));
+  ['fixed','percentNet'].forEach(m =>
+    document.getElementById('btn-savings-'+(m === 'fixed' ? 'fixed' : 'percent'))?.classList.toggle('active', m === s.savingsMode));
+  document.getElementById('idx-on')?.classList.toggle('active', s.indexThresholds);
+  document.getElementById('idx-off')?.classList.toggle('active', !s.indexThresholds);
+  document.getElementById('derisk-on')?.classList.toggle('active', s.deRiskEnabled);
+  document.getElementById('derisk-off')?.classList.toggle('active', !s.deRiskEnabled);
+  document.getElementById('derisk-pension-on')?.classList.toggle('active', s.deRiskPensions);
+  document.getElementById('derisk-pension-off')?.classList.toggle('active', !s.deRiskPensions);
+  renderPensionSourcesEditor();
+  [1,2,3].forEach(i =>
+    document.getElementById('sc-'+i)?.classList.toggle('active', i === s.strategy));
+  ['nominal','real'].forEach(m =>
+    document.getElementById('btn-mode-'+m)?.classList.toggle('active', m === s.displayMode));
+  ['dark','light'].forEach(t =>
+    document.getElementById('btn-theme-'+t)?.classList.toggle('active', t === s.theme));
+  const sensEl = document.getElementById('sensitivity-metric');
+  if (sensEl) sensEl.value = s.sensitivityMetric;
+}
+
+function renderPensionSourcesEditor() {
+  const list = document.getElementById('occupational-pension-list');
+  if (!list) return;
+  const typeLabel = {
+    itp1: 'Nuvarande ITP1',
+    capital: 'Kapital / fribrev',
+    fixed: 'Fast brutto/mån'
+  };
+  const autoSourceId = contributionPensionSourceId(state.occupationalPensions || []);
+  const duplicateAuto = (state.occupationalPensions || []).filter(source => source.type === 'itp1').length > 1;
+  const sources = state.occupationalPensions || [];
+  if (sources.length === 0) {
+    list.innerHTML = '<div class="pension-info">Ingen tjänstepension tillagd. Lägg till en källa om du vill modellera tjänstepension eller fribrev.</div>';
+    return;
+  }
+  list.innerHTML = sources.map(source => {
+    const id = source.id;
+    const isFixed = source.type === 'fixed';
+    const sourceNote = source.type === 'itp1' && duplicateAuto && source.id !== autoSourceId
+      ? '<div style="font-size:10px;color:var(--text-dim);margin-top:6px">Framtida ITP1-intjäning räknas bara på första nuvarande ITP1-källan.</div>'
+      : '';
+    return `
+        <div class="pension-source">
+          <div class="pension-source-head">
+            <input class="text-input" value="${escapeHTML(source.name)}" onchange="updatePensionSource('${id}', 'name', this.value)">
+          <button class="icon-btn" onclick="removePensionSource('${id}')">×</button>
+        </div>
+        <div class="mini-grid">
+          <div class="mini-field">
+            <label class="has-tip" data-tip="Välj hur källan ska modelleras: aktiv ITP1 med framtida intjäning, kapital/fribrev utan ny intjäning, eller fast brutto/mån.">Typ</label>
+            <select class="select-input" style="width:100%" onchange="updatePensionSource('${id}', 'type', this.value)">
+              ${Object.keys(typeLabel).map(type => `<option value="${type}" ${source.type === type ? 'selected' : ''}>${typeLabel[type]}</option>`).join('')}
+            </select>
+          </div>
+          <div class="mini-field">
+            <label class="has-tip" data-tip="Ålder när just denna pensionskälla börjar betalas ut. Optimizer kan tillfälligt testa gemensam startålder.">Startålder</label>
+            <input class="mini-input" type="number" min="${Math.max(ITP1_MIN_AGE, state.fireAge)}" max="${state.lifeExp - 1}" value="${source.startAge}" onchange="updatePensionSource('${id}', 'startAge', this.value)">
+          </div>
+          <div class="mini-field">
+            <label class="has-tip" data-tip="${isFixed ? 'Fast bruttobelopp per månad från startålder. Beloppet påverkas inte av marknadsavkastning.' : 'Nuvarande kapital för källan. Växer med pensionskapitalets avkastning och minskar under utbetalning.'}">${isFixed ? 'Brutto/mån' : 'Kapital'}</label>
+            <input class="mini-input" type="number" min="0" step="${isFixed ? 500 : 25000}" value="${isFixed ? source.monthlyAmount : source.capital}" onchange="updatePensionSource('${id}', '${isFixed ? 'monthlyAmount' : 'capital'}', this.value)">
+          </div>
+          <div class="mini-field">
+            <label class="has-tip" data-tip="Antal år kapitalbaserad tjänstepension betalas ut. Livsvar. sprider kapitalet över återstående livslängd i modellen.">Utbetalning</label>
+            <select class="select-input" style="width:100%" onchange="updatePensionSource('${id}', 'payout', this.value)">
+              ${[5, 10, 15, 20, 'lifetime'].map(p => `<option value="${p}" ${source.payout === p ? 'selected' : ''}>${p === 'lifetime' ? 'Livsvar.' : p + ' år'}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        ${sourceNote}
+      </div>`;
+  }).join('');
+}
+
+// ============================================================
+// TAX CALCULATIONS (2026 rules)
+// ============================================================
+
+const ceilHundred = n => n <= 0 ? 0 : Math.ceil(n / 100) * 100;
+const roundHundred = n => {
+  if (n <= 0) return 0;
+  const lower = Math.floor(n / 100) * 100;
+  return n - lower <= 50 ? lower : lower + 100;
+};
+
+function rulesForYear(yearIndex = 0) {
+  const y = Math.max(0, Number(yearIndex) || 0);
+  const priceFactor = state.indexThresholds ? Math.pow(1 + state.infl / 100, y) : 1;
+  const incomeFactor = state.indexThresholds ? Math.pow(1 + Math.max(INKOMSTINDEX_RATE, state.infl / 100), y) : 1;
+  return {
+    pbb: PBB * priceFactor,
+    ibb: IBB * incomeFactor,
+    stateTaxThreshold: STATE_TAX_THRESHOLD * priceFactor,
+    publicServiceMax: state.publicServiceMax * priceFactor,
+    publicPensionMinIncome: PUBLIC_PENSION_MIN_INCOME * priceFactor,
+    publicPensionFeeCeilingGross: PUBLIC_PENSION_FEE_CEILING_GROSS * incomeFactor,
+    publicPensionPgiCeiling: PUBLIC_PENSION_PGI_CEILING * incomeFactor,
+    iskTaxFreeBase: ISK_TAX_FREE_BASE * priceFactor
+  };
+}
+
+function calcOrdinaryGrundavdragRaw(income, rules = rulesForYear(0)) {
+  if (income <= 0) return 0;
+  const pbb = rules.pbb;
+  let ga;
+  if (income <= 0.99 * pbb) {
+    ga = 0.423 * pbb;
+  } else if (income <= 2.72 * pbb) {
+    ga = 0.423 * pbb + (income - 0.99 * pbb) * 0.20;
+  } else if (income <= 3.11 * pbb) {
+    ga = 0.77 * pbb;
+  } else if (income <= 7.88 * pbb) {
+    ga = 0.77 * pbb - (income - 3.11 * pbb) * 0.10;
+  } else {
+    ga = 0.293 * pbb;
+  }
+  return Math.max(0, Math.min(ga, income));
+}
+
+function calcSeniorGrundavdragExtraRaw(income, rules = rulesForYear(0)) {
+  if (income <= 0) return 0;
+  const pbb = rules.pbb;
+  if (income <= 0.91 * pbb) return 0.687 * pbb;
+  if (income <= 1.11 * pbb) return 0.885 * pbb - income * 0.20;
+  if (income <= 1.965 * pbb) return 0.600 * pbb + income * 0.057;
+  if (income <= 2.72 * pbb) return 0.333 * pbb + income * 0.1949;
+  if (income <= 3.11 * pbb) return income * 0.3949 - 0.212 * pbb;
+  if (income <= 3.24 * pbb) return income * 0.4949 - 0.523 * pbb;
+  if (income <= 5.00 * pbb) return income * 0.356 - 0.073 * pbb;
+  if (income <= 7.88 * pbb) return 0.017 * pbb + income * 0.338;
+  if (income <= 8.08 * pbb) return 0.703 * pbb + income * 0.251;
+  if (income <= 11.16 * pbb) return 2.732 * pbb;
+  if (income <= 12.84 * pbb) return 9.651 * pbb - income * 0.62;
+  return 1.691 * pbb;
+}
+
+// Grundavdrag 2026. Senior means the taxpayer has reached the age for förhöjt grundavdrag.
+function calcGrundavdrag(income, senior = false, yearIndex = 0) {
+  if (income <= 0) return 0;
+  const rules = rulesForYear(yearIndex);
+  const ordinary = calcOrdinaryGrundavdragRaw(income, rules);
+  const extra = senior ? calcSeniorGrundavdragExtraRaw(income, rules) : 0;
+  return ceilHundred(Math.max(0, ordinary + extra));
+}
+
+function calcGeneralPensionFee(earnedIncome, yearIndex = 0) {
+  const rules = rulesForYear(yearIndex);
+  if (earnedIncome < rules.publicPensionMinIncome) return 0;
+  const base = Math.min(earnedIncome, rules.publicPensionFeeCeilingGross);
+  return roundHundred(base * PUBLIC_PENSION_FEE_RATE);
+}
+
+function calcPublicServiceFee(taxableIncome, yearIndex = 0) {
+  const rules = rulesForYear(yearIndex);
+  return Math.floor(Math.min(Math.max(0, taxableIncome) * PUBLIC_SERVICE_FEE_RATE, rules.publicServiceMax));
+}
+
+function calcBurialFee(taxableIncome) {
+  return Math.floor(Math.max(0, taxableIncome) * (state.burialFee / 100));
+}
+
+// Jobbskatteavdrag 2026. Calculated against municipal tax only.
+function calcJOBA(earnedIncome, grundavdrag, senior = false, yearIndex = 0) {
+  if (earnedIncome <= 0) return 0;
+  const pbb = rulesForYear(yearIndex).pbb;
+  const ai = Math.floor(earnedIncome / 100) * 100;
+  const muniTax = state.municipalTax / 100;
+  let base;
+  if (senior) {
+    if (ai <= 1.75 * pbb) base = ai * 0.22;
+    else if (ai <= 5.24 * pbb) base = 0.2635 * pbb + ai * 0.07;
+    else base = 0.6293 * pbb;
+    return Math.max(0, Math.floor(base));
+  }
+  if (ai <= 0.91 * pbb) {
+    base = ai - grundavdrag;
+  } else if (ai <= 3.24 * pbb) {
+    base = 0.91 * pbb + 0.3874 * (ai - 0.91 * pbb) - grundavdrag;
+  } else if (ai <= 8.08 * pbb) {
+    base = 1.813 * pbb + 0.251 * (ai - 3.24 * pbb) - grundavdrag;
+  } else {
+    base = 3.027 * pbb - grundavdrag;
+  }
+  return Math.max(0, Math.floor(base * muniTax));
+}
+
+function calcEarnedIncomeReduction(taxableIncome) {
+  if (taxableIncome <= 40000) return 0;
+  if (taxableIncome <= 240000) return Math.floor((taxableIncome - 40000) * 0.0075);
+  return 1500;
+}
+
+// Inkomstskatt 2026. `age` controls the senior grundavdrag; pension before that age
+// uses ordinary grundavdrag and no jobbskatteavdrag.
+function calcIncomeTax(grossAnnual, isPension = false, age = null, yearIndex = 0) {
+  return calcTaxBreakdown(grossAnnual, isPension, age, yearIndex).total;
+}
+
+// Detaljerad skatteuppdelning (kr/år)
+function calcTaxBreakdown(grossAnnual, isPension = false, age = null, yearIndex = 0) {
+  if (grossAnnual <= 0) {
+    return { kommunal: 0, statlig: 0, joba: 0, forvarv: 0, pensionFee: 0, pensionFeeReduction: 0, burialFee: 0, publicServiceFee: 0, fees: 0, total: 0 };
+  }
+  const rules = rulesForYear(yearIndex);
+  const senior = age == null ? isPension : age >= SENIOR_TAX_AGE;
+  const ga = calcGrundavdrag(grossAnnual, senior, yearIndex);
+  const taxable = Math.max(0, grossAnnual - ga);
+  const kommunal = taxable * (state.municipalTax / 100);
+  const statlig = taxable > rules.stateTaxThreshold
+    ? (taxable - rules.stateTaxThreshold) * STATE_TAX_RATE : 0;
+  const pensionFee = isPension ? 0 : calcGeneralPensionFee(grossAnnual, yearIndex);
+  const pensionFeeReduction = Math.min(pensionFee, kommunal + statlig);
+  const jobaRaw = isPension ? 0 : calcJOBA(grossAnnual, ga, senior, yearIndex);
+  const joba = Math.min(jobaRaw, Math.max(0, kommunal - pensionFeeReduction));
+  const forvarvRaw = calcEarnedIncomeReduction(taxable);
+  const forvarv = Math.min(forvarvRaw, Math.max(0, kommunal - pensionFeeReduction - joba));
+  const burialFee = calcBurialFee(taxable);
+  const publicServiceFee = calcPublicServiceFee(taxable, yearIndex);
+  const fees = burialFee + publicServiceFee;
+  const total = Math.max(0, kommunal + statlig + pensionFee + fees - pensionFeeReduction - joba - forvarv);
+  return { kommunal, statlig, joba, forvarv, pensionFee, pensionFeeReduction, burialFee, publicServiceFee, fees, total };
+}
+
+// ISK/KF: 2026 tax on the capital base above the shared tax-free allowance.
+function calcISKTax(capital, yearIndex = 0) {
+  return Math.max(0, capital - rulesForYear(yearIndex).iskTaxFreeBase) * ISK_SCHABLONINTAKT_RATE * CAPITAL_TAX_RATE;
+}
+
+function calcKFTax(capital, yearIndex = 0) { return calcISKTax(capital, yearIndex); }
+
+function calcAnnualAccountTax(capital, type, yearIndex = 0) {
+  if (capital <= 0) return 0;
+  if (type === 'ISK' || type === 'KF') return calcISKTax(capital, yearIndex);
+  if (type === 'AF') return capital * AF_FUND_TAX_RATE;
+  return 0;
+}
+
+// Net from portfolio withdrawal (depends on account type)
+function netWithdrawal(grossWithdrawal, capital, costBasis, type) {
+  if (type === 'ISK' || type === 'KF') {
+    // No tax on withdrawal itself; ISK tax already counted separately
+    return grossWithdrawal;
+  }
+  // AF: 30% on gains; assume average gain proportion
+  if (capital <= 0 || grossWithdrawal <= 0) return grossWithdrawal;
+  const gainRatio = Math.max(0, (capital - costBasis) / capital);
+  const gain = grossWithdrawal * gainRatio;
+  return grossWithdrawal - gain * 0.30;
+}
+
+function grossWithdrawalForNet(netNeeded, capital, costBasis, type) {
+  if (netNeeded <= 0) return 0;
+  if (type === 'ISK' || type === 'KF' || capital <= 0) return netNeeded;
+  const gainRatio = Math.max(0, (capital - costBasis) / capital);
+  const netRate = 1 - gainRatio * CAPITAL_TAX_RATE;
+  return netNeeded / Math.max(0.01, netRate);
+}
+
+function annualSpendingTarget(monthlyTarget, spendFactors, yearIndex) {
+  return monthlyTarget * 12 * spendFactors[yearIndex];
+}
+
+function targetMonthlyForRow(row) {
+  if (!row) return state.spend;
+  const y = row.age - state.age;
+  const annualTarget = isFinite(row.targetSpendAnnual)
+    ? row.targetSpendAnnual
+    : state.spend * 12 * Math.pow(1 + state.infl / 100, y);
+  return annualTarget / 12;
+}
+
+function baseTargetSpendMonthlyFromRows(rows) {
+  const fireRow = rows.find(row => row.age === state.fireAge);
+  if (!fireRow?.targetSpendAnnual) return state.spend;
+  const fireYears = state.fireAge - state.age;
+  return fireRow.targetSpendAnnual / 12 / Math.pow(1 + state.infl / 100, fireYears);
+}
+
+function netIncomeComponents(row) {
+  const pensionGross = (row.almanBrutto || 0) + (row.itpBrutto || 0);
+  const pensionTax = pensionGross > 0
+    ? calcIncomeTax(pensionGross, true, row.age, row.age - state.age)
+    : 0;
+  const pensionNet = Math.max(0, pensionGross - pensionTax);
+  return {
+    portfolio: (row.portfolioNet || 0) / 12,
+    alman: pensionGross > 0 ? pensionNet * ((row.almanBrutto || 0) / pensionGross) / 12 : 0,
+    itp: pensionGross > 0 ? pensionNet * ((row.itpBrutto || 0) / pensionGross) / 12 : 0
+  };
+}
+
+const GUARDRAIL_WITHDRAWAL = {
+  lowerWR: 0.03,
+  upperWR: 0.065,
+  cappedWR: 0.055,
+  raiseFactor: 1.10
+};
+
+function plannedPortfolioWithdrawal({
+  strategy,
+  annualSpend,
+  pensionNet,
+  privateCapital,
+  costBasis,
+  savingType
+}) {
+  if (privateCapital <= 0) return 0;
+
+  const netNeed = Math.max(0, annualSpend - Math.max(0, pensionNet));
+  const targetWithdrawal = grossWithdrawalForNet(netNeed, privateCapital, costBasis, savingType);
+
+  if (strategy === 2) {
+    const g = GUARDRAIL_WITHDRAWAL;
+    const withdrawalRate = targetWithdrawal / Math.max(1, privateCapital);
+    if (withdrawalRate > g.upperWR) return privateCapital * g.cappedWR;
+    if (withdrawalRate < g.lowerWR && targetWithdrawal > 0) {
+      const fullSpendWithdrawal = grossWithdrawalForNet(annualSpend, privateCapital, costBasis, savingType);
+      return Math.min(targetWithdrawal * g.raiseFactor, fullSpendWithdrawal);
+    }
+  }
+
+  return targetWithdrawal;
+}
+
+function planMeetsTarget(rows) {
+  return rows.every(row => {
+    if (row.age < state.fireAge) return true;
+    return row.netMonthly + 1 >= targetMonthlyForRow(row);
+  });
+}
+
+function firstIncomeShortfallAge(rows) {
+  const row = rows.find(r => r.age >= state.fireAge && r.age < state.lifeExp && r.netMonthly + 1 < targetMonthlyForRow(r));
+  return row ? row.age : null;
+}
+
+function calculateEvenIncomeMonthly() {
+  const maxMonthly = MANUAL_LIMITS.spend.max;
+  const isFeasible = monthlyTarget => {
+    const rows = simulate({
+      targetSpendMonthly: monthlyTarget,
+      strategyOverride: 1,
+      disableEvenIncomeOptimization: true
+    });
+    return planMeetsTarget(rows);
+  };
+
+  let lo = 0;
+  let hi = Math.min(maxMonthly, Math.max(50000, state.spend * 2));
+  while (hi < maxMonthly && isFeasible(hi)) {
+    lo = hi;
+    hi = Math.min(maxMonthly, hi * 1.6);
+  }
+  if (hi >= maxMonthly && isFeasible(hi)) return maxMonthly;
+
+  for (let i = 0; i < 24; i++) {
+    const mid = (lo + hi) / 2;
+    if (isFeasible(mid)) lo = mid;
+    else hi = mid;
+  }
+
+  return Math.floor(lo / 100) * 100;
+}
+
+// ============================================================
+// PENSION CALCULATIONS (Swedish system)
+// ============================================================
+function calcAlmanPension(ipCapital, ppCapital, takeOutAge) {
+  // Simplified delningstal approximation. Current published tables vary by cohort;
+  // 64 years is around 17.66 and later starts reduce the divisor by about 0.7/year.
+  const delningstal = Math.max(1, 17.66 - (takeOutAge - 64) * 0.7);
+  const ipMonthly = ipCapital / (delningstal * 12);
+  const ppMonthly = ppCapital / (delningstal * 12);
+  return { inkomstpension: ipMonthly, premiepension: ppMonthly, total: ipMonthly + ppMonthly };
+}
+
+function calcPensionableIncome(grossSalary, yearIndex = 0) {
+  const rules = rulesForYear(yearIndex);
+  if (grossSalary < rules.publicPensionMinIncome) return 0;
+  return Math.min(grossSalary * (1 - PUBLIC_PENSION_FEE_RATE), rules.publicPensionPgiCeiling);
+}
+
+
+// ============================================================
+// CURRENT OCCUPATIONAL PENSION CONTRIBUTION (accumulation phase)
+// ============================================================
+function calcITP1Annual(grossSalary, yearIndex = 0) {
+  const ibb = rulesForYear(yearIndex).ibb;
+  const IBB75 = 7.5 * ibb;
+  const IBB30 = 30 * ibb;
+  let contrib = 0;
+  if (grossSalary <= IBB75) {
+    contrib = grossSalary * 0.045;
+  } else {
+    contrib = IBB75 * 0.045 + Math.min(grossSalary - IBB75, IBB30 - IBB75) * 0.30;
+  }
+  return contrib;
+}
+
+function clonePensionSourceRuntime(source) {
+  return {
+    ...source,
+    capitalRuntime: source.type === 'fixed' ? 0 : source.capital,
+    monthlyRuntime: null,
+    annualPayoutRuntime: 0,
+    payoutEndAge: source.payout === 'lifetime' ? state.lifeExp : source.startAge + Number(source.payout)
+  };
+}
+
+function sourceRemainingPayoutYears(source, currentAge, lifeExp) {
+  return source.payout === 'lifetime'
+    ? Math.max(1, lifeExp - currentAge)
+    : Math.max(1, source.payoutEndAge - currentAge);
+}
+
+function contributionPensionSourceId(sources) {
+  return (sources || []).find(source => source.type === 'itp1')?.id || null;
+}
+
+function sourceAnnualContribution(source, grossSalary, contributionSourceId, yearIndex = 0) {
+  return source.type === 'itp1' && source.id === contributionSourceId
+    ? calcITP1Annual(grossSalary, yearIndex)
+    : 0;
+}
+
+function sourceCapitalTotal(sources) {
+  return sources.reduce((sum, source) =>
+    sum + (source.type === 'fixed' ? 0 : Math.max(0, source.capitalRuntime || 0)), 0);
+}
+
+function salaryAtYear(yearIndex, s = state) {
+  const growthFactor = Math.max(0, 1 + (s.salaryGrowth || 0) / 100);
+  return s.salary * Math.pow(growthFactor, Math.max(0, yearIndex));
+}
+
+function annualPrivateSavings(currentSalary, age, yearIndex, s = state) {
+  if (s.savingsMode !== 'percentNet') return s.savings * 12;
+  const netAnnual = Math.max(0, currentSalary - calcIncomeTax(currentSalary, false, age, yearIndex));
+  return netAnnual * (s.savingsRate / 100);
+}
+
+function interestShareForAge(age, s = state, applies = true) {
+  if (!applies || !s.deRiskEnabled || age < s.fireAge) return 0;
+  const target = clampNumber(s.deRiskTarget, 0, 100, 0) / 100;
+  const years = Math.max(0, Math.round(s.deRiskYears || 0));
+  if (years <= 0) return target;
+  const progress = clampNumber((age - s.fireAge + 1) / years, 0, 1, 0);
+  return target * progress;
+}
+
+function blendedReturn(riskyReturn, interestReturn, interestShare) {
+  return riskyReturn * (1 - interestShare) + interestReturn * interestShare;
+}
+
+function effectivePrivateReturn(riskyReturn, age, s = state) {
+  return blendedReturn(riskyReturn, s.interestRet / 100, interestShareForAge(age, s, true));
+}
+
+function effectivePensionReturn(riskyReturn, age, s = state) {
+  return blendedReturn(riskyReturn, s.interestRet / 100, interestShareForAge(age, s, s.deRiskPensions));
+}
+
+function growOccupationalPensionCapital(capital, grossReturn, s = state) {
+  const startingCapital = Math.max(0, capital || 0);
+  const tax = startingCapital * (s.occupationalPensionTax / 100);
+  return {
+    capital: Math.max(0, startingCapital * (1 + grossReturn) - tax),
+    tax
+  };
+}
+
+const STRESS_SCENARIOS = [
+  { id: 'base', label: 'Bas' },
+  { id: 'fireCrash', label: 'Börsfall vid FIRE' },
+  { id: 'lostDecade', label: 'Svagt första decennium' },
+  { id: 'highInflation', label: 'Hög inflation' },
+  { id: 'lowReturns', label: 'Lägre långsiktig avkastning' }
+];
+
+function stressYearParams(stressId, yearIndex, age, s, baseRet, basePret, baseInfl) {
+  let ret = baseRet;
+  let pret = basePret;
+  let infl = baseInfl;
+  if (stressId === 'lostDecade' && age >= s.fireAge && age < s.fireAge + 10) {
+    ret = Math.min(ret, 0);
+    pret = Math.min(pret, 0.02);
+  } else if (stressId === 'highInflation' && age >= s.fireAge && age < s.fireAge + 10) {
+    infl = Math.max(infl, 0.06);
+  } else if (stressId === 'lowReturns') {
+    ret -= 0.02;
+    pret -= 0.015;
+  }
+  return { ret, pret, infl };
+}
+
+function stressShockFactors(stressId, age, s) {
+  if (stressId === 'fireCrash' && age === s.fireAge) {
+    return { privateCapital: 0.70, pensionCapital: 0.85 };
+  }
+  return { privateCapital: 1, pensionCapital: 1 };
+}
+
+function spendFactorsForScenario(years, stressId, s, baseRet, basePret, baseInfl) {
+  const factors = [1];
+  for (let i = 1; i < years; i++) {
+    const prevAge = s.age + i - 1;
+    const params = stressYearParams(stressId, i - 1, prevAge, s, baseRet, basePret, baseInfl);
+    factors[i] = factors[i - 1] * (1 + params.infl);
+  }
+  return factors;
+}
+
+// ============================================================
+// MAIN SIMULATION
+// ============================================================
+function simulate(options = {}) {
+  const s = state;
+  const years = s.lifeExp - s.age;
+  const baseRet = s.ret / 100;
+  const basePret = s.pret / 100;
+  const baseInfl = s.infl / 100;
+  const stressId = options.stressId || 'base';
+  const spendFactors = spendFactorsForScenario(years, stressId, s, baseRet, basePret, baseInfl);
+  const strategy = Number(options.strategyOverride ?? s.strategy);
+  const targetSpendMonthly = isFinite(Number(options.targetSpendMonthly))
+    ? Number(options.targetSpendMonthly)
+    : strategy === 3 && !options.disableEvenIncomeOptimization
+      ? calculateEvenIncomeMonthly()
+      : s.spend;
+
+  // Choose pension start age based on strategy and FIRE age
+  const pensionStartAge = s.publicPensionStartAge;
+
+  // Initial capital
+  let privateCapital = s.wealth;
+  const pensionSources = (s.occupationalPensions || []).map(clonePensionSourceRuntime);
+  const contributionSourceId = contributionPensionSourceId(pensionSources);
+  let itpCapital = sourceCapitalTotal(pensionSources);
+  let ipCapital = s.ipBalance;
+  let ppCapital = s.ppBalance;
+  let costBasis = s.wealth * 0.5; // assume 50% is gains for AF
+  let ipPensionMonthly = 0;
+  let ppPensionMonthly = 0;
+
+  const rows = [];
+
+  for (let i = 0; i < years; i++) {
+    const currentAge = s.age + i;
+    const isFireYear = currentAge === s.fireAge;
+    const hasFired = currentAge >= s.fireAge;
+    const pensionActive = currentAge >= pensionStartAge;
+    const currentSalary = salaryAtYear(i, s);
+    const yearParams = stressYearParams(stressId, i, currentAge, s, baseRet, basePret, baseInfl);
+    const yearRet = yearParams.ret;
+    const yearPret = yearParams.pret;
+    const privateReturn = effectivePrivateReturn(yearRet, currentAge, s);
+    const pensionReturn = effectivePensionReturn(yearPret, currentAge, s);
+    const ipIndexRate = Math.max(INKOMSTINDEX_RATE, yearParams.infl);
+    const ipPayoutIndexRate = Math.max(0, ipIndexRate - IP_PAYOUT_ADVANCE_RATE);
+    const ppPayoutIndexRate = ((1 + pensionReturn) / (1 + PP_PAYOUT_ADVANCE_RATE)) - 1;
+    const shock = stressShockFactors(stressId, currentAge, s);
+    if (shock.privateCapital !== 1 || shock.pensionCapital !== 1) {
+      privateCapital *= shock.privateCapital;
+      pensionSources.forEach(source => {
+        if (source.type !== 'fixed') source.capitalRuntime *= shock.pensionCapital;
+      });
+      ppCapital *= shock.pensionCapital;
+    }
+    let occupationalAccountTax = 0;
+
+    // === ACCUMULATION PHASE ===
+      if (!hasFired) {
+        // Grow private capital
+        privateCapital *= (1 + privateReturn);
+        // Annual savings (net from salary)
+        const netSalaryExtra = annualPrivateSavings(currentSalary, currentAge, i, s);
+        privateCapital += netSalaryExtra;
+        costBasis += netSalaryExtra; // new contributions are at full cost basis
+        const accountTax = calcAnnualAccountTax(privateCapital, s.savingType, i);
+        privateCapital = Math.max(0, privateCapital - accountTax);
+
+	        // Grow occupational pension sources during work.
+	        pensionSources.forEach(source => {
+	          if (source.type === 'fixed') return;
+	          const grown = growOccupationalPensionCapital(source.capitalRuntime, pensionReturn, s);
+	          occupationalAccountTax += grown.tax;
+	          source.capitalRuntime = grown.capital + sourceAnnualContribution(source, currentSalary, contributionSourceId, i);
+	        });
+        itpCapital = sourceCapitalTotal(pensionSources);
+
+        // Grow allmän pension: IP with inkomstindex + contributions, PP with market return + contributions
+        const pensionableIncome = calcPensionableIncome(currentSalary, i);
+        ipCapital = ipCapital * (1 + ipIndexRate) + pensionableIncome * 0.16;
+        ppCapital = ppCapital * (1 + pensionReturn) + pensionableIncome * 0.025;
+
+        const workBreakdown = calcTaxBreakdown(currentSalary, false, currentAge, i);
+	        rows.push({
+	          age: currentAge,
+	          grossSalary: currentSalary,
+	          privateCapital,
+	          privateCapitalPreWithdrawal: privateCapital,
+	          itpCapital, itpCapitalPrePayout: itpCapital, ipCapital, ppCapital,
+	          targetSpendAnnual: annualSpendingTarget(targetSpendMonthly, spendFactors, i),
+	          withdrawal: 0, portfolioNet: 0,
+          almanBrutto: 0, itpBrutto: 0,
+          pensionGross: 0,
+          ipPensionMonthly: 0, ppPensionMonthly: 0, itpMonthly: 0,
+          netMonthly: Math.round((currentSalary - workBreakdown.total) / 12),
+          taxPaid: workBreakdown.total + accountTax + occupationalAccountTax,
+          taxKommunal: workBreakdown.kommunal,
+          taxStatlig:  workBreakdown.statlig,
+          taxKapital:  accountTax + occupationalAccountTax,
+          taxPensionCapital: occupationalAccountTax,
+          taxFees:     workBreakdown.fees,
+          taxPensionFee: workBreakdown.pensionFee,
+          taxPensionFeeReduction: workBreakdown.pensionFeeReduction,
+          taxJoba:     workBreakdown.joba + workBreakdown.forvarv,
+          wr: 0,
+          phase: 'accum',
+          isFireYear
+      });
+      continue;
+    }
+
+    // === DECUMULATION PHASE ===
+    // IP/PP: grow until pension starts (no contributions after FIRE)
+    if (!pensionActive) {
+      ipCapital = ipCapital * (1 + ipIndexRate);
+      ppCapital = ppCapital * (1 + pensionReturn);
+    }
+
+    // Pension income — track sources separately for reporting
+    let almanBrutto = 0;
+    let itpBrutto = 0;
+    if (pensionActive) {
+      if (ipPensionMonthly === 0) {
+        // First year of pension: lock in amounts based on accumulated capital
+        const pa = calcAlmanPension(ipCapital, ppCapital, pensionStartAge);
+        ipPensionMonthly = pa.inkomstpension;
+        ppPensionMonthly = pa.premiepension;
+        } else {
+          // Subsequent years: IP is följsamhetsindexerad; PP follows fund returns reduced by advance interest.
+          ipPensionMonthly *= (1 + ipPayoutIndexRate);
+          ppPensionMonthly *= (1 + ppPayoutIndexRate);
+        }
+      almanBrutto = (ipPensionMonthly + ppPensionMonthly) * 12;
+      // Grow pension capital with returns before depleting by payments
+      ipCapital = ipCapital * (1 + ipIndexRate);
+      ipCapital = Math.max(0, ipCapital - ipPensionMonthly * 12);
+      ppCapital = ppCapital * (1 + pensionReturn);
+      ppCapital = Math.max(0, ppCapital - ppPensionMonthly * 12);
+    }
+    pensionSources.forEach(source => {
+      source.annualPayoutRuntime = 0;
+      if (currentAge < source.startAge) {
+        if (source.type !== 'fixed') {
+          const grown = growOccupationalPensionCapital(source.capitalRuntime, pensionReturn, s);
+          occupationalAccountTax += grown.tax;
+          source.capitalRuntime = grown.capital;
+        }
+        return;
+      }
+      if (currentAge >= source.payoutEndAge) return;
+      if (source.type === 'fixed') {
+        itpBrutto += source.monthlyAmount * 12;
+        return;
+      }
+      const grown = growOccupationalPensionCapital(source.capitalRuntime, pensionReturn, s);
+      occupationalAccountTax += grown.tax;
+      source.capitalRuntime = grown.capital;
+      const annualPayout = source.capitalRuntime / sourceRemainingPayoutYears(source, currentAge, s.lifeExp);
+      source.monthlyRuntime = annualPayout / 12;
+      source.annualPayoutRuntime = annualPayout;
+      itpBrutto += annualPayout;
+    });
+	    const itpCapitalPrePayout = sourceCapitalTotal(pensionSources);
+	    const pensionBrutto = almanBrutto + itpBrutto;
+
+    // Target spending (inflation adjusted from FIRE year)
+    const inflSpend = annualSpendingTarget(targetSpendMonthly, spendFactors, i);
+
+      // Pension net. Förhöjt grundavdrag applies only from the senior tax age.
+      const pensionNet = pensionBrutto - calcIncomeTax(pensionBrutto, true, currentAge, i);
+
+      // Portfolio withdrawal needed. Pension income is always counted first; the
+      // selected strategy then adjusts the private withdrawal around that gap.
+      let portfolioWithdrawal = plannedPortfolioWithdrawal({
+        strategy,
+        annualSpend: inflSpend,
+        pensionNet,
+        privateCapital,
+        costBasis,
+        savingType: s.savingType
+      });
+
+	    // Cap to available capital
+	    portfolioWithdrawal = Math.min(portfolioWithdrawal, Math.max(0, privateCapital));
+	    const privateCapitalPreWithdrawal = privateCapital;
+
+	    // Net from portfolio
+	    const portfolioNet = netWithdrawal(portfolioWithdrawal, privateCapital, costBasis, s.savingType);
+
+    // Total net monthly
+    const totalNetMonthly = Math.round((pensionNet + portfolioNet) / 12);
+
+    // Withdrawal rate
+    const wr = privateCapital > 0 ? (portfolioWithdrawal / privateCapital) * 100 : 0;
+
+    // Tax paid this year — detailed breakdown
+      const pensionBreakdown = calcTaxBreakdown(pensionBrutto, true, currentAge, i);
+      const pensionTax   = pensionBreakdown.total;
+      const portfolioTax = portfolioWithdrawal - portfolioNet; // kapitalvinstskatt (0 för ISK/KF)
+
+      // Update cost basis proportionally to withdrawal, then withdraw and grow
+      const withdrawFrac = privateCapital > 0 ? portfolioWithdrawal / privateCapital : 0;
+      costBasis = Math.max(0, costBasis * (1 - withdrawFrac));
+      privateCapital = Math.max(0, privateCapital - portfolioWithdrawal);
+      const accountTax = calcAnnualAccountTax(privateCapital, s.savingType, i);
+      privateCapital = Math.max(0, privateCapital - accountTax);
+      privateCapital *= (1 + privateReturn);
+      const taxPaid = pensionTax + portfolioTax + accountTax + occupationalAccountTax;
+
+	    pensionSources.forEach(source => {
+	      if (source.type === 'fixed') return;
+	      if (currentAge >= source.startAge && currentAge < source.payoutEndAge && source.annualPayoutRuntime > 0) {
+	        source.capitalRuntime = Math.max(0, source.capitalRuntime - source.annualPayoutRuntime);
+	      }
+	    });
+    itpCapital = sourceCapitalTotal(pensionSources);
+
+    rows.push({
+	      age: currentAge,
+	      grossSalary: 0,
+		      privateCapital,
+		      privateCapitalPreWithdrawal,
+			      itpCapital, itpCapitalPrePayout, ipCapital, ppCapital,
+	      targetSpendAnnual: inflSpend,
+	      withdrawal: portfolioWithdrawal,
+      portfolioNet,
+        almanBrutto, itpBrutto,
+        pensionGross: pensionBrutto,
+        ipPensionMonthly, ppPensionMonthly, itpMonthly: itpBrutto / 12,
+        netMonthly: totalNetMonthly,
+        taxPaid,
+        taxKommunal: pensionBreakdown.kommunal,
+        taxStatlig:  pensionBreakdown.statlig,
+        taxKapital:  portfolioTax + accountTax + occupationalAccountTax,
+        taxPensionCapital: occupationalAccountTax,
+        taxFees:     pensionBreakdown.fees,
+        taxPensionFee: pensionBreakdown.pensionFee,
+        taxPensionFeeReduction: pensionBreakdown.pensionFeeReduction,
+        taxJoba:     pensionBreakdown.forvarv,
+      wr: wr,
+      phase: pensionActive ? 'full-pension' : 'early',
+      isFireYear
+    });
+  }
+
+  return rows;
+}
+
+// ============================================================
+// COMPUTE DERIVED METRICS
+// ============================================================
+function computeMetrics(rows) {
+  const s = state;
+  const fireIn = s.fireAge - s.age;
+
+  // Find FIRE row
+  const fireRow = rows.find(r => r.age === s.fireAge) || rows[0];
+  const preFireRows = rows.filter(r => r.age < s.fireAge);
+  const wealthAtFire = preFireRows.length > 0 ? preFireRows[preFireRows.length - 1].privateCapital : s.wealth;
+
+	  const annualSpendAtFire = fireRow?.targetSpendAnnual
+	    ?? s.spend * 12 * Math.pow(1 + s.infl/100, fireIn);
+	  const fireWithdrawal = fireRow?.withdrawal || 0;
+	  const wr = wealthAtFire > 0 ? (fireWithdrawal / wealthAtFire) * 100 : fireWithdrawal > 0 ? Infinity : 0;
+
+  // 25x rule target (private capital only, gross)
+  const fireTarget = annualSpendAtFire * 25;
+  const gap = Math.max(0, fireTarget - wealthAtFire);
+
+    // Pension: use the locked monthly amounts from the simulation at each start age.
+    const pensionAge = s.publicPensionStartAge;
+    const itpAge = earliestOccupationalStartAge();
+    const pensionRow = rows.find(r => r.age === pensionAge) || rows.find(r => r.age > pensionAge);
+    const itpRow = rows.find(r => r.age === itpAge) || rows.find(r => r.age > itpAge);
+    const paAtStart = pensionRow
+      ? {
+          inkomstpension: pensionRow.ipPensionMonthly || 0,
+          premiepension: pensionRow.ppPensionMonthly || 0,
+          total: (pensionRow.ipPensionMonthly || 0) + (pensionRow.ppPensionMonthly || 0)
+        }
+      : { inkomstpension: 0, premiepension: 0, total: 0 };
+    const occupationalMonthlyAtStart = itpRow && itpRow.itpMonthly ? itpRow.itpMonthly : 0;
+    const occupationalMonthlyAtPensionStart = pensionRow && pensionRow.itpMonthly ? pensionRow.itpMonthly : 0;
+    const totalPension63 = paAtStart.total + occupationalMonthlyAtPensionStart;
+
+  // Determine if plan is feasible
+  const finalCapital = rows.length > 0 ? rows[rows.length - 1].privateCapital : 0;
+  const depletionAge = firstIncomeShortfallAge(rows);
+  let verdict = 'Hållbar';
+  let verdictClass = 'good';
+  if (depletionAge != null) {
+    verdict = 'Risk för inkomstbrist';
+    verdictClass = 'bad';
+  } else if (wr > 5) {
+    verdict = 'Hög uttagsgrad';
+    verdictClass = 'warn';
+  }
+
+  // Bound pension balances at FIRE. Inkomstpension is a notional base for a
+  // lifelong monthly pension, so do not present it as capital. PPM is funded
+  // capital before payout, but not freely withdrawable private wealth.
+  const firePreRow = preFireRows.length > 0 ? preFireRows[preFireRows.length - 1] : null;
+  const investablePensionAtFire = firePreRow
+    ? firePreRow.itpCapital + firePreRow.ppCapital
+    : pensionSourceCapitalTotal() + s.ppBalance;
+  const totalWealthAtFire = firePreRow
+    ? firePreRow.privateCapital + firePreRow.itpCapital
+    : s.wealth + pensionSourceCapitalTotal();
+
+  // Tax totals
+  const fireRows = rows.filter(r => r.phase !== 'accum');
+  const accumRows = rows.filter(r => r.phase === 'accum');
+  const totalAccumTax = accumRows.reduce((sum, r) => sum + r.taxPaid, 0);
+  const totalFireTax = fireRows.reduce((sum, r) => sum + r.taxPaid, 0);
+
+  // Per-phase income averages (monthly net)
+  const avg = arr => arr.length ? arr.reduce((s, r) => s + r.netMonthly, 0) / arr.length : 0;
+  const earlyFireRows = rows.filter(r => r.phase === 'early');
+  const fullPensionRows = rows.filter(r => r.phase === 'full-pension');
+  const avgWorkIncome = avg(accumRows);
+  const avgEarlyFire = avg(earlyFireRows);
+  const avgFullPension = avg(fullPensionRows);
+
+	  // Phase rows — only include a phase if it has rows (prevents negative spans)
+	  const hasOccupationalSources = (s.occupationalPensions || []).length > 0;
+	  const preFIREtoOccupational = hasOccupationalSources
+	    ? earlyFireRows.filter(r => r.age < itpAge)
+	    : earlyFireRows;
+	  const occupationalToAlman = hasOccupationalSources
+	    ? earlyFireRows.filter(r => r.age >= itpAge)
+	    : [];
+  const phaseData = [
+    { label: 'Arbete',       period: `${s.age}–${s.fireAge - 1}`,   rows: accumRows,      isWork: true },
+    ...(preFIREtoOccupational.length ? [{ label: 'Tidig FIRE', period: `${s.fireAge}–${itpAge - 1}`,    rows: preFIREtoOccupational }] : []),
+    ...(occupationalToAlman.length   ? [{ label: 'Tjänstepension', period: `${itpAge}–${pensionAge - 1}`,   rows: occupationalToAlman   }] : []),
+    ...(fullPensionRows.length ? [{ label: 'Full pension', period: `${pensionAge}+`,            rows: fullPensionRows }] : []),
+  ];
+
+  // Pension coverage: pension net as % of spending at pension start
+  const yearsToPS = pensionAge - s.age;
+  const spendAtPS = targetMonthlyForRow(pensionRow) || s.spend * Math.pow(1 + s.infl/100, yearsToPS);
+    const pensionNetMonthly = totalPension63 - calcIncomeTax(totalPension63 * 12, true, pensionAge, yearsToPS) / 12;
+  const pensionCoverage = spendAtPS > 0 ? (pensionNetMonthly / spendAtPS) * 100 : 0;
+
+  return {
+    wealthAtFire, wr, gap, totalPension63, finalCapital, depletionAge, verdict, verdictClass,
+    incomeAtFire: fireRow ? fireRow.netMonthly : 0,
+      pa63: paAtStart, itpMonthly63: occupationalMonthlyAtStart, annualSpendAtFire,
+    investablePensionAtFire, totalWealthAtFire, totalAccumTax, totalFireTax,
+    avgWorkIncome, avgEarlyFire, avgFullPension,
+    pensionCoverage, phaseData
+  };
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function renderTaxSettingsText() {
+  const taxScope = state.taxPreset === 'stockholm' ? 'Stockholm kommun + region' : 'Anpassad kommun + region';
+  const muni = fmtDec(state.municipalTax, 2);
+  const burial = fmtDec(state.burialFee, 3).replace(/0+$/, '').replace(/,$/, '');
+  const ps = fmt(state.publicServiceMax);
+  const occPensionTax = fmtDec(state.occupationalPensionTax, 3).replace(/0+$/, '').replace(/,$/, '');
+
+  const taxNote = document.getElementById('tax-breakdown-note');
+  if (taxNote) {
+    taxNote.textContent = `Skattereduktion omfattar jobbskatteavdrag och skattereduktion för förvärvsinkomst. Kommunalskatt: ${taxScope} ${muni} %. Avgifter: begravningsavgift ${burial} % och public service max ${ps} kr/år. Avkastningsskatt tjänstepension: ${occPensionTax} %/år.`;
+  }
+
+  const disclaimer = document.getElementById('tax-disclaimer-note');
+  if (disclaimer) {
+    const indexingText = state.indexThresholds
+      ? ' Beloppsgränser indexeras framåt: prisbaserade gränser med inflation och inkomstbaserade pensionsgränser med inkomstindex.'
+      : ' Framtida beloppsgränser hålls nominellt på 2026 års nivå.';
+    disclaimer.textContent = `Skatteberäkningar baseras på 2026 års regler: IBB 83 400 kr · PBB 59 200 kr · skiktgräns 643 000 kr · ${taxScope} ${muni} % · begravningsavgift ${burial} % och public service max ${ps} kr/år · ISK/KF-skatt 1,065 % på kapitalunderlag över 300 000 kr · avkastningsskatt tjänstepension ${occPensionTax} %/år.${indexingText}`;
+  }
+}
+
+function scenarioStatus(rows, metrics) {
+  const depletionAge = firstIncomeShortfallAge(rows);
+  if (depletionAge != null) return { label: `Mål missas ${depletionAge}`, cls: 'negative' };
+  if (metrics.wr > 5.5) return { label: 'Hög uttagsgrad', cls: '' };
+  return { label: 'Hållbar', cls: 'positive' };
+}
+
+function renderStressScenarios(targetSpendMonthly = null) {
+  const tbody = document.getElementById('stress-table-body');
+  if (!tbody) return;
+  const fireYears = state.fireAge - state.age;
+  const endYears = state.lifeExp - 1 - state.age;
+  tbody.innerHTML = STRESS_SCENARIOS.map(scenario => {
+    const simOptions = { stressId: scenario.id };
+    if (state.strategy === 3 && isFinite(Number(targetSpendMonthly))) {
+      simOptions.targetSpendMonthly = Number(targetSpendMonthly);
+    }
+    const rows = simulate(simOptions);
+    const m = computeMetrics(rows);
+    const status = scenarioStatus(rows, m);
+    return `<tr>
+      <td>${scenario.label}</td>
+      <td>${fmtR(m.wealthAtFire, fireYears)}</td>
+      <td>${fmtR(m.finalCapital, endYears)}</td>
+      <td>${fmt(Math.round(toReal(m.totalPension63, state.publicPensionStartAge - state.age)))} kr</td>
+      <td class="${status.cls}">${status.label}</td>
+    </tr>`;
+  }).join('');
+}
+
+const OPTIMIZER_PAYOUT_OPTIONS = [5, 10, 15, 20, 'lifetime'];
+
+function pensionPayoutLabel(payout) {
+  if (payout === 'mixed') return 'Blandat';
+  return payout === 'lifetime' ? 'Livsvar.' : payout + ' år';
+}
+
+function optimizablePayoutSources(s = state) {
+  return (s.occupationalPensions || []).filter(source => source.type !== 'fixed');
+}
+
+function occupationalPayoutForOptimizer(s = state) {
+  const sources = optimizablePayoutSources(s);
+  if (!sources.length) return 'lifetime';
+  const first = sources[0].payout;
+  return sources.every(source => String(source.payout) === String(first)) ? first : 'mixed';
+}
+
+function computePensionStartOptimizer(targetSpendMonthly = null) {
+  const publicMin = Math.max(calcPensionMinAgeFromBirthYear(state.birthYear), state.fireAge);
+  const publicMax = Math.min(75, state.lifeExp - 1);
+  const occupationalMin = Math.max(ITP1_MIN_AGE, state.fireAge);
+  const occupationalMax = Math.min(75, state.lifeExp - 1);
+  const fixedTargetSpendMonthly = state.strategy === 3 && isFinite(Number(targetSpendMonthly))
+    ? Number(targetSpendMonthly)
+    : null;
+  const payoutOptions = optimizablePayoutSources().length
+    ? OPTIMIZER_PAYOUT_OPTIONS
+    : [occupationalPayoutForOptimizer()];
+  const candidates = [];
+
+  for (let publicAge = publicMin; publicAge <= publicMax; publicAge++) {
+    for (let occupationalAge = occupationalMin; occupationalAge <= occupationalMax; occupationalAge++) {
+      payoutOptions.forEach(occupationalPayout => {
+        const point = withTemporaryState(optimizerStartPatch(publicAge, occupationalAge, occupationalPayout), () => {
+          const rows = fixedTargetSpendMonthly == null
+            ? simulate()
+            : simulate({
+                targetSpendMonthly: fixedTargetSpendMonthly,
+                disableEvenIncomeOptimization: true
+              });
+          const m = computeMetrics(rows);
+          const depletionAge = firstIncomeShortfallAge(rows);
+          const sustainable = depletionAge == null;
+          const score = (sustainable ? 1e12 : 0) + m.finalCapital + m.pensionCoverage * 10000;
+          return {
+            publicAge,
+            occupationalAge,
+            occupationalPayout,
+            finalCapital: m.finalCapital,
+            totalPension: m.totalPension63,
+            pensionCoverage: m.pensionCoverage,
+            depletionAge,
+            sustainable,
+            score
+          };
+        });
+        candidates.push(point);
+      });
+    }
+  }
+  candidates.sort((a, b) => b.score - a.score);
+  return candidates;
+}
+
+function optimizerStartPatch(publicAge, occupationalAge, occupationalPayout = occupationalPayoutForOptimizer()) {
+  const nextOccupationalAge = Number(occupationalAge);
+  const nextPayout = occupationalPayout === 'lifetime' ? 'lifetime' : Number(occupationalPayout);
+  return {
+    publicPensionStartAge: Number(publicAge),
+    itpStartAge: nextOccupationalAge,
+    itpPayout: nextPayout,
+    occupationalPensions: state.occupationalPensions.map(source => ({
+      ...source,
+      startAge: nextOccupationalAge,
+      payout: source.type === 'fixed' ? source.payout : nextPayout
+    }))
+  };
+}
+
+function previewOptimizerCandidate(publicAge, occupationalAge, occupationalPayout) {
+  if (!optimizerPreviewSnapshot) {
+    optimizerPreviewSnapshot = JSON.parse(JSON.stringify(state));
+  }
+  optimizerPreviewTargetSpendMonthly = state.strategy === 3
+    ? baseTargetSpendMonthlyFromRows(simulate())
+    : null;
+  Object.assign(state, optimizerStartPatch(publicAge, occupationalAge, occupationalPayout));
+  render();
+}
+
+function restoreOptimizerPreview() {
+  if (!optimizerPreviewSnapshot) return;
+  Object.assign(state, optimizerPreviewSnapshot);
+  optimizerPreviewSnapshot = null;
+  optimizerPreviewTargetSpendMonthly = null;
+  render();
+}
+
+function keepOptimizerPreview() {
+  optimizerPreviewSnapshot = null;
+  optimizerPreviewTargetSpendMonthly = null;
+  render();
+}
+
+function renderPensionStartOptimizer(targetSpendMonthly = null) {
+  const tbody = document.getElementById('optimizer-table-body');
+  if (!tbody) return;
+  const candidates = computePensionStartOptimizer(targetSpendMonthly);
+  const best = candidates[0];
+  const endYears = state.lifeExp - 1 - state.age;
+  const setText = (id, value) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  };
+  if (!best) {
+    setText('opt-public', '–');
+    setText('opt-occupational', '–');
+    setText('opt-payout', '–');
+    setText('opt-final', '–');
+    setText('opt-status', '–');
+    setText('m-optimizer-choice', '–');
+    setText('m-optimizer-sub', 'saknar kandidater');
+    tbody.innerHTML = '';
+    const previewEl = document.getElementById('optimizer-preview');
+    if (previewEl) previewEl.style.display = 'none';
+    return;
+  }
+  setText('opt-public', best.publicAge);
+  setText('opt-occupational', best.occupationalAge);
+  setText('opt-payout', pensionPayoutLabel(best.occupationalPayout));
+  setText('opt-final', fmtR(best.finalCapital, endYears));
+  const optStatus = document.getElementById('opt-status');
+  if (optStatus) {
+    optStatus.textContent = best.sustainable ? 'Hållbar' : `Miss ${best.depletionAge}`;
+    optStatus.className = 'metric-value ' + (best.sustainable ? 'good' : 'bad');
+  }
+  const optimizerChoice = document.getElementById('m-optimizer-choice');
+  if (optimizerChoice) {
+    optimizerChoice.textContent = `${best.publicAge} / ${best.occupationalAge}`;
+    optimizerChoice.className = 'metric-value ' + (best.sustainable ? 'good' : 'bad');
+  }
+  setText('m-optimizer-sub', `allmän / tjänste · ${pensionPayoutLabel(best.occupationalPayout)}`);
+
+  const previewEl = document.getElementById('optimizer-preview');
+  const previewText = document.getElementById('optimizer-preview-text');
+  if (previewEl) previewEl.style.display = optimizerPreviewSnapshot ? 'block' : 'none';
+  if (previewText && optimizerPreviewSnapshot) {
+    previewText.textContent = `Förhandsvisar allmän pension från ${state.publicPensionStartAge}, tjänstepension från ${earliestOccupationalStartAge()} och uttag ${pensionPayoutLabel(occupationalPayoutForOptimizer())}. Inställningarna sparas först när du väljer Behåll.`;
+  }
+
+  tbody.innerHTML = candidates.slice(0, 5).map((candidate, idx) => {
+    const status = candidate.sustainable ? 'Hållbar' : `Miss ${candidate.depletionAge}`;
+    const activePreview = optimizerPreviewSnapshot
+      && candidate.publicAge === state.publicPensionStartAge
+      && candidate.occupationalAge === earliestOccupationalStartAge()
+      && String(candidate.occupationalPayout) === String(occupationalPayoutForOptimizer());
+    const payoutArg = JSON.stringify(candidate.occupationalPayout);
+    return `<tr class="${idx === 0 ? 'fire-year' : ''}">
+      <td>${idx + 1}</td>
+      <td>${candidate.publicAge}</td>
+      <td>${candidate.occupationalAge}</td>
+      <td>${pensionPayoutLabel(candidate.occupationalPayout)}</td>
+      <td>${fmtR(candidate.finalCapital, endYears)}</td>
+      <td>${fmt(Math.round(toReal(candidate.totalPension, candidate.publicAge - state.age)))} kr</td>
+      <td class="${candidate.sustainable ? 'positive' : 'negative'}">${status}</td>
+      <td><button class="table-action-btn ${activePreview ? 'active' : ''}" onclick="previewOptimizerCandidate(${candidate.publicAge}, ${candidate.occupationalAge}, ${payoutArg})">${activePreview ? 'Aktiv' : 'Testa'}</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function render() {
+	  normalizeState();
+	  syncUI();
+	  const simOptions = optimizerPreviewTargetSpendMonthly == null
+	    ? {}
+	    : { targetSpendMonthly: optimizerPreviewTargetSpendMonthly, disableEvenIncomeOptimization: true };
+	  const rows = simulate(simOptions);
+  const m = computeMetrics(rows);
+  const s = state;
+  const targetSpendMonthly = baseTargetSpendMonthlyFromRows(rows);
+  renderTaxSettingsText();
+
+  // Verdict tag
+  const verdTag = document.getElementById('fire-verdict');
+  verdTag.textContent = m.verdict;
+  verdTag.style.color = m.verdictClass === 'good' ? '#3dbfa0' : m.verdictClass === 'bad' ? '#e06b5a' : '#c9a84c';
+
+    // Phase bar
+    const pensionStartAge = s.publicPensionStartAge;
+    document.getElementById('ph-accum').textContent = s.age + '–' + (s.fireAge - 1);
+    document.getElementById('ph-fire').textContent = 'Ålder ' + s.fireAge;
+    document.getElementById('ph-early').textContent = s.fireAge < pensionStartAge ? s.fireAge + '–' + (pensionStartAge - 1) : '–';
+    document.getElementById('ph-full-label').textContent = 'Full pension (' + pensionStartAge + '+)';
+    document.getElementById('ph-full').textContent = pensionStartAge + '+';
+
+    const fireYears = s.fireAge - s.age;
+    const pensionStartYears = pensionStartAge - s.age;
+  const endYears = s.lifeExp - 1 - s.age;
+  const modeLabel = s.displayMode === 'real' ? ' (2026 kr)' : '';
+
+  // Row 1 metric cards
+  document.getElementById('m-fire-wealth').textContent = fmtR(m.wealthAtFire, fireYears);
+  document.getElementById('m-fire-wealth').className = 'metric-value ' + (m.wealthAtFire > 0 ? 'good' : 'bad');
+
+  const wrEl = document.getElementById('m-wr');
+  wrEl.textContent = fmtPct(m.wr);
+  wrEl.className = 'metric-value ' + (m.wr <= 4 ? 'good' : m.wr <= 5.5 ? 'warn' : 'bad');
+
+  const depletionEl = document.getElementById('m-depletion');
+	  if (m.depletionAge == null) {
+	    depletionEl.textContent = 'Ingen';
+	    depletionEl.className = 'metric-value good';
+	    document.getElementById('m-depletion-sub').textContent = `till ${s.lifeExp} år`;
+	  } else {
+	    depletionEl.textContent = m.depletionAge + ' år';
+	    depletionEl.className = 'metric-value bad';
+	    document.getElementById('m-depletion-sub').textContent = 'första år målinkomst missas';
+	  }
+
+  const covEl = document.getElementById('m-coverage');
+  covEl.textContent = fmtPct(m.pensionCoverage);
+  covEl.className = 'metric-value ' + (m.pensionCoverage >= 100 ? 'good' : m.pensionCoverage >= 60 ? 'warn' : 'bad');
+  document.getElementById('m-coverage-sub').textContent = `netto vid ${pensionStartAge} år`;
+
+  // Row 2 metric cards
+  const endCap = m.finalCapital;
+  const endEl = document.getElementById('m-end-capital');
+  endEl.textContent = fmtR(endCap, endYears);
+  endEl.className = 'metric-value ' + (endCap > 0 ? 'good' : 'bad');
+  document.getElementById('m-life-label').textContent = s.lifeExp;
+
+  const pensionCapitalEl = document.getElementById('m-pension-capital');
+  pensionCapitalEl.textContent = fmtR(m.investablePensionAtFire, fireYears);
+  pensionCapitalEl.className = 'metric-value ' + (m.investablePensionAtFire > 0 ? 'good' : '');
+
+  const salaryAtFire = salaryAtYear(Math.max(0, fireYears), s);
+  document.getElementById('m-fire-salary').textContent = fmtR(salaryAtFire / 12, fireYears);
+  document.getElementById('m-fire-salary').className = 'metric-value';
+  document.getElementById('m-fire-salary-sub').textContent = `månadslön före skatt vid ${s.fireAge} år${modeLabel}`;
+
+  document.getElementById('m-optimizer-choice').textContent = 'Beräknar';
+  document.getElementById('m-optimizer-choice').className = 'metric-value';
+  document.getElementById('m-optimizer-sub').textContent = 'allmän / tjänste / uttag';
+
+  document.getElementById('m-total-tax').textContent = fmtR(m.totalFireTax, fireYears + (s.lifeExp - s.fireAge) / 2);
+  document.getElementById('m-tax-sub').textContent = `Ackum. skatt: ${fmtM(toReal(m.totalAccumTax, fireYears / 2))}`;
+
+  // Strategy notice
+  const noticeEl = document.getElementById('strategy-notice');
+  const strategyTexts = [
+    `Målbelopp: Planen siktar på ${fmt(Math.round(toReal(m.annualSpendAtFire, fireYears)/12))} kr/mån netto${modeLabel}. Pensioner räknas av först och privat kapital fyller bara nettogapet.`,
+    `Guardrails: Utgår från målbeloppet men kapar privat bruttouttag över 6,5% uttagsgrad och höjer det 10% under 3%. Total netto kan därför avvika från målet.`,
+    `Jämn nettoinkomst: Beräknar högsta jämna nettomål planen klarar, cirka ${fmt(Math.round(toReal(m.annualSpendAtFire, fireYears)/12))} kr/mån netto${modeLabel}, och låter pensioner minska privat bruttouttag.`
+  ];
+  noticeEl.textContent = strategyTexts[s.strategy - 1];
+
+  // Pension details
+    document.getElementById('pd-income').textContent = fmt(Math.round(toReal(m.pa63.inkomstpension, pensionStartYears)));
+    document.getElementById('pd-premium').textContent = fmt(Math.round(toReal(m.pa63.premiepension, pensionStartYears)));
+    const occupationalStartYears = earliestOccupationalStartAge() - s.age;
+    const hasOccupationalSources = (s.occupationalPensions || []).length > 0;
+    document.getElementById('pd-itp').textContent = hasOccupationalSources
+      ? fmt(Math.round(toReal(m.itpMonthly63, occupationalStartYears)))
+      : '–';
+    document.getElementById('pd-total').textContent = fmt(Math.round(toReal(m.totalPension63, pensionStartYears)));
+    document.getElementById('pd-income-sub').textContent = 'kr/mån brutto vid ' + pensionStartAge;
+    document.getElementById('pd-premium-sub').textContent = 'kr/mån brutto vid ' + pensionStartAge;
+  document.getElementById('pd-itp-end').textContent = hasOccupationalSources
+    ? 'kr/mån brutto vid första start'
+    : 'ingen tjänstepension';
+  document.getElementById('pd-total-sub').textContent = 'kr/mån brutto vid ' + pensionStartAge;
+
+  // Phase income table + tax breakdown
+  renderPhaseTable(m.phaseData);
+  renderTaxBreakdown(m.phaseData);
+
+  // Table
+  renderTable(rows);
+
+  // Charts
+  renderSensitivityChart();
+  renderWealthChart(rows);
+  renderIncomeChart(rows);
+  renderTaxChart(rows);
+
+  // Monte Carlo (runs after other charts so it doesn't block main render)
+  const mcData = runMonteCarlo(rows);
+  renderFanChart(mcData);
+  renderStressScenarios(targetSpendMonthly);
+  renderPensionStartOptimizer(targetSpendMonthly);
+
+  saveSettings();
+}
+
+function renderTable(rows) {
+  const tbody = document.getElementById('table-body');
+  const pensionMinAge = calcPensionMinAgeFromBirthYear(state.birthYear);
+  // Show every 5th year + fire year + last year for performance
+  const filtered = rows.filter((r, i) =>
+    r.age % 5 === 0 || r.isFireYear || r.age === state.lifeExp - 1 ||
+    r.age === pensionMinAge || r.age === state.publicPensionStartAge || r.age === earliestOccupationalStartAge()
+  );
+
+  tbody.innerHTML = filtered.map(r => {
+    const y = r.age - state.age;
+    const cls = r.isFireYear ? 'fire-year' : '';
+    const wrStr = r.wr > 0 ? fmtPct(r.wr) : '–';
+    const wrCls = r.wr > 6 ? 'negative' : r.wr > 4.5 ? '' : r.wr > 0 ? 'positive' : '';
+    const targetMonthly = targetMonthlyForRow(r);
+	    const displayedNetMonthly = Math.round(toReal(r.netMonthly, y));
+	    const displayedTargetMonthly = Math.round(toReal(targetMonthly, y));
+	    const netOk = displayedNetMonthly >= displayedTargetMonthly;
+	    const fmtMonthly = v => v > 0 ? fmt(Math.round(toReal(v, y))) + ' kr/mån' : '–';
+	    return `<tr class="${cls}">
+	      <td>${r.age}${r.isFireYear ? ' 🔥' : ''}</td>
+	      <td>${fmtR(r.privateCapital, y)}</td>
+	      <td>${fmtR(r.itpCapital, y)}</td>
+	      <td>${r.withdrawal > 0 ? fmtR(r.withdrawal, y) : '–'}</td>
+	      <td>${fmtMonthly(r.ipPensionMonthly)}</td>
+	      <td>${fmtMonthly(r.ppPensionMonthly)}</td>
+	      <td>${fmtMonthly(r.itpMonthly)}</td>
+	      <td class="${netOk ? 'positive' : 'negative'}">${fmt(displayedNetMonthly)} kr</td>
+	      <td class="${wrCls}">${wrStr}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderPhaseTable(phaseData) {
+  const s = state;
+  const tbody = document.getElementById('phase-table-body');
+  if (!tbody || !phaseData.length) return;
+  tbody.innerHTML = phaseData.map(p => {
+    const getY = r => r.age - s.age;
+    const avgR = getter => p.rows.length
+      ? p.rows.reduce((sum, r) => sum + toReal(getter(r), getY(r)), 0) / p.rows.length
+      : 0;
+	    const portfolio = avgR(r => netIncomeComponents(r).portfolio);
+	    const itp       = avgR(r => netIncomeComponents(r).itp);
+	    const alman     = avgR(r => netIncomeComponents(r).alman);
+    const total     = avgR(r => r.netMonthly);
+    const tax       = avgR(r => r.taxPaid / 12);
+    const fmtKr = v => v > 1 ? fmt(Math.round(v)) : '–';
+    return `<tr>
+      <td>${p.label}</td>
+      <td style="color:var(--text-dim)">${p.period}</td>
+      <td>${fmtKr(portfolio)}</td>
+      <td>${fmtKr(itp)}</td>
+      <td>${fmtKr(alman)}</td>
+      <td class="positive">${fmtKr(total)}</td>
+      <td class="negative">${fmtKr(tax)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderTaxBreakdown(phaseData) {
+  const s = state;
+  const tbody = document.getElementById('tax-breakdown-body');
+  if (!tbody || !phaseData.length) return;
+
+  tbody.innerHTML = phaseData.map(p => {
+    const getY = r => r.age - s.age;
+    const avgR = getter => p.rows.length
+      ? p.rows.reduce((sum, r) => sum + toReal(getter(r), getY(r)), 0) / p.rows.length : 0;
+
+    const kommunal = avgR(r => r.taxKommunal / 12);
+    const statlig  = avgR(r => r.taxStatlig  / 12);
+    const kapital  = avgR(r => r.taxKapital  / 12);
+    const fees     = avgR(r => (r.taxFees || 0) / 12);
+    const joba     = avgR(r => r.taxJoba     / 12);
+    const totalTax = avgR(r => r.taxPaid     / 12);
+    // Gross income per month for effective rate denominator
+    const grossMonthly = p.isWork
+      ? avgR(r => (r.grossSalary || 0) / 12)
+      : avgR(r => (r.almanBrutto + r.itpBrutto + r.withdrawal) / 12);
+    const effRate = grossMonthly > 0 ? (totalTax / grossMonthly) * 100 : 0;
+
+    const fmtKr = v => v > 0.5 ? fmt(Math.round(v)) : '–';
+    const fmtPctVal = v => v > 0.1 ? v.toFixed(1) + ' %' : '–';
+    return `<tr>
+      <td>${p.label}</td>
+      <td style="color:var(--text-dim)">${p.period}</td>
+      <td class="negative">${fmtKr(kommunal)}</td>
+      <td class="negative">${fmtKr(statlig)}</td>
+      <td class="negative">${fmtKr(kapital)}</td>
+      <td class="negative">${fmtKr(fees)}</td>
+      <td class="positive">${fmtKr(joba)}</td>
+      <td class="negative">${fmtKr(totalTax)}</td>
+      <td>${fmtPctVal(effRate)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function sensitivityValues(metric) {
+  const s = state;
+  const seq = (from, to, step) => {
+    const out = [];
+    for (let v = from; v <= to + 1e-9; v += step) out.push(Math.round(v * 100) / 100);
+    return out;
+  };
+
+  if (metric === 'fireAge') return seq(Math.max(s.age, 30), Math.min(70, s.lifeExp - 1), 1);
+  if (metric === 'ret') return seq(0, 15, 1);
+  if (metric === 'pret') return seq(0, 12, 1);
+  if (metric === 'salaryGrowth') return seq(0, 10, 0.5);
+  if (metric === 'publicPensionStartAge') {
+    const minAge = Math.max(calcPensionMinAgeFromBirthYear(s.birthYear), s.fireAge);
+    return seq(minAge, Math.min(75, s.lifeExp - 1), 1);
+  }
+  if (metric === 'occupationalStartAge') return seq(Math.max(ITP1_MIN_AGE, s.fireAge), Math.min(75, s.lifeExp - 1), 1);
+  if (metric === 'spend') {
+    const min = Math.max(10000, Math.floor((s.spend * 0.5) / 5000) * 5000);
+    const max = Math.min(1000000, Math.ceil((s.spend * 1.5) / 5000) * 5000);
+    return seq(min, Math.max(min, max), 5000);
+  }
+  if (metric === 'savings') {
+    if (s.savingsMode === 'percentNet') {
+      return seq(0, 100, 5);
+    }
+    const max = Math.min(1000000, Math.max(80000, Math.ceil((s.savings * 1.5) / 5000) * 5000));
+    return seq(0, max, 5000);
+  }
+  return seq(Math.max(s.age, 30), Math.min(70, s.lifeExp - 1), 1);
+}
+
+function sensitivityLabel(metric, value) {
+  if (metric === 'ret' || metric === 'pret' || metric === 'salaryGrowth') return value + '%';
+  if (metric === 'savings' && state.savingsMode === 'percentNet') return value + '%';
+  if (metric === 'spend' || metric === 'savings') return Math.round(value / 1000) + 'k';
+  return String(value);
+}
+
+function isReturnSensitivity(metric) {
+  return metric === 'ret' || metric === 'pret';
+}
+
+function withTemporaryState(patch, fn) {
+  const saved = JSON.parse(JSON.stringify(state));
+  try {
+    Object.assign(state, patch);
+    normalizeState();
+    return fn();
+  } finally {
+    Object.assign(state, saved);
+  }
+}
+
+function renderSensitivityChart() {
+  const metric = state.sensitivityMetric || 'fireAge';
+  const values = sensitivityValues(metric);
+  const labels = values.map(v => sensitivityLabel(metric, v));
+  const compactReturnView = isReturnSensitivity(metric);
+  const finalCapital = [];
+  const wealthAtFire = [];
+  const minSpendingCoverage = [];
+
+  values.forEach(value => {
+    const patch = metric === 'occupationalStartAge'
+      ? { occupationalPensions: state.occupationalPensions.map(source => ({ ...source, startAge: value })) }
+      : metric === 'savings' && state.savingsMode === 'percentNet'
+        ? { savingsRate: value }
+      : { [metric]: value };
+    const point = withTemporaryState(patch, () => {
+      const rows = simulate();
+      const m = computeMetrics(rows);
+      const endYears = state.lifeExp - 1 - state.age;
+      const fireYears = state.fireAge - state.age;
+      const fireRows = rows.filter(r => r.age >= state.fireAge);
+      const minCoverage = fireRows.reduce((min, row) => {
+        const targetMonthly = targetMonthlyForRow(row);
+        const coverage = targetMonthly > 0 ? (row.netMonthly / targetMonthly) * 100 : 100;
+        return Math.min(min, coverage);
+      }, Infinity);
+      return {
+        finalCapital: toReal(m.finalCapital, endYears),
+        wealthAtFire: toReal(m.wealthAtFire, fireYears),
+        minSpendingCoverage: isFinite(minCoverage) ? Math.max(0, minCoverage) : 0
+      };
+    });
+    finalCapital.push(point.finalCapital);
+    wealthAtFire.push(point.wealthAtFire);
+    minSpendingCoverage.push(point.minSpendingCoverage);
+  });
+
+  const ctx = document.getElementById('chartSensitivity');
+  if (!ctx) return;
+  if (sensitivityChart) sensitivityChart.destroy();
+  document.getElementById('sens-final-legend')?.style.setProperty('display', 'flex');
+  const ct = chartTheme();
+
+  const datasets = [
+    {
+      label: 'Kapital kvar vid slut',
+      data: finalCapital,
+      borderColor: '#3dbfa0',
+      backgroundColor: 'rgba(61,191,160,0.08)',
+      fill: false,
+      tension: 0.25,
+      pointRadius: 2,
+      borderWidth: 2,
+      yAxisID: compactReturnView ? 'yFinal' : 'y'
+    },
+    {
+      label: 'Privat kapital vid FIRE',
+      data: wealthAtFire,
+      borderColor: '#c9a84c',
+      backgroundColor: 'rgba(201,168,76,0.08)',
+      fill: false,
+      tension: 0.25,
+      pointRadius: 2,
+      borderWidth: 2,
+      yAxisID: 'y'
+    },
+    {
+      label: 'Lägsta nettotäckning efter FIRE',
+      data: minSpendingCoverage,
+      borderColor: '#e06b5a',
+      backgroundColor: 'rgba(224,107,90,0.08)',
+      fill: false,
+      tension: 0.25,
+      pointRadius: 2,
+      borderWidth: 2,
+      yAxisID: 'yRate'
+    }
+  ];
+
+  sensitivityChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          ...chartTooltipTheme(),
+          callbacks: {
+            label: ctx => ctx.dataset.yAxisID === 'yRate'
+              ? ctx.dataset.label + ': ' + fmtPct(ctx.raw)
+              : ctx.dataset.label + ': ' + fmtM(ctx.raw)
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { color: ct.tick, font: { size: 10 }, maxTicksLimit: 12 }
+        },
+        y: {
+          grid: { color: ct.grid },
+          ticks: { color: ct.tick, font: { size: 11 }, callback: v => fmtM(v) }
+        },
+        yRate: {
+          position: 'right',
+          grid: { drawOnChartArea: false },
+          suggestedMin: 0,
+          suggestedMax: 120,
+          ticks: { color: '#e06b5a', font: { size: 11 }, callback: v => v + '%' }
+        },
+        ...(compactReturnView ? {
+          yFinal: {
+            position: 'right',
+            grid: { drawOnChartArea: false },
+            ticks: { color: ct.teal, font: { size: 11 }, callback: v => fmtM(v) }
+          }
+        } : {})
+      }
+    }
+  });
+}
+
+function renderWealthChart(rows) {
+  const ages = rows.map(r => r.age);
+  const chartReal = (value, yearsFromNow) => state.displayMode === 'real'
+    ? value / Math.pow(1 + state.infl / 100, yearsFromNow)
+    : value;
+  const startOfAgeValue = (i, endField, initialValue) =>
+    i === 0 ? initialValue : rows[i - 1]?.[endField] ?? initialValue;
+  const initialOccupationalCapital = sourceCapitalTotal((state.occupationalPensions || []).map(clonePensionSourceRuntime));
+  const priv = rows.map((r, i) => {
+    const usesPreWithdrawalPoint = r.phase !== 'accum' && r.privateCapitalPreWithdrawal != null;
+    const value = usesPreWithdrawalPoint
+      ? r.privateCapitalPreWithdrawal
+      : startOfAgeValue(i, 'privateCapital', state.wealth);
+    return chartReal(Math.max(0, value), i);
+  });
+  const occupational = rows.map((r, i) =>
+    chartReal(Math.max(0, startOfAgeValue(i, 'itpCapital', initialOccupationalCapital)), i)
+  );
+  const premiumPensionBeforeStart = rows.map((r, i) =>
+    r.age < state.publicPensionStartAge ? chartReal(Math.max(0, startOfAgeValue(i, 'ppCapital', state.ppBalance)), i) : null
+  );
+  const total = rows.map((_, i) => priv[i] + occupational[i]);
+  const fireIdx = rows.findIndex(r => r.age === state.fireAge);
+  const ctx = document.getElementById('chartWealth');
+  if (wealthChart) wealthChart.destroy();
+  const ct = chartTheme();
+
+  wealthChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: ages,
+      datasets: [
+        {
+          label: 'Privat portfölj',
+          data: priv,
+          borderColor: '#c9a84c',
+          backgroundColor: 'rgba(201,168,76,0.08)',
+          fill: true,
+          tension: 0,
+          pointRadius: 0,
+          borderWidth: 2.5
+        },
+        {
+          label: 'Tjänstepension',
+          data: occupational,
+          borderColor: '#3dbfa0',
+          backgroundColor: 'rgba(61,191,160,0.06)',
+          fill: true,
+          tension: 0,
+          pointRadius: 0,
+          borderWidth: 2
+        },
+        {
+          label: 'PPM före start',
+          data: premiumPensionBeforeStart,
+          borderColor: '#5a9fd4',
+          backgroundColor: 'rgba(90,159,212,0.05)',
+          fill: false,
+          tension: 0,
+          pointRadius: 0,
+          borderWidth: 2,
+          borderDash: [3, 3],
+          spanGaps: false
+        },
+        {
+          label: 'Totalt exkl. PPM',
+          data: total,
+          borderColor: '#8a8780',
+          backgroundColor: 'transparent',
+          tension: 0,
+          pointRadius: 0,
+          borderWidth: 1.5,
+          borderDash: [4, 3]
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        fireLine: { fireIdx },
+        tooltip: {
+          mode: 'index',
+          intersect: false,
+          ...chartTooltipTheme(),
+          callbacks: {
+            title: ctx => 'Ålder ' + ctx[0].label,
+            label: ctx => ctx.raw == null ? null : ctx.dataset.label + ': ' + fmtM(ctx.raw)
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: ct.grid },
+          ticks: { color: ct.tick, font: { size: 11 }, maxTicksLimit: 12 }
+        },
+        y: {
+          grid: { color: ct.grid },
+          ticks: {
+            color: ct.tick,
+            font: { size: 11 },
+            callback: v => fmtM(v)
+          }
+        }
+      }
+    }
+  });
+
+}
+
+// ============================================================
+// MONTE CARLO
+// ============================================================
+function randNormal() {
+  // Box-Muller transform
+  let u;
+  do { u = Math.random(); } while (u === 0);
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * Math.random());
+}
+
+function lognormalReturn(meanAnnual, volAnnual) {
+  // Treat meanAnnual as geometric mean (CAGR) so P50 matches static simulation.
+  // This sets mu = ln(1+r), making the median return exactly r. The arithmetic
+  // mean ends up slightly higher: (1+r)*exp(½σ²)-1, which is the correct relationship.
+  return lognormalReturnFromZ(meanAnnual, volAnnual, randNormal());
+}
+
+function lognormalReturnFromZ(meanAnnual, volAnnual, z) {
+  const mu = Math.log(1 + meanAnnual);
+  return Math.exp(mu + volAnnual * z) - 1;
+}
+
+function correlatedLognormalReturns(meanPrivate, volPrivate, meanPension, volPension, corrPct) {
+  const corr = clampNumber(corrPct, -100, 100, 0) / 100;
+  const zPrivate = randNormal();
+  const zIndependent = randNormal();
+  const zPension = corr * zPrivate + Math.sqrt(Math.max(0, 1 - corr * corr)) * zIndependent;
+  return {
+    privateReturn: lognormalReturnFromZ(meanPrivate, volPrivate, zPrivate),
+    pensionReturn: lognormalReturnFromZ(meanPension, volPension, zPension)
+  };
+}
+
+function blendedMonteCarloReturns(meanPrivate, volPrivate, meanPension, volPension, meanInterest, volInterest, corrPct, privateInterestShare, pensionInterestShare) {
+  const risky = correlatedLognormalReturns(meanPrivate, volPrivate, meanPension, volPension, corrPct);
+  const interestReturn = lognormalReturn(meanInterest, volInterest);
+  return {
+    privateReturn: blendedReturn(risky.privateReturn, interestReturn, privateInterestShare),
+    pensionReturn: blendedReturn(risky.pensionReturn, interestReturn, pensionInterestShare)
+  };
+}
+
+function runMonteCarlo(baseRows, nSims = 1000) {
+  const s = state;
+  const ret      = s.ret / 100;
+  const pret     = s.pret / 100;
+  const interestRet = s.interestRet / 100;
+  const interestVol = s.interestVol / 100;
+  const volP     = s.volPrivate / 100;
+  const volI     = s.volITP / 100;
+  const infl        = s.infl / 100;
+  const pensionStartAge = s.publicPensionStartAge;
+  const years = s.lifeExp - s.age;
+  const ages  = Array.from({ length: years }, (_, i) => s.age + i);
+  const fireIdx = s.fireAge - s.age;
+  const baseFireRow = baseRows.find(r => r.age === s.fireAge);
+  const targetSpendMonthly = baseFireRow?.targetSpendAnnual
+    ? baseFireRow.targetSpendAnnual / 12 / Math.pow(1 + infl, fireIdx)
+    : s.spend;
+
+  // Allmän pension follows the deterministic base simulation year by year.
+  // This keeps Monte Carlo aligned with the static model's separate IP and PP indexing.
+  const baseRowsByAge = new Map(baseRows.map(r => [r.age, r]));
+  const baseAlmanAnnualByIdx = ages.map(age => baseRowsByAge.get(age)?.almanBrutto || 0);
+  const baseAlmanNetMonthlyByIdx = ages.map(age => {
+    const row = baseRowsByAge.get(age);
+    return row ? netIncomeComponents(row).alman : 0;
+  });
+
+  const contributionSourceId = contributionPensionSourceId(s.occupationalPensions || []);
+
+  // Track private capital, occupational pension capital, and monthly income for each year × sim
+  const allPriv   = Array.from({ length: years }, () => new Float64Array(nSims));
+  const allITP    = Array.from({ length: years }, () => new Float64Array(nSims));
+  const allIncome = Array.from({ length: years }, () => new Float64Array(nSims));
+  const failureAges = [];
+  let successCount = 0;
+
+  for (let sim = 0; sim < nSims; sim++) {
+    let priv = s.wealth;
+    const pensionSources = (s.occupationalPensions || []).map(clonePensionSourceRuntime);
+    let costBasis = s.wealth * 0.5;
+    let failed = false;
+    let failAge = null;
+
+    for (let i = 0; i < years; i++) {
+      const age       = s.age + i;
+      const fired     = age >= s.fireAge;
+      const pensionAct = age >= pensionStartAge;
+      const currentSalary = salaryAtYear(i, s);
+
+      const { privateReturn: rP, pensionReturn: rI } =
+        blendedMonteCarloReturns(
+          ret, volP, pret, volI, interestRet, interestVol, s.mcCorrelation,
+          interestShareForAge(age, s, true),
+          interestShareForAge(age, s, s.deRiskPensions)
+        );
+
+      let occupationalIncome = 0;
+
+      let monthlyIncome;
+
+      if (!fired) {
+        // Accumulation: grow → savings → account tax (same order as base simulation)
+        priv *= (1 + rP);
+        const annualSavings = annualPrivateSavings(currentSalary, age, i, s);
+        priv += annualSavings;
+        costBasis += annualSavings;
+        priv = Math.max(0, priv - calcAnnualAccountTax(priv, s.savingType, i));
+
+        pensionSources.forEach(source => {
+          if (source.type === 'fixed') return;
+          source.capitalRuntime = growOccupationalPensionCapital(source.capitalRuntime, rI, s).capital
+            + sourceAnnualContribution(source, currentSalary, contributionSourceId, i);
+        });
+        monthlyIncome = (currentSalary - calcIncomeTax(currentSalary, false, age, i)) / 12;
+      } else {
+        // Occupational pension capital: grow before payout starts; recalculate payout each year.
+        pensionSources.forEach(source => {
+          source.annualPayoutRuntime = 0;
+          if (age < source.startAge) {
+            if (source.type !== 'fixed') {
+              source.capitalRuntime = growOccupationalPensionCapital(source.capitalRuntime, rI, s).capital;
+            }
+            return;
+          }
+          if (age >= source.payoutEndAge) return;
+          if (source.type === 'fixed') {
+            occupationalIncome += source.monthlyAmount * 12;
+            return;
+          }
+          source.capitalRuntime = growOccupationalPensionCapital(source.capitalRuntime, rI, s).capital;
+          const annualPayout = source.capitalRuntime / sourceRemainingPayoutYears(source, age, s.lifeExp);
+          source.monthlyRuntime = annualPayout / 12;
+          source.annualPayoutRuntime = annualPayout;
+          occupationalIncome += annualPayout;
+        });
+
+        // Decumulation: withdraw → account tax → grow (same order as base simulation)
+        const annualSpend = targetSpendMonthly * 12 * Math.pow(1 + infl, i);
+        const pensionGrossAnnual = (pensionAct ? baseAlmanAnnualByIdx[i] : 0) + occupationalIncome;
+        // Convert pension to net.
+        const pensionNetAnnual   = pensionGrossAnnual > 0
+          ? pensionGrossAnnual - calcIncomeTax(pensionGrossAnnual, true, age, i) : 0;
+        const targetNetNeed = Math.max(0, annualSpend - pensionNetAnnual);
+        let withdrawNeeded = plannedPortfolioWithdrawal({
+          strategy: s.strategy,
+          annualSpend,
+          pensionNet: pensionNetAnnual,
+          privateCapital: priv,
+          costBasis,
+          savingType: s.savingType
+        });
+
+        // Cap withdrawal to what's available (portfolio can't go negative)
+        const actualWithdraw = Math.min(withdrawNeeded, Math.max(0, priv));
+        const netWithdraw = netWithdrawal(actualWithdraw, priv, costBasis, s.savingType);
+
+        const withdrawFrac = priv > 0 ? actualWithdraw / priv : 0;
+        costBasis = Math.max(0, costBasis * (1 - withdrawFrac));
+        priv -= actualWithdraw;
+        priv = Math.max(0, priv - calcAnnualAccountTax(priv, s.savingType, i));
+        priv *= (1 + rP);
+	        pensionSources.forEach(source => {
+	          if (source.type === 'fixed') return;
+	          if (age >= source.startAge && age < source.payoutEndAge && source.annualPayoutRuntime > 0) {
+	            source.capitalRuntime = Math.max(0, source.capitalRuntime - source.annualPayoutRuntime);
+	          }
+	        });
+
+        // Scenario fails if the spending target couldn't be fully met
+        if (netWithdraw + 1 < targetNetNeed && !failed) {
+          failed = true;
+          failAge = age;
+        }
+
+        monthlyIncome = (pensionNetAnnual + netWithdraw) / 12;
+      }
+
+      allPriv[i][sim]   = priv;
+      allITP[i][sim]    = sourceCapitalTotal(pensionSources);
+      allIncome[i][sim] = monthlyIncome;
+    }
+
+    if (!failed) successCount++;
+    else failureAges.push(failAge ?? s.lifeExp);
+  }
+
+  const pct = (arr, p) => {
+    const sorted = Float64Array.from(arr).sort();
+    const idx = (p / 100) * (sorted.length - 1);
+    const lo = Math.floor(idx), hi = Math.ceil(idx);
+    return sorted[lo] + (sorted[hi] - sorted[lo]) * (idx - lo);
+  };
+
+  const pensionIdx     = Math.min(pensionStartAge - s.age, years - 1);
+  const finalPriv      = allPriv[years - 1] || new Float64Array(nSims);
+  const decadeLen      = Math.min(10, Math.max(1, years - fireIdx));
+  const worstDecadeIncome = new Float64Array(nSims);
+  for (let sim = 0; sim < nSims; sim++) {
+    let worst = Infinity;
+    for (let start = fireIdx; start <= years - decadeLen; start++) {
+      let sum = 0;
+      for (let j = start; j < start + decadeLen; j++) {
+        const income = state.displayMode === 'real'
+          ? allIncome[j][sim] / Math.pow(1 + infl, j)
+          : allIncome[j][sim];
+        sum += income;
+      }
+      worst = Math.min(worst, sum / decadeLen);
+    }
+    worstDecadeIncome[sim] = isFinite(worst) ? worst : 0;
+  }
+
+  return {
+    ages,
+    // Private capital percentiles
+    p10: Array.from(allPriv, a => pct(a, 10)),
+    p25: Array.from(allPriv, a => pct(a, 25)),
+    p50: Array.from(allPriv, a => pct(a, 50)),
+    p75: Array.from(allPriv, a => pct(a, 75)),
+    p90: Array.from(allPriv, a => pct(a, 90)),
+    // Occupational pension capital percentiles
+    itpP10: Array.from(allITP, a => pct(a, 10)),
+    itpP25: Array.from(allITP, a => pct(a, 25)),
+    itpP50: Array.from(allITP, a => pct(a, 50)),
+    itpP75: Array.from(allITP, a => pct(a, 75)),
+    itpP90: Array.from(allITP, a => pct(a, 90)),
+    // Monthly income percentiles
+    incP10: Array.from(allIncome, a => pct(a, 10)),
+    incP25: Array.from(allIncome, a => pct(a, 25)),
+    incP50: Array.from(allIncome, a => pct(a, 50)),
+    incP75: Array.from(allIncome, a => pct(a, 75)),
+    incP90: Array.from(allIncome, a => pct(a, 90)),
+    // Reference values for income chart overlays
+    baseAlmanNetMonthlyByIdx,
+    targetSpendMonthly,
+    successRate: (successCount / nSims) * 100,
+    medianFailureAge: failureAges.length ? pct(failureAges, 50) : null,
+    finalCapitalP10: pct(finalPriv, 10),
+    finalCapitalP50: pct(finalPriv, 50),
+    finalCapitalP90: pct(finalPriv, 90),
+    worstDecadeIncomeP10: pct(worstDecadeIncome, 10),
+    fireIdx,
+    pensionIdx,
+    infl
+  };
+}
+
+function renderFanChart(mcData) {
+  const {
+    ages, p10, p25, p50, p75, p90,
+    itpP10, itpP25, itpP50, itpP75, itpP90,
+    incP10, incP25, incP50, incP75, incP90,
+    baseAlmanNetMonthlyByIdx, targetSpendMonthly, infl,
+    successRate, medianFailureAge, finalCapitalP10, finalCapitalP50, finalCapitalP90,
+    worstDecadeIncomeP10, fireIdx, pensionIdx
+  } = mcData;
+  const s = state;
+  const toR = (v, i) => s.displayMode === 'real' ? toReal(v, i) : v;
+  const ct = chartTheme();
+
+  // ── Metric callouts ───────────────────────────────────────────
+  const srEl = document.getElementById('mc-success-rate');
+  srEl.textContent = successRate.toFixed(0) + ' %';
+  srEl.className = 'metric-value ' + (successRate >= 85 ? 'good' : successRate >= 65 ? 'warn' : 'bad');
+
+  const fmtK = v => {
+    const av = Math.abs(v);
+    if (av >= 1e6) return (v / 1e6).toFixed(1) + ' M';
+    if (av >= 1e3) return Math.round(v / 1000) + ' k';
+    return Math.round(v).toString();
+  };
+  const pi = Math.min(pensionIdx, ages.length - 1);
+  document.getElementById('mc-inc-median').textContent = fmtK(toR(incP50[pi] || 0, pi)) + ' kr';
+  document.getElementById('mc-inc-p10').textContent    = fmtK(toR(incP10[pi] || 0, pi)) + ' kr';
+  document.getElementById('mc-failure-age').textContent = medianFailureAge == null ? 'Ingen' : Math.round(medianFailureAge) + ' år';
+  const endIdx = ages.length - 1;
+  document.getElementById('mc-final-capital').textContent =
+    `${fmtK(toR(finalCapitalP10 || 0, endIdx))} / ${fmtK(toR(finalCapitalP50 || 0, endIdx))} / ${fmtK(toR(finalCapitalP90 || 0, endIdx))}`;
+  document.getElementById('mc-worst-decade').textContent = fmtK(worstDecadeIncomeP10 || 0) + ' kr';
+
+  // ── Shared chart options builder ──────────────────────────────
+  const baseOpts = (fireIdx, yFmt) => ({
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { display: false },
+      fireLine: { fireIdx },
+      tooltip: {
+        ...chartTooltipTheme(),
+        callbacks: {
+          label: ctx => {
+            const v = ctx.raw;
+            if (v == null) return null;
+            return `${ctx.dataset.label}: ${fmt(Math.round(Math.abs(v)))} kr`;
+          }
+        }
+      }
+    },
+    scales: {
+      x: { grid: { color: ct.grid },
+           ticks: { color: ct.tick, font: { family: 'DM Mono', size: 10 } } },
+      y: { grid: { color: ct.grid },
+           ticks: { color: ct.tick, font: { family: 'DM Mono', size: 10 }, callback: yFmt } }
+    }
+  });
+
+  const millionFmt = v => {
+    if (Math.abs(v) >= 1e6) return (v / 1e6).toFixed(1) + ' M';
+    if (Math.abs(v) >= 1e3) return (v / 1e3).toFixed(0) + 'k';
+    return v;
+  };
+  const kFmt = v => Math.abs(v) >= 1000 ? (v / 1000).toFixed(0) + 'k' : v;
+
+  // ── Fan band helper (5 datasets: p10 base, then 4 fills) ─────
+  const fanDatasets = (p10d, p25d, p50d, p75d, p90d, color, label) => {
+    const c = (a) => `rgba(${color},${a})`;
+    return [
+      { label: 'p10',         data: p10d, borderColor: c(0.25), borderWidth: 1, pointRadius: 0, fill: false,  tension: 0.3 },
+      { label: 'p25',         data: p25d, borderColor: c(0.3),  borderWidth: 1, pointRadius: 0, fill: '-1', backgroundColor: c(0.09), tension: 0.3 },
+      { label: `${label} (p50)`, data: p50d, borderColor: `rgba(${color},0.9)`, borderWidth: 2, pointRadius: 0, fill: '-1', backgroundColor: c(0.16), tension: 0.3 },
+      { label: 'p75',         data: p75d, borderColor: c(0.3),  borderWidth: 1, pointRadius: 0, fill: '-1', backgroundColor: c(0.16), tension: 0.3 },
+      { label: 'p90',         data: p90d, borderColor: c(0.25), borderWidth: 1, pointRadius: 0, fill: '-1', backgroundColor: c(0.09), tension: 0.3 },
+    ];
+  };
+
+  // ── 1. Private capital fan ────────────────────────────────────
+  if (mcChart) mcChart.destroy();
+  mcChart = new Chart(document.getElementById('chartMC'), {
+    type: 'line',
+    data: {
+      labels: ages,
+      datasets: fanDatasets(
+        ages.map((_, i) => toR(p10[i], i)),
+        ages.map((_, i) => toR(p25[i], i)),
+        ages.map((_, i) => toR(p50[i], i)),
+        ages.map((_, i) => toR(p75[i], i)),
+        ages.map((_, i) => toR(p90[i], i)),
+        '201,168,76', 'Privat'
+      )
+    },
+    options: { ...baseOpts(fireIdx, millionFmt) }
+  });
+
+  // ── 2. Occupational pension capital fan ───────────────────────
+  if (mcChartITP) mcChartITP.destroy();
+  mcChartITP = new Chart(document.getElementById('chartMCITP'), {
+    type: 'line',
+    data: {
+      labels: ages,
+      datasets: fanDatasets(
+        ages.map((_, i) => toR(itpP10[i], i)),
+        ages.map((_, i) => toR(itpP25[i], i)),
+        ages.map((_, i) => toR(itpP50[i], i)),
+        ages.map((_, i) => toR(itpP75[i], i)),
+        ages.map((_, i) => toR(itpP90[i], i)),
+        '61,191,160', 'Tjänstepension'
+      )
+    },
+    options: { ...baseOpts(fireIdx, millionFmt) }
+  });
+
+  // ── 3. Monthly income fan (full width, all sources) ───────────
+  if (mcChartIncome) mcChartIncome.destroy();
+
+  // Reference lines: allmän pension net component and target net spending.
+    const almanLine = ages.map((_, i) => {
+      if (i < pensionIdx) return null; // only shown from pension start, not FIRE
+      return toR(baseAlmanNetMonthlyByIdx[i] || 0, i);
+    });
+  const targetLine = ages.map((_, i) => {
+    if (i < fireIdx) return null;
+    const nomTarget = targetSpendMonthly * Math.pow(1 + infl, i);
+    return toR(nomTarget, i);
+  });
+
+  const incDatasets = [
+    // Fan bands (teal for income)
+    ...fanDatasets(
+      ages.map((_, i) => toR(incP10[i], i)),
+      ages.map((_, i) => toR(incP25[i], i)),
+      ages.map((_, i) => toR(incP50[i], i)),
+      ages.map((_, i) => toR(incP75[i], i)),
+      ages.map((_, i) => toR(incP90[i], i)),
+      '61,191,160', 'Inkomst'
+    ),
+    // Allmän pension net reference (blue)
+    {
+      label: 'Allmän pension netto',
+      data: almanLine,
+      borderColor: 'rgba(90,159,212,0.85)',
+      borderWidth: 1.5,
+      borderDash: [4, 3],
+      pointRadius: 0,
+      fill: false,
+      tension: 0,
+      spanGaps: false,
+    },
+    // Target net spending (gold dashed)
+    {
+      label: 'Nettomål',
+      data: targetLine,
+      borderColor: 'rgba(201,168,76,0.6)',
+      borderWidth: 1.5,
+      borderDash: [6, 4],
+      pointRadius: 0,
+      fill: false,
+      tension: 0,
+      spanGaps: false,
+    },
+  ];
+
+  mcChartIncome = new Chart(document.getElementById('chartMCIncome'), {
+    type: 'line',
+    data: { labels: ages, datasets: incDatasets },
+    options: {
+      ...baseOpts(fireIdx, kFmt),
+      plugins: {
+        ...baseOpts(fireIdx, kFmt).plugins,
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const v = ctx.raw;
+              if (v == null) return null;
+              return `${ctx.dataset.label}: ${fmt(Math.round(v))} kr/mån`;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function renderIncomeChart(rows) {
+  const pensionStartAge = state.publicPensionStartAge;
+  const workRows    = rows.filter(r => r.age < state.fireAge);
+  const earlyRows   = rows.filter(r => r.age >= state.fireAge && r.age < pensionStartAge);
+  const pensionRows = rows.filter(r => r.age >= pensionStartAge);
+
+  const avgReal = (arr, fn) => arr.length
+    ? arr.reduce((sum, r) => sum + toReal(fn(r), r.age - state.age), 0) / arr.length
+    : 0;
+
+  const workIncome      = avgReal(workRows, r => r.netMonthly);
+  const earlyPortfolio  = avgReal(earlyRows,   r => netIncomeComponents(r).portfolio);
+  const earlyAlman      = avgReal(earlyRows,   r => netIncomeComponents(r).alman);
+  const earlyItp        = avgReal(earlyRows,   r => netIncomeComponents(r).itp);
+  const fullPortfolio   = avgReal(pensionRows, r => netIncomeComponents(r).portfolio);
+  const fullAlman       = avgReal(pensionRows, r => netIncomeComponents(r).alman);
+  const fullItp         = avgReal(pensionRows, r => netIncomeComponents(r).itp);
+
+  const ctx = document.getElementById('chartIncome');
+  if (incomeChart) incomeChart.destroy();
+  const ct = chartTheme();
+
+  incomeChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: [
+          'Arbete',
+          'Tidig FIRE\n(' + (state.fireAge < pensionStartAge ? state.fireAge + '–' + (pensionStartAge - 1) : '–') + ')',
+          'Pension\n(' + pensionStartAge + '+)'
+      ],
+      datasets: [
+        {
+          label: 'Lön/portfölj netto',
+          data: [workIncome, earlyPortfolio, fullPortfolio],
+          backgroundColor: 'rgba(201,168,76,0.7)',
+          borderRadius: 4
+        },
+        {
+          label: 'Allmän pension netto',
+          data: [0, earlyAlman, fullAlman],
+          backgroundColor: 'rgba(61,191,160,0.7)',
+          borderRadius: 4
+        },
+        {
+          label: 'Tjänstepension netto',
+          data: [0, earlyItp, fullItp],
+          backgroundColor: 'rgba(90,159,212,0.7)',
+          borderRadius: 4
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          ...chartTooltipTheme(),
+          callbacks: {
+            label: ctx => ctx.dataset.label + ': ' + fmt(Math.round(ctx.raw)) + ' kr/mån'
+          }
+        }
+      },
+      scales: {
+        x: {
+          stacked: true,
+          grid: { display: false },
+          ticks: { color: ct.tick, font: { size: 11 } }
+        },
+        y: {
+          stacked: true,
+          grid: { color: ct.grid },
+          ticks: { color: ct.tick, font: { size: 11 }, callback: v => fmt(v) }
+        }
+      }
+    }
+  });
+}
+
+function renderTaxChart(rows) {
+  // Show income split and granular tax burden at selected ages.
+  const pensionStartAge = state.publicPensionStartAge;
+  const sampleAges = [...new Set([state.fireAge, state.fireAge + 5, pensionStartAge, 70, 75])]
+    .filter(age => age >= state.age && age < state.lifeExp);
+  const labels = [];
+  const netArr = [];
+  const kommunalArr = [];
+  const statligArr = [];
+  const capitalArr = [];
+  const feesArr = [];
+  const pensionFeeArr = [];
+
+  const afterReduction = row => {
+    let kommunal = Math.max(0, row.taxKommunal || 0);
+    let statlig = Math.max(0, row.taxStatlig || 0);
+    let reduction = Math.max(0, row.taxJoba || 0);
+
+    const kommunalReduction = Math.min(kommunal, reduction);
+    kommunal -= kommunalReduction;
+    reduction -= kommunalReduction;
+
+    const statligReduction = Math.min(statlig, reduction);
+    statlig -= statligReduction;
+
+    const pensionFeeNet = Math.max(0, (row.taxPensionFee || 0) - (row.taxPensionFeeReduction || 0));
+    return {
+      kommunal,
+      statlig,
+      capital: Math.max(0, row.taxKapital || 0),
+      fees: Math.max(0, row.taxFees || 0),
+      pensionFee: pensionFeeNet
+    };
+  };
+
+  sampleAges.forEach(a => {
+    const row = rows.find(r => r.age === a);
+    if (!row) return;
+    const y = a - state.age;
+    const components = afterReduction(row);
+    labels.push('Ålder ' + a);
+    netArr.push(Math.round(toReal(row.netMonthly, y)));
+    kommunalArr.push(Math.round(toReal(components.kommunal / 12, y)));
+    statligArr.push(Math.round(toReal(components.statlig / 12, y)));
+    capitalArr.push(Math.round(toReal(components.capital / 12, y)));
+    feesArr.push(Math.round(toReal(components.fees / 12, y)));
+    pensionFeeArr.push(Math.round(toReal(components.pensionFee / 12, y)));
+  });
+
+  const ctx = document.getElementById('chartTax');
+  if (taxChart) taxChart.destroy();
+  const ct = chartTheme();
+
+  taxChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Netto efter skatt',
+          data: netArr,
+          backgroundColor: 'rgba(61,191,160,0.7)',
+          borderRadius: 4
+        },
+        {
+          label: 'Kommunal efter reduktion',
+          data: kommunalArr,
+          backgroundColor: 'rgba(224,107,90,0.7)',
+          borderRadius: 4
+        },
+        {
+          label: 'Statlig skatt',
+          data: statligArr,
+          backgroundColor: 'rgba(157,121,200,0.75)',
+          borderRadius: 4
+        },
+        {
+          label: 'Kapital/ISK/TP',
+          data: capitalArr,
+          backgroundColor: 'rgba(201,168,76,0.75)',
+          borderRadius: 4
+        },
+        {
+          label: 'Avgifter',
+          data: feesArr,
+          backgroundColor: 'rgba(90,159,212,0.65)',
+          borderRadius: 4
+        },
+        {
+          label: 'Pensionsavgift netto',
+          data: pensionFeeArr,
+          backgroundColor: 'rgba(138,135,128,0.65)',
+          borderRadius: 4
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          ...chartTooltipTheme(),
+          callbacks: {
+            label: ctx => ctx.raw > 0 ? ctx.dataset.label + ': ' + fmt(ctx.raw) + ' kr/mån' : null
+          }
+        }
+      },
+      scales: {
+        x: {
+          stacked: true,
+          grid: { display: false },
+          ticks: { color: ct.tick, font: { size: 11 } }
+        },
+        y: {
+          stacked: true,
+          grid: { color: ct.grid },
+          ticks: { color: ct.tick, font: { size: 11 }, callback: v => fmt(v) }
+        }
+      }
+    }
+  });
+}
+
+// ============================================================
+// UI HELPERS
+// ============================================================
+function setupSlider(id, displayId, formatter, onChange) {
+  const slider = document.getElementById(id);
+  const display = document.getElementById(displayId);
+  const manualBounds = () => {
+    const limitId = id === 'savings' && state.savingsMode === 'percentNet' ? 'savings-rate' : id;
+    const limits = MANUAL_LIMITS[limitId] || {};
+    const min = limits.min ?? parseFloat(slider.min);
+    const max = limits.max ?? parseFloat(slider.max);
+    return { min, max };
+  };
+  slider.addEventListener('input', () => {
+    const val = parseFloat(slider.value);
+    display.textContent = formatter(val);
+    onChange(val);
+  });
+
+  display.addEventListener('click', () => {
+    if (display.classList.contains('editing')) return;
+    display.classList.add('editing');
+    // Parse actual displayed value (may be out of slider range; strip locale separators)
+    const dispRaw = display.textContent.replace(/[^\d.\-]/g, "");
+    const prev = isNaN(parseFloat(dispRaw)) ? parseFloat(slider.value) : parseFloat(dispRaw);
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'val-input';
+    input.value = prev;
+    display.textContent = '';
+    display.appendChild(input);
+    input.focus();
+    input.select();
+
+    let done = false;
+    const commit = () => {
+      if (done) return;
+      done = true;
+      const raw = input.value.replace(/[\s ]/g, '').replace(',', '.');
+      const val = parseFloat(raw);
+      display.classList.remove('editing');
+      if (!isNaN(val) && val !== prev) {
+        const bounds = manualBounds();
+        const clamped = Math.min(Math.max(val, bounds.min), bounds.max);
+        slider.value = Math.min(Math.max(clamped, parseFloat(slider.min)), parseFloat(slider.max));
+        onChange(clamped);
+        display.textContent = formatter(clamped);
+      } else {
+        display.textContent = formatter(prev);
+      }
+    };
+
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); commit(); }
+      if (e.key === 'Escape') { done = true; display.classList.remove('editing'); display.textContent = formatter(prev); }
+    });
+    input.addEventListener('blur', commit);
+  });
+}
+
+function setDisplayMode(mode) {
+  state.displayMode = mode;
+  ['nominal','real'].forEach(m =>
+    document.getElementById('btn-mode-'+m)?.classList.toggle('active', m === mode));
+  render();
+}
+
+function setTheme(theme) {
+  state.theme = theme === 'light' ? 'light' : 'dark';
+  applyTheme();
+  ['dark','light'].forEach(t =>
+    document.getElementById('btn-theme-'+t)?.classList.toggle('active', t === state.theme));
+  render();
+}
+
+function setSavingsMode(mode) {
+  const nextMode = mode === 'percentNet' ? 'percentNet' : 'fixed';
+  if (nextMode !== state.savingsMode) {
+    const currentSalary = salaryAtYear(0, state);
+    const netAnnual = Math.max(0, currentSalary - calcIncomeTax(currentSalary, false, state.age, 0));
+    if (nextMode === 'percentNet') {
+      state.savingsRate = netAnnual > 0 ? clampNumber((state.savings * 12 / netAnnual) * 100, 0, 100, state.savingsRate) : state.savingsRate;
+    } else {
+      state.savings = netAnnual * (state.savingsRate / 100) / 12;
+    }
+  }
+  state.savingsMode = nextMode;
+  render();
+}
+
+function setIndexThresholds(enabled) {
+  state.indexThresholds = !!enabled;
+  render();
+}
+
+function setDeRisking(enabled) {
+  state.deRiskEnabled = !!enabled;
+  render();
+}
+
+function setDeRiskPensions(enabled) {
+  state.deRiskPensions = !!enabled;
+  render();
+}
+
+function setSavingType(type) {
+  state.savingType = type;
+  ['ISK', 'AF', 'KF'].forEach(t => {
+    document.getElementById('btn-' + t.toLowerCase()).classList.toggle('active', t === type);
+  });
+  render();
+}
+
+function setTaxPreset(preset) {
+  if (preset === 'stockholm') {
+    const p = TAX_PRESETS.stockholm;
+    state.taxPreset = 'stockholm';
+    state.municipalTax = p.municipalTax;
+    state.burialFee = p.burialFee;
+    state.publicServiceMax = p.publicServiceMax;
+  } else {
+    state.taxPreset = 'custom';
+  }
+  render();
+}
+
+function addPensionSource() {
+  normalizePensionSources();
+  state.occupationalPensions.push(makePensionSource({
+    name: 'Ny tjänstepension',
+    type: 'capital',
+    capital: 0,
+    startAge: Math.max(ITP1_MIN_AGE, state.fireAge),
+    payout: 'lifetime'
+  }));
+  render();
+}
+
+function removePensionSource(id) {
+  normalizePensionSources();
+  state.occupationalPensions = state.occupationalPensions.filter(source => source.id !== id);
+  render();
+}
+
+function updatePensionSource(id, field, value) {
+  normalizePensionSources();
+  state.occupationalPensions = (state.occupationalPensions || []).map(source => {
+    if (source.id !== id) return source;
+    const next = { ...source };
+    if (field === 'name') next.name = value;
+    else if (field === 'type') next.type = value;
+    else if (field === 'payout') next.payout = value === 'lifetime' ? 'lifetime' : Number(value);
+    else next[field] = Number(value);
+    if (field === 'type') {
+      if (next.type === 'fixed') {
+        next.monthlyAmount = next.monthlyAmount || 0;
+      } else {
+        next.capital = next.capital || 0;
+      }
+    }
+    return next;
+  });
+  render();
+}
+
+function setStrategy(n) {
+  state.strategy = n;
+  [1, 2, 3].forEach(i => {
+    document.getElementById('sc-' + i).classList.toggle('active', i === n);
+  });
+  render();
+}
+
+function setSensitivityMetric(metric) {
+  state.sensitivityMetric = metric;
+  render();
+}
+
+// ============================================================
+// INIT
+// ============================================================
+setupSlider('birth-year', 'v-birth-year', v => v, v => { state.birthYear = v; state.age = TAX_YEAR - v; render(); });
+setupSlider('age', 'v-age', v => v, v => { state.age = v; state.birthYear = TAX_YEAR - v; render(); });
+setupSlider('fire-age', 'v-fire-age', v => v, v => { state.fireAge = v; render(); });
+setupSlider('life-exp', 'v-life-exp', v => v, v => { state.lifeExp = v; render(); });
+setupSlider('salary', 'v-salary', v => fmt(v), v => { state.salary = v; render(); });
+setupSlider('salary-growth', 'v-salary-growth', v => v.toFixed(1), v => { state.salaryGrowth = v; render(); });
+setupSlider('savings', 'v-savings',
+  v => state.savingsMode === 'percentNet' ? v.toFixed(0) : fmt(v),
+  v => {
+    if (state.savingsMode === 'percentNet') state.savingsRate = v;
+    else state.savings = v;
+    render();
+  });
+setupSlider('wealth', 'v-wealth', v => fmt(v), v => { state.wealth = v; render(); });
+setupSlider('tax-muni', 'v-tax-muni', v => Number(v).toFixed(2), v => { state.taxPreset = 'custom'; state.municipalTax = v; render(); });
+setupSlider('tax-burial', 'v-tax-burial', v => Number(v).toFixed(3).replace(/0+$/, '').replace(/\.$/, ''), v => { state.taxPreset = 'custom'; state.burialFee = v; render(); });
+setupSlider('tax-public', 'v-tax-public', v => fmt(v), v => { state.taxPreset = 'custom'; state.publicServiceMax = v; render(); });
+setupSlider('occ-pension-tax', 'v-occ-pension-tax', v => Number(v).toFixed(3).replace(/0+$/, '').replace(/\.$/, ''), v => { state.occupationalPensionTax = v; render(); });
+setupSlider('ip-balance', 'v-ip-bal', v => fmt(v), v => { state.ipBalance = v; render(); });
+setupSlider('pp-balance', 'v-pp-bal', v => fmt(v), v => { state.ppBalance = v; render(); });
+setupSlider('public-pension-start', 'v-public-start', v => v, v => { state.publicPensionStartAge = v; render(); });
+setupSlider('spend', 'v-spend', v => fmt(v), v => { state.spend = v; render(); });
+setupSlider('infl', 'v-infl', v => v.toFixed(1), v => { state.infl = v; render(); });
+setupSlider('ret', 'v-ret', v => v.toFixed(1), v => { state.ret = v; render(); });
+setupSlider('pret', 'v-pret', v => v.toFixed(1), v => { state.pret = v; render(); });
+setupSlider('derisk-target', 'v-derisk-target', v => v.toFixed(0), v => { state.deRiskTarget = v; render(); });
+setupSlider('derisk-years', 'v-derisk-years', v => v.toFixed(0), v => { state.deRiskYears = v; render(); });
+setupSlider('interest-ret', 'v-interest-ret', v => v.toFixed(1), v => { state.interestRet = v; render(); });
+setupSlider('interest-vol', 'v-interest-vol', v => v.toFixed(1), v => { state.interestVol = v; render(); });
+setupSlider('vol-priv', 'v-vol-priv', v => v.toFixed(1), v => { state.volPrivate = v; render(); });
+setupSlider('vol-itp',  'v-vol-itp',  v => v.toFixed(1), v => { state.volITP = v; render(); });
+setupSlider('mc-corr',  'v-mc-corr',  v => v.toFixed(0), v => { state.mcCorrelation = v; render(); });
+
+// Load saved settings, sync all UI elements, then render
+loadSettings();
+normalizeState();
+syncUI();
+render();
+setupHelpTooltips();
+</script>
+</body>
+</html>
