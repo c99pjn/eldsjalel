@@ -439,16 +439,63 @@
     gap: 10px;
   }
 
-  .pension-source {
-    background: var(--bg-input);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 10px;
-  }
+	  .pension-source {
+	    background: var(--bg-input);
+	    border: 1px solid var(--border);
+	    border-radius: var(--radius);
+	    padding: 10px;
+	  }
 
-  .pension-source-head {
-    display: flex;
-    gap: 8px;
+	  .household-panel {
+	    border: 1px solid var(--border);
+	    border-radius: var(--radius);
+	    padding: 12px;
+	    margin-top: 10px;
+	    background: var(--bg-input);
+	  }
+
+	  .household-summary {
+	    display: grid;
+	    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+	    gap: 8px;
+	    margin: 0 0 18px;
+	  }
+
+	  .household-summary-item {
+	    border: 1px solid var(--border);
+	    border-radius: var(--radius);
+	    padding: 10px 12px;
+	    background: var(--bg-card);
+	  }
+
+	  .household-summary-item span {
+	    display: block;
+	    color: var(--text-muted);
+	    font-size: 10px;
+	    text-transform: uppercase;
+	    letter-spacing: 0.5px;
+	    margin-bottom: 4px;
+	  }
+
+	  .household-summary-item strong {
+	    display: block;
+	    color: var(--text);
+	    font-family: var(--font-mono);
+	    font-size: 15px;
+	  }
+
+	  .subsection-title {
+	    font-family: var(--font-mono);
+	    font-size: 10px;
+	    text-transform: uppercase;
+	    letter-spacing: 1px;
+	    color: var(--text-dim);
+	    margin-bottom: 12px;
+	  }
+
+	  .pension-source-head {
+	    display: flex;
+	    gap: 8px;
     align-items: center;
     margin-bottom: 8px;
   }
@@ -895,6 +942,43 @@
 
   .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 
+  .inline-detail-table {
+    width: 100%;
+    margin-top: 8px;
+    font-size: 11px;
+  }
+
+  .household-detail-row td {
+    background: var(--bg-input);
+    border-top: 0;
+    color: var(--text-dim);
+  }
+
+  .household-detail-row summary {
+    cursor: pointer;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+  }
+
+  tr.survivor-row td {
+    background: rgba(224,107,90,0.07);
+  }
+
+  .survivor-pill {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 2px 5px;
+    border: 1px solid rgba(224,107,90,0.45);
+    border-radius: 999px;
+    color: #e06b5a;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    text-transform: uppercase;
+  }
+
   @media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
 </style>
 </head>
@@ -916,12 +1000,20 @@
   </div>
 
   <!-- PERSONAL -->
-  <div class="section">
-    <div class="section-title">Personligt</div>
+	  <div class="section">
+	    <div class="section-title">Personligt</div>
 
-    <div class="field">
-      <label>Födelseår <span class="val" id="v-birth-year">1991</span></label>
-      <input type="range" id="birth-year" min="1926" max="2006" value="1991" step="1">
+	    <div class="field">
+	      <label>Planläge</label>
+	      <div class="toggle-group">
+	        <button id="household-off" class="active" onclick="setHouseholdMode(false)">En person</button>
+	        <button id="household-on" onclick="setHouseholdMode(true)">Hushåll</button>
+	      </div>
+	    </div>
+
+	    <div class="field">
+	      <label>Födelseår <span class="val" id="v-birth-year">1991</span></label>
+	      <input type="range" id="birth-year" min="1926" max="2006" value="1991" step="1">
     </div>
 
     <div class="field">
@@ -934,11 +1026,31 @@
       <input type="range" id="fire-age" min="30" max="70" value="50" step="1">
     </div>
 
-    <div class="field">
-      <label>Förväntad livslängd <span class="val" id="v-life-exp">90</span></label>
-      <input type="range" id="life-exp" min="70" max="100" value="90" step="1">
-    </div>
-  </div>
+	    <div class="field">
+	      <label>Förväntad livslängd <span class="val" id="v-life-exp">90</span></label>
+	      <input type="range" id="life-exp" min="70" max="110" value="90" step="1">
+	    </div>
+
+	    <div id="partner-personal-section" class="household-panel" style="display:none">
+	      <div class="subsection-title">Person 2</div>
+	      <div class="field">
+	        <label>Födelseår <span class="val" id="v-partner-birth-year">1986</span></label>
+	        <input type="range" id="partner-birth-year" min="1926" max="2006" value="1986" step="1">
+	      </div>
+	      <div class="field">
+	        <label>Nuvarande ålder <span class="val" id="v-partner-age">40</span></label>
+	        <input type="range" id="partner-age" min="20" max="100" value="40" step="1">
+	      </div>
+	      <div class="field">
+	        <label>FIRE-ålder samma år <span class="val" id="v-partner-fire-age">55</span></label>
+	        <input type="range" id="partner-fire-age" min="30" max="110" value="55" step="1" disabled>
+	      </div>
+	      <div class="field">
+	        <label>Förväntad livslängd <span class="val" id="v-partner-life-exp">90</span></label>
+	        <input type="range" id="partner-life-exp" min="70" max="110" value="90" step="1">
+	      </div>
+	    </div>
+	  </div>
 
   <!-- INCOME & SAVINGS -->
   <div class="section">
@@ -949,14 +1061,14 @@
       <input type="range" id="salary" min="200000" max="2000000" value="600000" step="10000">
     </div>
 
-    <div class="field">
-      <label>Årlig löneökning (nominell %) <span class="val" id="v-salary-growth">0.0</span>%</label>
-      <input type="range" id="salary-growth" min="0" max="10" value="0" step="0.1">
-    </div>
+	    <div class="field">
+	      <label>Årlig löneökning (nominell %) <span class="val" id="v-salary-growth">0.0</span>%</label>
+	      <input type="range" id="salary-growth" min="0" max="10" value="0" step="0.1">
+	    </div>
 
-    <div class="field">
-      <label>Löneväxling (kr/mån brutto) <span class="val" id="v-salary-exchange">0</span></label>
-      <input type="range" id="salary-exchange" min="0" max="60000" value="0" step="500">
+	    <div class="field">
+	      <label>Löneväxling (kr/mån brutto) <span class="val" id="v-salary-exchange">0</span></label>
+	      <input type="range" id="salary-exchange" min="0" max="60000" value="0" step="500">
     </div>
 
     <div id="salary-exchange-details" style="display:none">
@@ -976,6 +1088,39 @@
       <div class="pension-info" id="salary-exchange-note"></div>
     </div>
 
+	    <div id="partner-income-section" class="household-panel" style="display:none">
+	      <div class="subsection-title">Person 2</div>
+	      <div class="field">
+	        <label>Bruttolön idag (kr/år) <span class="val" id="v-partner-salary">480 000</span></label>
+	        <input type="range" id="partner-salary" min="0" max="2000000" value="480000" step="10000">
+	      </div>
+	      <div class="field">
+	        <label>Årlig löneökning (nominell %) <span class="val" id="v-partner-salary-growth">3.0</span>%</label>
+	        <input type="range" id="partner-salary-growth" min="0" max="10" value="3" step="0.1">
+	      </div>
+	      <div class="field">
+	        <label>Löneväxling (kr/mån brutto) <span class="val" id="v-partner-salary-exchange">0</span></label>
+	        <input type="range" id="partner-salary-exchange" min="0" max="60000" value="0" step="500">
+	      </div>
+
+	      <div id="partner-salary-exchange-details" style="display:none">
+	        <div class="field">
+	          <label>Arbetsgivartillägg (%) <span class="val" id="v-partner-salary-exchange-topup">5.8</span>%</label>
+	          <input type="range" id="partner-salary-exchange-topup" min="0" max="20" value="5.8" step="0.1">
+	        </div>
+
+	        <div class="field">
+	          <label>ITP beräknas före löneväxling</label>
+	          <div class="toggle-group">
+	            <button id="partner-salary-exchange-itp-on" class="active" onclick="setPartnerSalaryExchangePreserveITP(true)">Ja</button>
+	            <button id="partner-salary-exchange-itp-off" onclick="setPartnerSalaryExchangePreserveITP(false)">Nej</button>
+	          </div>
+	        </div>
+
+	        <div class="pension-info" id="partner-salary-exchange-note"></div>
+	      </div>
+	    </div>
+
     <div class="field">
       <label>Sparmodell</label>
       <div class="toggle-group">
@@ -989,12 +1134,12 @@
       <input type="range" id="savings" min="0" max="80000" value="10000" step="500">
     </div>
 
-    <div class="field">
+    <div class="field" style="display:none">
       <label>Nuvarande privat förmögenhet <span class="val" id="v-wealth">500 000</span></label>
       <input type="range" id="wealth" min="0" max="10000000" value="500000" step="50000">
     </div>
 
-    <div class="field">
+    <div class="field" style="display:none">
       <label>Typ av privat sparande</label>
       <div class="toggle-group">
         <button id="btn-isk" class="active" onclick="setSavingType('ISK')">ISK</button>
@@ -1006,6 +1151,13 @@
     <div class="field" id="fund-cost-basis-field" style="display:none">
       <label>Anskaffningsvärde fondkonto <span class="val" id="v-fund-cost-basis">1 000 000</span></label>
       <input type="range" id="fund-cost-basis" min="0" max="10000000" value="1000000" step="50000">
+    </div>
+
+    <div class="field">
+      <label>Privata sparkällor</label>
+      <div id="private-savings-list" class="pension-source-list"></div>
+      <button class="add-source-btn" onclick="addPrivateSavingSource()">+ Lägg till sparkälla</button>
+      <div class="pension-info">Nytt sparande och överskott efter FIRE går till markerad källa. Uttag från privat kapital sker enligt vald uttagsordning. I hushållsläge styr ägare vilket personligt ISK/KF-grundavdrag som används.</div>
     </div>
   </div>
 
@@ -1069,25 +1221,51 @@
       <input type="range" id="public-pension-start" min="62" max="75" value="66" step="1">
     </div>
 
-    <div class="field">
-      <label>Tjänste- och privat pension</label>
-      <div id="occupational-pension-list" class="pension-source-list"></div>
-      <button class="add-source-btn" onclick="addPensionSource()">+ Lägg till pensionskälla</button>
-    </div>
+	    <div class="field">
+	      <label>Tjänste- och privat pension</label>
+	      <div id="occupational-pension-list" class="pension-source-list"></div>
+	      <button class="add-source-btn" onclick="addPensionSource()">+ Lägg till pensionskälla</button>
+	    </div>
 
-    <div class="pension-info">
-      Hämta aktuellt saldo från <strong>minpension.se</strong>. Använd Nuvarande ITP1 för din aktiva tjänstepension med framtida löneintjäning. Gamla fribrev läggs som Kapital/fribrev. Fast belopp behandlas som bruttopension från vald startålder.
-    </div>
+	    <div id="partner-pension-section" class="household-panel" style="display:none">
+	      <div class="subsection-title">Person 2</div>
+	      <div class="field">
+	        <label>Inkomstpensionssaldo (kr) <span class="val" id="v-partner-ip-bal">500 000</span></label>
+	        <input type="range" id="partner-ip-balance" min="0" max="8000000" value="500000" step="10000">
+	      </div>
+	      <div class="field">
+	        <label>Premiepensionssaldo (kr) <span class="val" id="v-partner-pp-bal">150 000</span></label>
+	        <input type="range" id="partner-pp-balance" min="0" max="2000000" value="150000" step="5000">
+	      </div>
+	      <div class="field">
+	        <label>Start allmän pension (ålder) <span class="val" id="v-partner-public-start">66</span></label>
+	        <input type="range" id="partner-public-pension-start" min="62" max="75" value="66" step="1">
+	      </div>
+	      <div class="field">
+	        <label>Tjänste- och privat pension</label>
+	        <div id="partner-occupational-pension-list" class="pension-source-list"></div>
+	        <button class="add-source-btn" onclick="addPensionSource('partner')">+ Lägg till pensionskälla</button>
+	      </div>
+	    </div>
+
+	    <div class="pension-info">
+	      Hämta aktuellt saldo från <strong>minpension.se</strong>. Använd Nuvarande ITP1 för din aktiva tjänstepension med framtida löneintjäning. Gamla fribrev läggs som Kapital/fribrev. Fast belopp behandlas som bruttopension från vald startålder.
+	    </div>
   </div>
 
   <!-- SPENDING -->
   <div class="section">
     <div class="section-title">Utgifter &amp; inflation</div>
 
-    <div class="field">
-      <label>Utgifter idag (kr/mån) <span class="val" id="v-spend">35 000</span></label>
-      <input type="range" id="spend" min="10000" max="150000" value="35000" step="1000">
-    </div>
+	    <div class="field">
+	      <label><span id="spend-label-text">Utgifter idag (kr/mån)</span> <span class="val" id="v-spend">35 000</span></label>
+	      <input type="range" id="spend" min="10000" max="150000" value="35000" step="1000">
+	    </div>
+
+	    <div class="field" id="survivor-spend-field" style="display:none">
+	      <label>Utgifter efter en partner (%) <span class="val" id="v-survivor-spend">70</span>%</label>
+	      <input type="range" id="survivor-spend" min="40" max="100" value="70" step="5">
+	    </div>
 
     <div class="field">
       <label>Inflation (%) <span class="val" id="v-infl">2.0</span>%</label>
@@ -1195,6 +1373,33 @@
     <span class="value-chip gross">Brutto = före skatt</span>
     <span class="value-chip capital">Kapital = saldo</span>
     <span class="value-chip tax">Skatt = kostnad</span>
+  </div>
+
+  <div class="household-summary" id="household-summary" style="display:none" aria-label="Planöversikt">
+    <div class="household-summary-item">
+      <span id="hh-fire-year-label">FIRE-år</span>
+      <strong id="hh-fire-year">–</strong>
+    </div>
+    <div class="household-summary-item">
+      <span id="hh-primary-fire-age-label">Person 1 vid FIRE</span>
+      <strong id="hh-primary-fire-age">–</strong>
+    </div>
+    <div class="household-summary-item">
+      <span id="hh-partner-fire-age-label">Person 2 vid FIRE</span>
+      <strong id="hh-partner-fire-age">–</strong>
+    </div>
+    <div class="household-summary-item">
+      <span id="hh-years-to-fire-label">År till FIRE</span>
+      <strong id="hh-years-to-fire">–</strong>
+    </div>
+    <div class="household-summary-item">
+      <span id="hh-full-pension-year-label">Full pension från</span>
+      <strong id="hh-full-pension-year">–</strong>
+    </div>
+    <div class="household-summary-item">
+      <span id="hh-survivor-year-label">Efterlevande från</span>
+      <strong id="hh-survivor-year">–</strong>
+    </div>
   </div>
 
   <!-- PHASE INDICATOR -->
@@ -1319,6 +1524,26 @@
     </div>
   </div>
 
+  <div class="chart-card" id="household-pension-breakdown-card" style="display:none; margin-bottom:20px">
+    <div class="chart-title" id="pension-breakdown-title">Pension per person</div>
+    <div class="chart-sub" id="household-pension-breakdown-sub">Brutto och netto per månad vid full hushållspension.</div>
+    <div class="scroll-table" style="max-height:none">
+      <table>
+        <thead id="pension-breakdown-head">
+          <tr>
+            <th style="text-align:left">Person</th>
+            <th>Ålder</th>
+            <th>Allmän brutto/mån</th>
+            <th>Tjänste brutto/mån</th>
+            <th>Pension netto/mån</th>
+            <th>Pensionsskatt/mån</th>
+          </tr>
+        </thead>
+        <tbody id="household-pension-breakdown-body"></tbody>
+      </table>
+    </div>
+  </div>
+
   <!-- PORTFOLIO CHART -->
   <div class="chart-card">
     <div class="chart-title">Kapitalutveckling över tid</div>
@@ -1329,6 +1554,7 @@
       <div class="legend-item"><div class="legend-dot" style="background:#5a9fd4"></div>PPM före start</div>
       <div class="legend-item"><div class="legend-dot" style="border: 1.5px dashed var(--text-dim); background: transparent;"></div>Totalt exkl. PPM</div>
       <div class="legend-item"><div class="legend-dot" style="background:#9d79c8; border: 1.5px dashed #9d79c8; background: transparent;"></div>FIRE-datum</div>
+      <div class="legend-item" id="survivor-legend-item" style="display:none"><div class="legend-dot" style="background:#e06b5a; border: 1.5px dashed #e06b5a; background: transparent;"></div>Efterlevandefas</div>
     </div>
     <div style="position:relative; height:300px;">
       <canvas id="chartWealth" role="img" aria-label="Kapitalutveckling från nuläge till livets slut"></canvas>
@@ -1472,6 +1698,9 @@
         <div class="legend-item"><div class="legend-dot" style="background:#3dbfa0"></div>Rekommenderad</div>
       </div>
     </div>
+    <div id="optimizer-household-note" class="notice" style="display:none; margin-bottom:14px">
+      Optimizern är avstängd i hushållsläge eftersom varje person kan ha olika allmän pension, tjänstepensioner och livslängd. Ändra pensionsstart per person i inställningarna för att testa hushållsscenarier.
+    </div>
     <div class="results-grid optimizer-grid" style="margin-bottom:14px">
       <div class="metric-card">
         <div class="metric-label">Allmän pension</div>
@@ -1588,7 +1817,7 @@
   <div class="table-card">
     <div class="table-header">
       <div class="chart-title">Årsvis projektion</div>
-      <div style="font-size:11px; color:var(--text-muted)">Gulmarkerad rad = FIRE-år</div>
+      <div id="table-note" style="font-size:11px; color:var(--text-muted)">Gulmarkerad rad = FIRE-år</div>
     </div>
     <div class="scroll-table">
       <table id="proj-table">
@@ -1691,6 +1920,7 @@ function calcPensionMinAge(currentAge) {
 const ITP1_MIN_AGE = 55;        // Tjänstepension lägsta utbetalningsålder i kalkylen
 const MAX_PENSION_SOURCE_CAPITAL = 500000000;
 const MAX_PENSION_SOURCE_MONTHLY = 5000000;
+const MAX_LIFE_EXP = 110;
 
 // ISK/KF: schablonintäkt = (SLR + 1 %) × kapital, beskattas med 30 % kapitalskatt
 const ISK_SCHABLONINTAKT_RATE = 0.0355; // SLR 30 nov 2025 2,55 % + 1 % = 3,55 %
@@ -1708,12 +1938,34 @@ const TAX_PRESETS = {
 // ============================================================
 // STATE
 // ============================================================
+const DEFAULT_PARTNER = {
+  name: 'Person 2',
+  birthYear: 1986,
+  age: 40,
+  fireAge: 55,
+  lifeExp: 90,
+  salary: 480000,
+  salaryGrowth: 3.0,
+  salaryExchangeMonthly: 0,
+  salaryExchangeTopup: 5.8,
+  salaryExchangePreserveITP: true,
+  ipBalance: 500000,
+  ppBalance: 150000,
+  publicPensionStartAge: 66,
+  occupationalPensions: []
+};
+
+const DEFAULT_PRIVATE_SAVINGS = [
+  { id: 'ps-main', name: 'ISK', type: 'ISK', owner: 'primary', capital: 2000000, costBasis: 1000000, savingsTarget: true, withdrawalOrder: 1 }
+];
+
 let state = {
-  birthYear: 1986, age: 40, fireAge: 55, lifeExp: 90,
-  salary: 720000, salaryGrowth: 3.0, savingsMode: 'fixed', savings: 10000, savingsRate: 20, wealth: 2000000,
-  salaryExchangeMonthly: 0, salaryExchangeTopup: 5.8, salaryExchangePreserveITP: true,
-  fundCostBasis: 1000000,
+	  birthYear: 1986, age: 40, fireAge: 55, lifeExp: 90,
+	  salary: 720000, salaryGrowth: 3.0, savingsMode: 'fixed', savings: 10000, savingsRate: 20, wealth: 2000000,
+	  salaryExchangeMonthly: 0, salaryExchangeTopup: 5.8, salaryExchangePreserveITP: true,
+	  fundCostBasis: 1000000,
   savingType: 'ISK',
+  privateSavings: cloneSettings(DEFAULT_PRIVATE_SAVINGS),
 	  taxPreset: 'stockholm', municipalTax: 30.55, burialFee: 0.07, publicServiceMax: DEFAULT_PUBLIC_SERVICE_FEE_MAX, indexThresholds: true,
 	  occupationalPensionTax: DEFAULT_OCC_PENSION_AVKASTNINGSSKATT,
 	  ipBalance: 1000000, ppBalance: 350000,
@@ -1722,8 +1974,9 @@ let state = {
     { id: 'tp-itp1', name: 'ITP1', type: 'itp1', capital: 1000000, monthlyAmount: 0, startAge: 55, payout: 10 }
   ],
   publicPensionStartAge: 66,
-  spend: 35000, infl: 2.0,
-  ret: 7.0, pret: 5.0,
+	  spend: 35000, infl: 2.0,
+	  householdEnabled: false, survivorSpendPercent: 70, partner: JSON.parse(JSON.stringify(DEFAULT_PARTNER)),
+	  ret: 7.0, pret: 5.0,
   deRiskEnabled: false, deRiskTarget: 60, deRiskYears: 10, interestRet: 3.0, interestVol: 4.0, deRiskPensions: false,
   volPrivate: 18, volITP: 12, mcCorrelation: 60,
   strategy: 1,
@@ -1738,20 +1991,25 @@ Chart.register({
   id: 'fireLine',
   afterDraw(chart) {
     const cfg = chart.options.plugins.fireLine;
-    if (!cfg || cfg.fireIdx < 0) return;
+    if (!cfg) return;
     const meta = chart.getDatasetMeta(0);
-    const point = meta.data[cfg.fireIdx];
-    if (!point) return;
     const { ctx, chartArea } = chart;
-    ctx.save();
-    ctx.setLineDash([5, 4]);
-    ctx.strokeStyle = '#9d79c8';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(point.x, chartArea.top);
-    ctx.lineTo(point.x, chartArea.bottom);
-    ctx.stroke();
-    ctx.restore();
+    const drawMarker = (idx, color, dash) => {
+      if (idx == null || idx < 0) return;
+      const point = meta.data[idx];
+      if (!point) return;
+      ctx.save();
+      ctx.setLineDash(dash);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(point.x, chartArea.top);
+      ctx.lineTo(point.x, chartArea.bottom);
+      ctx.stroke();
+      ctx.restore();
+    };
+    drawMarker(cfg.fireIdx, '#9d79c8', [5, 4]);
+    drawMarker(cfg.survivorIdx, '#e06b5a', [2, 4]);
   }
 });
 
@@ -1835,7 +2093,7 @@ function importedSettingsFromPayload(payload) {
   if (!settings || typeof settings !== 'object' || Array.isArray(settings)) {
     throw new Error('Importfilen saknar inställningar.');
   }
-  const knownKeys = ['age', 'birthYear', 'fireAge', 'lifeExp', 'salary', 'wealth', 'occupationalPensions'];
+  const knownKeys = ['age', 'birthYear', 'fireAge', 'lifeExp', 'salary', 'wealth', 'privateSavings', 'occupationalPensions'];
   if (!knownKeys.some(key => Object.prototype.hasOwnProperty.call(settings, key))) {
     throw new Error('Importfilen ser inte ut som en Eldsjälen-export.');
   }
@@ -1857,6 +2115,9 @@ function applySettingsObject(settings) {
   }
   if (!Object.prototype.hasOwnProperty.call(imported, 'occupationalPensions')) {
     next.occupationalPensions = null;
+  }
+  if (!Object.prototype.hasOwnProperty.call(imported, 'privateSavings')) {
+    next.privateSavings = null;
   }
   if (!Object.prototype.hasOwnProperty.call(imported, 'fundCostBasis')) {
     next.fundCostBasis = clampNumber(next.wealth, 0, MANUAL_LIMITS.wealth.max, DEFAULT_STATE.wealth) * DEFAULT_FUND_COST_BASIS_SHARE;
@@ -2010,14 +2271,22 @@ function setupHelpTooltips() {
   };
 
   [
-    ['birth-year', 'Styr pensionsåldersregler och grundålder i simuleringen. Ålder räknas från 2026 års kalenderår.'],
-    ['age', 'Nuvarande ålder i planen. Ändras tillsammans med födelseår.'],
-    ['fire-age', 'Åldern när lön och nytt sparande upphör och portföljuttag börjar.'],
-    ['life-exp', 'Sista ålder som planen behöver finansiera. Kapital kvar visas vid året före denna ålder.'],
-	    ['salary', 'Årlig bruttolön idag före skatt. Används för skatt, sparande som procent av nettolön, pension och ITP1-intjäning.'],
-	    ['salary-growth', 'Förväntad nominell löneökning per år före FIRE. Påverkar lön, skatt, allmän pension och aktiv ITP1-intjäning.'],
+	    ['birth-year', 'Styr pensionsåldersregler och grundålder i simuleringen. Ålder räknas från 2026 års kalenderår.'],
+	    ['age', 'Nuvarande ålder i planen. Ändras tillsammans med födelseår.'],
+	    ['fire-age', 'Åldern när lön och nytt sparande upphör och portföljuttag börjar.'],
+	    ['life-exp', 'Sista ålder som planen behöver finansiera. Kapital kvar visas vid året före denna ålder.'],
+	    ['partner-birth-year', 'Födelseår för person 2. Används för pensionsåldersregler, skatt och hushållets tidslinje.'],
+	    ['partner-age', 'Nuvarande ålder för person 2. Ändras tillsammans med födelseår.'],
+	    ['partner-fire-age', 'Person 2:s ålder samma kalenderår som hushållet når FIRE. Värdet räknas automatiskt från hushållets FIRE-år och åldersskillnaden.'],
+	    ['partner-life-exp', 'Sista ålder person 2 behöver finansieras i hushållsplanen.'],
+		    ['salary', 'Årlig bruttolön idag före skatt. Används för skatt, sparande som procent av nettolön, pension och ITP1-intjäning.'],
+		    ['salary-growth', 'Förväntad nominell löneökning per år före FIRE. Påverkar lön, skatt, allmän pension och aktiv ITP1-intjäning.'],
+		    ['partner-salary', 'Årlig bruttolön för person 2. Beskattas separat och ger egen allmän pension och eventuell aktiv ITP1-intjäning.'],
+		    ['partner-salary-growth', 'Förväntad nominell löneökning per år för person 2 före personens FIRE-år.'],
 	    ['salary-exchange', 'Bruttolön per månad som växlas till extra tjänstepension före FIRE. Sänker kontant bruttolön, skatt och allmän pensionsgrundande inkomst, men ökar pensionskapitalet.'],
 	    ['salary-exchange-topup', 'Extra premie från arbetsgivaren på löneväxlat belopp. Standard 5,8 % motsvarar ungefär skillnaden mellan arbetsgivaravgift 31,42 % och särskild löneskatt på pension 24,26 %.'],
+	    ['partner-salary-exchange', 'Person 2:s bruttolön per månad som växlas till extra tjänstepension före hushållets FIRE-år.'],
+	    ['partner-salary-exchange-topup', 'Extra premie från arbetsgivaren på person 2:s löneväxlade belopp.'],
 	    ['savings', 'Privat sparande fram till FIRE. Kan vara fast kr/mån eller procent av beräknad nettolön.'],
 	    ['wealth', 'Privat investerbart kapital idag, utanför allmän pension och tjänstepension.'],
 	    ['fund-cost-basis', 'Fondkontots omkostnadsbelopp/anskaffningsvärde för dagens privata kapital. Används för att uppskatta realiserad kapitalvinst och 30 % skatt vid uttag. Nya insättningar läggs till med fullt anskaffningsvärde. Förlustavdrag modelleras inte.'],
@@ -2025,10 +2294,14 @@ function setupHelpTooltips() {
     ['tax-burial', 'Begravningsavgift som ingår i skatteberäkningen.'],
     ['tax-public', 'Maximal public service-avgift per år.'],
     ['occ-pension-tax', 'Årlig avkastningsskatt som dras från kapitalbaserad tjänstepension. 2026-approximationen är 2,36 % × 15 % = 0,354 %.'],
-    ['ip-balance', 'Inkomstpensionens pensionsbehållning. Den visas som månadsinkomst, inte som fritt uttagbart kapital.'],
-    ['pp-balance', 'Premiepensionssaldo. Modelleras som bundet kapital fram till allmän pensionsstart och omräknas sedan till månadsbelopp. Det är inte fritt uttagbart kapital.'],
-    ['public-pension-start', 'Ålder när allmän pension börjar tas ut. Senare start ger högre beräknad månadsutbetalning.'],
-    ['spend', 'Önskade utgifter idag efter skatt. Simuleringen indexerar detta med inflation efter FIRE.'],
+	    ['ip-balance', 'Inkomstpensionens pensionsbehållning. Den visas som månadsinkomst, inte som fritt uttagbart kapital.'],
+	    ['pp-balance', 'Premiepensionssaldo. Modelleras som bundet kapital fram till allmän pensionsstart och omräknas sedan till månadsbelopp. Det är inte fritt uttagbart kapital.'],
+	    ['public-pension-start', 'Ålder när allmän pension börjar tas ut. Senare start ger högre beräknad månadsutbetalning.'],
+	    ['partner-ip-balance', 'Person 2:s inkomstpensionsbehållning. Räknas om till egen livsvarig månadsinkomst vid vald pensionsstart.'],
+	    ['partner-pp-balance', 'Person 2:s premiepensionssaldo. Modelleras separat från person 1:s premiepension.'],
+	    ['partner-public-pension-start', 'Ålder när person 2 börjar ta ut allmän pension.'],
+	    ['spend', 'Önskade utgifter idag efter skatt. I hushållsläge avser värdet hela hushållet. Simuleringen indexerar detta med inflation efter FIRE.'],
+	    ['survivor-spend', 'Andel av hushållets utgifter som finns kvar när bara en person lever inom planeringshorisonten.'],
     ['infl', 'Årlig inflation som höjer framtida utgifter och vissa skatte-/pensionsgränser när indexering är på.'],
     ['ret', 'Nominell förväntad årsavkastning på privat portfölj före inflation.'],
     ['pret', 'Nominell förväntad bruttoavkastning på kapitalbaserad pension och premiepension. Avkastningsskatt dras separat från tjänstepensionskapital.'],
@@ -2042,8 +2315,10 @@ function setupHelpTooltips() {
   ].forEach(([id, text]) => controlTip(id, text));
 
   [
-	    ['btn-savings-fixed', 'Välj om sparandet anges som fast belopp per månad eller som procent av beräknad nettolön.'],
+		    ['btn-savings-fixed', 'Välj om sparandet anges som fast belopp per månad eller som procent av beräknad nettolön.'],
+		    ['household-on', 'Hushållsläge räknar två personers lön, pensioner och inkomstskatt separat men använder samma privata portfölj och utgiftsmål.'],
 	    ['salary-exchange-itp-on', 'Styr om ordinarie ITP1-premie beräknas på lön före eller efter löneväxling. Många avtal skyddar pensionsgrundande lön, men kontrollera ditt eget avtal.'],
+	    ['partner-salary-exchange-itp-on', 'Styr om person 2:s ordinarie ITP1-premie beräknas på lön före eller efter löneväxling.'],
 	    ['btn-isk', 'Typ av konto styr schablonskatt eller kapitalvinstskatt på privata uttag. Fondkonto modelleras med 0,12 % skatt på fondvärde vid årets ingång och 30 % skatt på realiserad vinst vid uttag.'],
     ['tax-preset-stockholm', 'Stockholm fyller i fördefinierade skattevärden. Anpassad låter dig ändra dem själv.'],
     ['idx-on', 'När detta är på räknas framtida beloppsgränser upp i simuleringen i stället för att hållas nominellt fasta.'],
@@ -2085,18 +2360,18 @@ function setupHelpTooltips() {
   ].forEach(([id, text]) => chartTip(id, text));
 }
 
-function makePensionSource(overrides = {}) {
-  const id = overrides.id || ('tp-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6));
-  return {
-    id,
-    name: overrides.name || 'Tjänstepension',
-    type: overrides.type || 'capital', // itp1, capital, fixed
-    capital: overrides.capital ?? 0,
-    monthlyAmount: overrides.monthlyAmount ?? 0,
-    startAge: overrides.startAge ?? Math.max(ITP1_MIN_AGE, state.fireAge || DEFAULT_STATE.fireAge),
-    payout: overrides.payout ?? 'lifetime'
-  };
-}
+function makePensionSource(overrides = {}, person = state) {
+	  const id = overrides.id || ('tp-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6));
+	  return {
+	    id,
+	    name: overrides.name || 'Tjänstepension',
+	    type: overrides.type || 'capital', // itp1, capital, fixed
+	    capital: overrides.capital ?? 0,
+	    monthlyAmount: overrides.monthlyAmount ?? 0,
+	    startAge: overrides.startAge ?? Math.max(ITP1_MIN_AGE, person.fireAge || DEFAULT_STATE.fireAge),
+	    payout: overrides.payout ?? 'lifetime'
+	  };
+	}
 
 function legacyPensionSources() {
   const startAge = state.itpStartAge || Math.max(ITP1_MIN_AGE, state.fireAge || DEFAULT_STATE.fireAge);
@@ -2122,50 +2397,135 @@ function legacyPensionSources() {
   return sources;
 }
 
-function normalizePensionSources() {
-  if (!Array.isArray(state.occupationalPensions)) {
-    state.occupationalPensions = legacyPensionSources();
-  }
-  const minStart = Math.max(ITP1_MIN_AGE, state.fireAge);
-  state.occupationalPensions = state.occupationalPensions.map((source, idx) => {
-    const type = ['itp1', 'capital', 'fixed'].includes(source.type) ? source.type : 'capital';
-    const payout = source.payout === 'lifetime' ? 'lifetime' : Number(source.payout);
-    const rawId = String(source.id || ('tp-' + idx));
-    return {
+function normalizePensionSourceList(sources, person, fallbackSources = []) {
+	  const list = Array.isArray(sources) ? sources : fallbackSources;
+	  const minStart = Math.min(Math.max(ITP1_MIN_AGE, person.fireAge), person.lifeExp - 1);
+	  return list.map((source, idx) => {
+	    const type = ['itp1', 'capital', 'fixed'].includes(source.type) ? source.type : 'capital';
+	    const payout = source.payout === 'lifetime' ? 'lifetime' : Number(source.payout);
+	    const rawId = String(source.id || ('tp-' + idx));
+	    return {
       id: /^[A-Za-z0-9_-]+$/.test(rawId) ? rawId : ('tp-' + idx),
       name: String(source.name || (type === 'itp1' ? 'ITP1' : 'Tjänstepension')).slice(0, 40),
-      type,
-      capital: clampNumber(source.capital, 0, MAX_PENSION_SOURCE_CAPITAL, 0),
-      monthlyAmount: clampNumber(source.monthlyAmount, 0, MAX_PENSION_SOURCE_MONTHLY, 0),
-      startAge: Math.round(clampNumber(source.startAge, minStart, state.lifeExp - 1, minStart)),
-      payout: [5, 10, 15, 20, 'lifetime'].includes(payout) ? payout : 'lifetime'
-    };
-  });
-}
+	      type,
+	      capital: clampNumber(source.capital, 0, MAX_PENSION_SOURCE_CAPITAL, 0),
+	      monthlyAmount: clampNumber(source.monthlyAmount, 0, MAX_PENSION_SOURCE_MONTHLY, 0),
+	      startAge: Math.round(clampNumber(source.startAge, minStart, person.lifeExp - 1, minStart)),
+	      payout: [5, 10, 15, 20, 'lifetime'].includes(payout) ? payout : 'lifetime'
+	    };
+	  });
+	}
+
+function pensionSourceContext(owner = 'primary') {
+	  return owner === 'partner' ? state.partner : state;
+	}
+
+function normalizePensionSources(owner = 'primary') {
+	  const person = pensionSourceContext(owner);
+	  if (!person) return;
+	  const fallback = owner === 'partner' ? [] : legacyPensionSources();
+	  person.occupationalPensions = normalizePensionSourceList(person.occupationalPensions, person, fallback);
+	}
+
+function primaryPersonFromState(s = state) {
+	  return {
+	    id: 'primary',
+	    name: 'Person 1',
+	    birthYear: s.birthYear,
+	    age: s.age,
+	    fireAge: s.fireAge,
+	    lifeExp: s.lifeExp,
+	    salary: s.salary,
+	    salaryGrowth: s.salaryGrowth,
+	    salaryExchangeMonthly: s.salaryExchangeMonthly,
+	    salaryExchangeTopup: s.salaryExchangeTopup,
+	    salaryExchangePreserveITP: s.salaryExchangePreserveITP,
+	    ipBalance: s.ipBalance,
+	    ppBalance: s.ppBalance,
+	    publicPensionStartAge: s.publicPensionStartAge,
+	    occupationalPensions: s.occupationalPensions || []
+	  };
+	}
+
+function partnerPersonFromState(s = state) {
+	  const p = s.partner || DEFAULT_PARTNER;
+	  return {
+	    id: 'partner',
+	    name: p.name || 'Person 2',
+	    birthYear: p.birthYear,
+	    age: p.age,
+	    fireAge: p.fireAge,
+	    lifeExp: p.lifeExp,
+	    salary: p.salary,
+	    salaryGrowth: p.salaryGrowth,
+	    salaryExchangeMonthly: p.salaryExchangeMonthly || 0,
+	    salaryExchangeTopup: p.salaryExchangeTopup ?? DEFAULT_SALARY_EXCHANGE_TOPUP,
+	    salaryExchangePreserveITP: p.salaryExchangePreserveITP !== false,
+	    ipBalance: p.ipBalance,
+	    ppBalance: p.ppBalance,
+	    publicPensionStartAge: p.publicPensionStartAge,
+	    occupationalPensions: p.occupationalPensions || []
+	  };
+	}
+
+function householdPeople(s = state) {
+	  const people = [primaryPersonFromState(s)];
+	  if (s.householdEnabled) people.push(partnerPersonFromState(s));
+	  return people;
+	}
+
+function personFireIndex(person) {
+	  return Math.max(0, person.fireAge - person.age);
+	}
+
+function personPublicPensionIndex(person) {
+	  return Math.max(0, person.publicPensionStartAge - person.age);
+	}
+
+function projectionYears(s = state) {
+	  return Math.max(0, ...householdPeople(s).map(person => Math.max(0, person.lifeExp - person.age)));
+	}
+
+function projectionEndAge(s = state) {
+	  return s.age + projectionYears(s);
+	}
+
+function householdFireIndex(s = state) {
+	  return Math.max(0, s.fireAge - s.age);
+	}
+
+function householdFireAge(s = state) {
+	  return s.age + householdFireIndex(s);
+	}
+
+function householdPublicPensionAge(s = state) {
+	  return s.age + Math.min(...householdPeople(s).map(personPublicPensionIndex));
+	}
 
 function pensionSourceCapitalTotal() {
-  return (state.occupationalPensions || []).reduce((sum, source) =>
-    sum + (source.type === 'fixed' ? 0 : source.capital), 0);
-}
+	  return householdPeople(state).reduce((sum, person) =>
+	    sum + (person.occupationalPensions || []).reduce((inner, source) =>
+	      inner + (source.type === 'fixed' ? 0 : source.capital), 0), 0);
+	}
 
 function earliestOccupationalStartAge() {
-  const sources = state.occupationalPensions || [];
-  return sources.length
-    ? Math.min(...sources.map(source => source.startAge))
-    : Math.max(ITP1_MIN_AGE, state.fireAge);
-}
+	  const starts = householdPeople(state).flatMap(person =>
+	    (person.occupationalPensions || []).map(source => state.age + Math.max(0, source.startAge - person.age)));
+	  return starts.length ? Math.min(...starts) : householdFireAge(state);
+	}
 
 function hasModeledOccupationalPension(s = state) {
-  return (s.occupationalPensions || []).length > 0 || (s.salaryExchangeMonthly || 0) > 0;
-}
+	  return householdPeople(s).some(person =>
+	    (person.occupationalPensions || []).length > 0 || (person.salaryExchangeMonthly || 0) > 0);
+	}
 
 function isAlreadyFire(s = state) {
-  return s.fireAge <= s.age;
-}
+	  return householdFireIndex(s) === 0;
+	}
 
 function yearsUntilFire(s = state) {
-  return Math.max(0, s.fireAge - s.age);
-}
+	  return householdFireIndex(s);
+	}
 
 function phasePeriodFromRows(rows, plus = false) {
   if (!rows?.length) return '–';
@@ -2205,6 +2565,206 @@ const MANUAL_LIMITS = {
   'mc-corr':    { min: -100,  max: 100 }
 };
 
+function makePrivateSavingSource(data = {}) {
+  const type = ['ISK', 'AF', 'KF'].includes(data.type) ? data.type : 'ISK';
+  const owner = ['primary', 'partner'].includes(data.owner) ? data.owner : 'primary';
+  const capital = clampNumber(data.capital, MANUAL_LIMITS.wealth.min, MANUAL_LIMITS.wealth.max, 0);
+  const withdrawalOrder = Number(data.withdrawalOrder);
+  return {
+    id: data.id || ('ps-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6)),
+    name: data.name || (type === 'AF' ? 'Fondkonto' : type),
+    type,
+    owner,
+    capital,
+    savingsTarget: data.savingsTarget === true,
+    withdrawalOrder: isFinite(withdrawalOrder) ? Math.max(1, Math.round(withdrawalOrder)) : null,
+    costBasis: clampNumber(
+      data.costBasis,
+      MANUAL_LIMITS['fund-cost-basis'].min,
+      MANUAL_LIMITS['fund-cost-basis'].max,
+      Math.min(capital, capital * DEFAULT_FUND_COST_BASIS_SHARE)
+    )
+  };
+}
+
+function normalizePrivateSavings(s = state) {
+  const hasSources = Array.isArray(s.privateSavings);
+  const legacySource = makePrivateSavingSource({
+    id: 'ps-main',
+    name: s.savingType === 'AF' ? 'Fondkonto' : (s.savingType || 'ISK'),
+    type: s.savingType,
+    owner: 'primary',
+    capital: s.wealth,
+    costBasis: s.fundCostBasis
+  });
+  s.privateSavings = hasSources
+    ? s.privateSavings.map(makePrivateSavingSource)
+    : [legacySource];
+  const seenPrivateIds = new Set();
+  s.privateSavings = s.privateSavings.map(source => {
+    if (!seenPrivateIds.has(source.id)) {
+      seenPrivateIds.add(source.id);
+      return source;
+    }
+    const next = { ...source, id: 'ps-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6) };
+    seenPrivateIds.add(next.id);
+    return next;
+  });
+  let hasSavingsTarget = false;
+  s.privateSavings.forEach(source => {
+    if (source.savingsTarget && !hasSavingsTarget) {
+      hasSavingsTarget = true;
+    } else {
+      source.savingsTarget = false;
+    }
+  });
+  if (!hasSavingsTarget && s.privateSavings[0]) {
+    s.privateSavings[0].savingsTarget = true;
+  }
+  s.privateSavings = s.privateSavings
+    .map((source, idx) => ({ source, idx }))
+    .sort((a, b) => {
+      const ao = isFinite(Number(a.source.withdrawalOrder)) ? Number(a.source.withdrawalOrder) : Infinity;
+      const bo = isFinite(Number(b.source.withdrawalOrder)) ? Number(b.source.withdrawalOrder) : Infinity;
+      return ao - bo || a.idx - b.idx;
+    })
+    .map((item, idx) => ({ ...item.source, withdrawalOrder: idx + 1 }));
+  s.wealth = s.privateSavings.reduce((sum, source) => sum + source.capital, 0);
+  const first = s.privateSavings[0] || legacySource;
+  s.savingType = first.type;
+  s.fundCostBasis = s.privateSavings
+    .filter(source => source.type === 'AF')
+    .reduce((sum, source) => sum + source.costBasis, 0);
+}
+
+function privateSourceOwner(source, s = state) {
+  if (!s.householdEnabled) return 'primary';
+  return source.owner === 'partner' ? 'partner' : 'primary';
+}
+
+function privateSavingsForSimulation(s = state) {
+  return (s.privateSavings || [])
+    .slice()
+    .sort((a, b) => (a.withdrawalOrder || 9999) - (b.withdrawalOrder || 9999))
+    .map(source => ({
+      ...source,
+      capitalRuntime: Math.max(0, source.capital || 0),
+      costBasisRuntime: Math.max(0, source.costBasis || 0)
+    }));
+}
+
+function privateCapitalTotal(sources) {
+  return (sources || []).reduce((sum, source) => sum + Math.max(0, source.capitalRuntime || 0), 0);
+}
+
+function privateCostBasisTotal(sources) {
+  return (sources || []).reduce((sum, source) => sum + Math.max(0, source.costBasisRuntime || 0), 0);
+}
+
+function ensureRuntimePrivateSource(sources, fallbackType = 'ISK') {
+  if (sources.length > 0) return sources.find(source => source.savingsTarget) || sources[0];
+  const source = {
+    ...makePrivateSavingSource({ name: 'Nytt sparande', type: fallbackType, capital: 0, costBasis: 0, savingsTarget: true, withdrawalOrder: 1 }),
+    capitalRuntime: 0,
+    costBasisRuntime: 0
+  };
+  sources.push(source);
+  return source;
+}
+
+function depositToPrivateSources(sources, amount, fallbackType = 'ISK') {
+  if (amount <= 0) return;
+  const source = ensureRuntimePrivateSource(sources, fallbackType);
+  source.capitalRuntime += amount;
+  source.costBasisRuntime += amount;
+}
+
+function growPrivateSources(sources, returnRate) {
+  sources.forEach(source => {
+    source.capitalRuntime = Math.max(0, source.capitalRuntime * (1 + returnRate));
+  });
+}
+
+function applyShockToPrivateSources(sources, factor) {
+  sources.forEach(source => {
+    source.capitalRuntime = Math.max(0, source.capitalRuntime * factor);
+  });
+}
+
+function deductFromPrivateSources(sources, amount, predicate = () => true) {
+  let remaining = Math.max(0, amount || 0);
+  const eligible = sources.filter(source => predicate(source) && source.capitalRuntime > 0);
+  const total = privateCapitalTotal(eligible);
+  eligible.forEach(source => {
+    const share = total > 0 ? remaining * (source.capitalRuntime / total) : 0;
+    source.capitalRuntime = Math.max(0, source.capitalRuntime - share);
+  });
+}
+
+function applyPrivateAccountTaxes(sources, yearIndex = 0, openingSources = sources) {
+  const iskOwners = ['primary', ...(state.householdEnabled ? ['partner'] : [])];
+  const iskTax = iskOwners.reduce((sum, owner) => {
+    const ownerCapital = sources
+      .filter(source => (source.type === 'ISK' || source.type === 'KF') && privateSourceOwner(source) === owner)
+      .reduce((inner, source) => inner + Math.max(0, source.capitalRuntime || 0), 0);
+    const ownerTax = calcISKTax(ownerCapital, yearIndex);
+    deductFromPrivateSources(
+      sources,
+      ownerTax,
+      source => (source.type === 'ISK' || source.type === 'KF') && privateSourceOwner(source) === owner
+    );
+    return sum + ownerTax;
+  }, 0);
+  const openingById = new Map((openingSources || []).map(source => [source.id, source.capitalRuntime || 0]));
+  const afTax = sources
+    .filter(source => source.type === 'AF')
+    .reduce((sum, source) => sum + Math.max(0, openingById.get(source.id) || 0) * AF_FUND_TAX_RATE, 0);
+  deductFromPrivateSources(sources, afTax, source => source.type === 'AF');
+  return iskTax + afTax;
+}
+
+function estimateGrossWithdrawalForNetFromPrivateSources(netNeeded, sources) {
+  let remainingNet = Math.max(0, netNeeded || 0);
+  let gross = 0;
+  for (const source of sources) {
+    const capital = Math.max(0, source.capitalRuntime || 0);
+    if (capital <= 0 || remainingNet <= 0) continue;
+    const gainRatio = source.type === 'AF' && capital > 0
+      ? Math.max(0, (capital - Math.max(0, source.costBasisRuntime || 0)) / capital)
+      : 0;
+    const netRate = source.type === 'AF' ? Math.max(0.01, 1 - gainRatio * CAPITAL_TAX_RATE) : 1;
+    const maxNet = capital * netRate;
+    if (remainingNet <= maxNet) {
+      gross += remainingNet / netRate;
+      remainingNet = 0;
+      break;
+    }
+    gross += capital;
+    remainingNet -= maxNet;
+  }
+  return gross;
+}
+
+function withdrawFromPrivateSources(sources, grossAmount) {
+  let remaining = Math.max(0, grossAmount || 0);
+  let gross = 0;
+  let net = 0;
+  for (const source of sources) {
+    if (remaining <= 0) break;
+    const capital = Math.max(0, source.capitalRuntime || 0);
+    if (capital <= 0) continue;
+    const amount = Math.min(remaining, capital);
+    const sourceNet = netWithdrawal(amount, capital, source.costBasisRuntime || 0, source.type);
+    const withdrawFrac = capital > 0 ? amount / capital : 0;
+    source.costBasisRuntime = Math.max(0, (source.costBasisRuntime || 0) * (1 - withdrawFrac));
+    source.capitalRuntime = Math.max(0, capital - amount);
+    gross += amount;
+    net += sourceNet;
+    remaining -= amount;
+  }
+  return { gross, net, tax: Math.max(0, gross - net) };
+}
+
 function normalizeState() {
   const d = DEFAULT_STATE;
   if (isFinite(Number(state.age)) && state.birthYear === d.birthYear && Number(state.age) !== d.age) {
@@ -2215,15 +2775,50 @@ function normalizeState() {
 	  }
 	  state.birthYear = Math.round(clampNumber(state.birthYear, 1926, 2006, d.birthYear));
   state.age = TAX_YEAR - state.birthYear;
-	  state.fireAge = Math.round(clampNumber(state.fireAge, 30, 70, d.fireAge));
-	  state.lifeExp = Math.round(clampNumber(state.lifeExp, Math.max(70, state.age + 1, state.fireAge + 1), 100, d.lifeExp));
-  const minPublicPensionStart = Math.max(calcPensionMinAgeFromBirthYear(state.birthYear), state.fireAge);
-  const minItpStart = Math.max(ITP1_MIN_AGE, state.fireAge);
-  state.publicPensionStartAge = Math.round(clampNumber(state.publicPensionStartAge, minPublicPensionStart, state.lifeExp - 1, minPublicPensionStart));
-  state.itpStartAge = Math.round(clampNumber(state.itpStartAge, minItpStart, state.lifeExp - 1, minItpStart));
-  normalizePensionSources();
+		  state.fireAge = Math.round(clampNumber(state.fireAge, 30, 70, d.fireAge));
+		  state.lifeExp = Math.round(clampNumber(state.lifeExp, Math.max(70, state.age + 1, state.fireAge + 1), MAX_LIFE_EXP, d.lifeExp));
+	  const minPublicPensionStart = Math.max(calcPensionMinAgeFromBirthYear(state.birthYear), state.fireAge);
+	  const minItpStart = Math.max(ITP1_MIN_AGE, state.fireAge);
+	  state.publicPensionStartAge = Math.round(clampNumber(state.publicPensionStartAge, minPublicPensionStart, state.lifeExp - 1, minPublicPensionStart));
+	  state.itpStartAge = Math.round(clampNumber(state.itpStartAge, minItpStart, state.lifeExp - 1, minItpStart));
+	  normalizePensionSources();
 
-	  state.salary = clampNumber(state.salary, MANUAL_LIMITS.salary.min, MANUAL_LIMITS.salary.max, d.salary);
+	  state.householdEnabled = state.householdEnabled === true;
+	  state.survivorSpendPercent = clampNumber(state.survivorSpendPercent, 40, 100, d.survivorSpendPercent);
+	  if (!state.partner || typeof state.partner !== 'object' || Array.isArray(state.partner)) {
+	    state.partner = cloneSettings(d.partner || DEFAULT_PARTNER);
+	  } else {
+	    state.partner = { ...cloneSettings(d.partner || DEFAULT_PARTNER), ...state.partner };
+	  }
+	  const p = state.partner;
+	  if (isFinite(Number(p.age)) && p.birthYear === (d.partner?.birthYear ?? DEFAULT_PARTNER.birthYear) && Number(p.age) !== (d.partner?.age ?? DEFAULT_PARTNER.age)) {
+	    p.birthYear = TAX_YEAR - Number(p.age);
+	  }
+	  if (!isFinite(Number(p.birthYear))) {
+	    p.birthYear = TAX_YEAR - clampNumber(p.age, 20, 100, DEFAULT_PARTNER.age);
+	  }
+	  p.birthYear = Math.round(clampNumber(p.birthYear, 1926, 2006, DEFAULT_PARTNER.birthYear));
+	  p.age = TAX_YEAR - p.birthYear;
+	  const commonFireDelay = Math.max(0, state.fireAge - state.age);
+	  p.fireAge = state.householdEnabled
+	    ? p.age + commonFireDelay
+	    : Math.round(clampNumber(p.fireAge, 30, 70, DEFAULT_PARTNER.fireAge));
+	  const partnerLifeMin = state.householdEnabled
+	    ? Math.max(70, p.age + 1)
+	    : Math.max(70, p.age + 1, p.fireAge + 1);
+	  p.lifeExp = Math.round(clampNumber(p.lifeExp, partnerLifeMin, MAX_LIFE_EXP, DEFAULT_PARTNER.lifeExp));
+	  p.salary = clampNumber(p.salary, 0, MANUAL_LIMITS.salary.max, DEFAULT_PARTNER.salary);
+	  p.salaryGrowth = clampNumber(p.salaryGrowth, MANUAL_LIMITS['salary-growth'].min, MANUAL_LIMITS['salary-growth'].max, DEFAULT_PARTNER.salaryGrowth);
+	  p.salaryExchangeMonthly = clampNumber(p.salaryExchangeMonthly, 0, Math.min(MANUAL_LIMITS['salary-exchange'].max, Math.max(0, p.salary / 12)), 0);
+	  p.salaryExchangeTopup = clampNumber(p.salaryExchangeTopup, MANUAL_LIMITS['salary-exchange-topup'].min, MANUAL_LIMITS['salary-exchange-topup'].max, DEFAULT_PARTNER.salaryExchangeTopup);
+	  p.salaryExchangePreserveITP = p.salaryExchangePreserveITP !== false;
+	  p.ipBalance = clampNumber(p.ipBalance, MANUAL_LIMITS['ip-balance'].min, MANUAL_LIMITS['ip-balance'].max, DEFAULT_PARTNER.ipBalance);
+	  p.ppBalance = clampNumber(p.ppBalance, MANUAL_LIMITS['pp-balance'].min, MANUAL_LIMITS['pp-balance'].max, DEFAULT_PARTNER.ppBalance);
+	  const minPartnerPublicStart = Math.max(calcPensionMinAgeFromBirthYear(p.birthYear), Math.min(p.fireAge, p.lifeExp - 1));
+	  p.publicPensionStartAge = Math.round(clampNumber(p.publicPensionStartAge, minPartnerPublicStart, p.lifeExp - 1, minPartnerPublicStart));
+	  normalizePensionSources('partner');
+
+		  state.salary = clampNumber(state.salary, MANUAL_LIMITS.salary.min, MANUAL_LIMITS.salary.max, d.salary);
 	  state.salaryGrowth = clampNumber(state.salaryGrowth, MANUAL_LIMITS['salary-growth'].min, MANUAL_LIMITS['salary-growth'].max, d.salaryGrowth);
 	  state.salaryExchangeMonthly = clampNumber(
 	    state.salaryExchangeMonthly,
@@ -2273,6 +2868,7 @@ function normalizeState() {
   state.mcCorrelation = clampNumber(state.mcCorrelation, MANUAL_LIMITS['mc-corr'].min, MANUAL_LIMITS['mc-corr'].max, d.mcCorrelation);
 
   if (!['ISK', 'AF', 'KF'].includes(state.savingType)) state.savingType = d.savingType;
+  normalizePrivateSavings(state);
   if (!['stockholm', 'custom'].includes(state.taxPreset)) state.taxPreset = d.taxPreset;
   if (state.taxPreset === 'stockholm') {
     const p = TAX_PRESETS.stockholm;
@@ -2288,6 +2884,20 @@ function normalizeState() {
   state.itpPayout = [5, 10, 15, 20, 'lifetime'].includes(payout) ? payout : d.itpPayout;
   if (!['nominal', 'real'].includes(state.displayMode)) state.displayMode = d.displayMode;
   if (!['dark', 'light'].includes(state.theme)) state.theme = d.theme;
+}
+
+function salaryExchangeNoteText(person) {
+  if (personFireIndex(person) <= 0) {
+    return 'Löneväxling används bara före FIRE och påverkar därför inte prognosen när FIRE redan har passerat.';
+  }
+  const annualExchange = annualSalaryExchangeForYear(person.salary, 0, person);
+  const cashSalary = salaryAfterExchange(person.salary, annualExchange);
+  const fullPublicPensionSalary = rulesForYear(0).publicPensionFeeCeilingGross;
+  const exchangeContribution = salaryExchangePensionContribution(annualExchange, person);
+  const publicPensionText = cashSalary >= fullPublicPensionSalary
+    ? 'Lönen efter växling ligger över taket för full allmän pension.'
+    : `Lönen efter växling ligger under taket för full allmän pension (${fmt(fullPublicPensionSalary)} kr/år).`;
+  return `Extra tjänstepension: cirka ${fmt(exchangeContribution / 12)} kr/mån. Kontant bruttolön efter växling: ${fmt(cashSalary / 12)} kr/mån. ${publicPensionText}`;
 }
 
 function syncUI() {
@@ -2309,37 +2919,45 @@ function syncUI() {
     }
     if (disp) disp.textContent = formatter ? formatter(val) : val;
 	  };
-		  setSliderBounds('birth-year', 1926, 2006);
-		  setSliderBounds('age', 20, 100);
-	  setSliderBounds('fire-age', 30, Math.min(70, s.lifeExp - 1));
-	  setSliderBounds('life-exp', Math.max(70, s.age + 1, s.fireAge + 1), 100);
-	  setSliderBounds('public-pension-start', Math.max(calcPensionMinAgeFromBirthYear(s.birthYear), s.fireAge), s.lifeExp - 1);
-  setSlider('birth-year',    'v-birth-year', s.birthYear);
-  setSlider('age',          'v-age',       s.age);
-  setSlider('fire-age',     'v-fire-age',  s.fireAge);
-	  setSlider('life-exp',     'v-life-exp',  s.lifeExp);
-	  setSlider('salary',       'v-salary',    s.salary,      fmt);
-	  setSlider('salary-growth','v-salary-growth', s.salaryGrowth, v => v.toFixed(1));
-	  setSliderBounds('salary-exchange', 0, Math.min(MANUAL_LIMITS['salary-exchange'].max, Math.max(0, s.salary / 12)));
+			  setSliderBounds('birth-year', 1926, 2006);
+			  setSliderBounds('age', 20, 100);
+		  setSliderBounds('fire-age', 30, Math.min(70, s.lifeExp - 1));
+		  setSliderBounds('life-exp', Math.max(70, s.age + 1, s.fireAge + 1), MAX_LIFE_EXP);
+		  setSliderBounds('public-pension-start', Math.max(calcPensionMinAgeFromBirthYear(s.birthYear), s.fireAge), s.lifeExp - 1);
+		  const p = s.partner || DEFAULT_PARTNER;
+		  setSliderBounds('partner-birth-year', 1926, 2006);
+		  setSliderBounds('partner-age', 20, 100);
+		  setSliderBounds('partner-fire-age', 20, MAX_LIFE_EXP);
+		  setSliderBounds('partner-life-exp', s.householdEnabled ? Math.max(70, p.age + 1) : Math.max(70, p.age + 1, p.fireAge + 1), MAX_LIFE_EXP);
+		  setSliderBounds('partner-public-pension-start', Math.max(calcPensionMinAgeFromBirthYear(p.birthYear), p.fireAge), p.lifeExp - 1);
+	  setSlider('birth-year',    'v-birth-year', s.birthYear);
+	  setSlider('age',          'v-age',       s.age);
+	  setSlider('fire-age',     'v-fire-age',  s.fireAge);
+		  setSlider('life-exp',     'v-life-exp',  s.lifeExp);
+		  setSlider('partner-birth-year', 'v-partner-birth-year', p.birthYear);
+		  setSlider('partner-age', 'v-partner-age', p.age);
+		  setSlider('partner-fire-age', 'v-partner-fire-age', p.fireAge);
+		  setSlider('partner-life-exp', 'v-partner-life-exp', p.lifeExp);
+		  setSlider('salary',       'v-salary',    s.salary,      fmt);
+		  setSlider('salary-growth','v-salary-growth', s.salaryGrowth, v => v.toFixed(1));
+		  setSlider('partner-salary', 'v-partner-salary', p.salary, fmt);
+		  setSlider('partner-salary-growth', 'v-partner-salary-growth', p.salaryGrowth, v => v.toFixed(1));
+		  setSliderBounds('salary-exchange', 0, Math.min(MANUAL_LIMITS['salary-exchange'].max, Math.max(0, s.salary / 12)));
+		  setSliderBounds('partner-salary-exchange', 0, Math.min(MANUAL_LIMITS['salary-exchange'].max, Math.max(0, p.salary / 12)));
 	  setSlider('salary-exchange', 'v-salary-exchange', s.salaryExchangeMonthly, fmt);
 	  setSlider('salary-exchange-topup', 'v-salary-exchange-topup', s.salaryExchangeTopup, v => Number(v).toFixed(1));
+	  setSlider('partner-salary-exchange', 'v-partner-salary-exchange', p.salaryExchangeMonthly, fmt);
+	  setSlider('partner-salary-exchange-topup', 'v-partner-salary-exchange-topup', p.salaryExchangeTopup, v => Number(v).toFixed(1));
 	  const exchangeDetails = document.getElementById('salary-exchange-details');
 	  if (exchangeDetails) exchangeDetails.style.display = s.salaryExchangeMonthly > 0 ? '' : 'none';
 	  const exchangeNote = document.getElementById('salary-exchange-note');
 	  if (exchangeNote) {
-	    if (isAlreadyFire(s)) {
-	      exchangeNote.textContent = 'Löneväxling används bara före FIRE och påverkar därför inte prognosen när FIRE redan har passerat.';
-	    } else {
-	      const annualExchange = annualSalaryExchangeForYear(s.salary, 0, s);
-	      const cashSalary = salaryAfterExchange(s.salary, annualExchange);
-	      const fullPublicPensionSalary = rulesForYear(0).publicPensionFeeCeilingGross;
-	      const exchangeContribution = salaryExchangePensionContribution(annualExchange, s);
-	      const publicPensionText = cashSalary >= fullPublicPensionSalary
-	        ? 'Lönen efter växling ligger över taket för full allmän pension.'
-	        : `Lönen efter växling ligger under taket för full allmän pension (${fmt(fullPublicPensionSalary)} kr/år).`;
-	      exchangeNote.textContent = `Extra tjänstepension: cirka ${fmt(exchangeContribution / 12)} kr/mån. Kontant bruttolön efter växling: ${fmt(cashSalary / 12)} kr/mån. ${publicPensionText}`;
-	    }
+	    exchangeNote.textContent = salaryExchangeNoteText(primaryPersonFromState(s));
 	  }
+	  const partnerExchangeDetails = document.getElementById('partner-salary-exchange-details');
+	  if (partnerExchangeDetails) partnerExchangeDetails.style.display = s.householdEnabled && p.salaryExchangeMonthly > 0 ? '' : 'none';
+	  const partnerExchangeNote = document.getElementById('partner-salary-exchange-note');
+	  if (partnerExchangeNote) partnerExchangeNote.textContent = salaryExchangeNoteText(partnerPersonFromState(s));
 	  const savingsEl = document.getElementById('savings');
   if (savingsEl) {
     if (s.savingsMode === 'percentNet') {
@@ -2365,16 +2983,20 @@ function syncUI() {
 	  );
 	  setSlider('fund-cost-basis', 'v-fund-cost-basis', s.fundCostBasis, fmt);
 	  const fundCostBasisField = document.getElementById('fund-cost-basis-field');
-	  if (fundCostBasisField) fundCostBasisField.style.display = s.savingType === 'AF' ? '' : 'none';
+	  if (fundCostBasisField) fundCostBasisField.style.display = 'none';
 	  setSlider('tax-muni',     'v-tax-muni',  s.municipalTax, v => Number(v).toFixed(2));
   setSlider('tax-burial',   'v-tax-burial', s.burialFee,   v => Number(v).toFixed(3).replace(/0+$/, '').replace(/\.$/, ''));
-  setSlider('tax-public',   'v-tax-public', s.publicServiceMax, fmt);
-  setSlider('occ-pension-tax', 'v-occ-pension-tax', s.occupationalPensionTax, v => Number(v).toFixed(3).replace(/0+$/, '').replace(/\.$/, ''));
-  setSlider('ip-balance',   'v-ip-bal',    s.ipBalance,   fmt);
-  setSlider('pp-balance',   'v-pp-bal',    s.ppBalance,   fmt);
-  setSlider('public-pension-start', 'v-public-start', s.publicPensionStartAge);
-  setSlider('spend',        'v-spend',     s.spend,       fmt);
-  setSlider('infl',         'v-infl',      s.infl,        v => v.toFixed(1));
+		  setSlider('tax-public',   'v-tax-public', s.publicServiceMax, fmt);
+	  setSlider('occ-pension-tax', 'v-occ-pension-tax', s.occupationalPensionTax, v => Number(v).toFixed(3).replace(/0+$/, '').replace(/\.$/, ''));
+	  setSlider('ip-balance',   'v-ip-bal',    s.ipBalance,   fmt);
+	  setSlider('pp-balance',   'v-pp-bal',    s.ppBalance,   fmt);
+	  setSlider('public-pension-start', 'v-public-start', s.publicPensionStartAge);
+		  setSlider('partner-ip-balance', 'v-partner-ip-bal', p.ipBalance, fmt);
+		  setSlider('partner-pp-balance', 'v-partner-pp-bal', p.ppBalance, fmt);
+		  setSlider('partner-public-pension-start', 'v-partner-public-start', p.publicPensionStartAge);
+	  setSlider('spend',        'v-spend',     s.spend,       fmt);
+		  setSlider('survivor-spend', 'v-survivor-spend', s.survivorSpendPercent, v => v.toFixed(0));
+	  setSlider('infl',         'v-infl',      s.infl,        v => v.toFixed(1));
   setSlider('ret',          'v-ret',       s.ret,         v => v.toFixed(1));
   setSlider('pret',         'v-pret',      s.pret,        v => v.toFixed(1));
   setSlider('derisk-target','v-derisk-target', s.deRiskTarget, v => v.toFixed(0));
@@ -2389,9 +3011,21 @@ function syncUI() {
     document.getElementById('btn-'+t.toLowerCase())?.classList.toggle('active', t === s.savingType));
   ['stockholm','custom'].forEach(p =>
     document.getElementById('tax-preset-'+p)?.classList.toggle('active', p === s.taxPreset));
-  ['fixed','percentNet'].forEach(m =>
-    document.getElementById('btn-savings-'+(m === 'fixed' ? 'fixed' : 'percent'))?.classList.toggle('active', m === s.savingsMode));
-  document.getElementById('idx-on')?.classList.toggle('active', s.indexThresholds);
+	  ['fixed','percentNet'].forEach(m =>
+	    document.getElementById('btn-savings-'+(m === 'fixed' ? 'fixed' : 'percent'))?.classList.toggle('active', m === s.savingsMode));
+	  document.getElementById('household-on')?.classList.toggle('active', s.householdEnabled);
+	  document.getElementById('household-off')?.classList.toggle('active', !s.householdEnabled);
+	  ['partner-personal-section', 'partner-income-section', 'partner-pension-section', 'survivor-spend-field'].forEach(id => {
+	    const el = document.getElementById(id);
+	    if (el) el.style.display = s.householdEnabled ? '' : 'none';
+	  });
+	  const spendLabel = document.getElementById('spend-label-text');
+	  if (spendLabel) spendLabel.textContent = s.householdEnabled ? 'Hushållets utgifter idag (kr/mån)' : 'Utgifter idag (kr/mån)';
+	  const savingsLabel = document.getElementById('savings-label-text');
+	  if (savingsLabel) savingsLabel.textContent = s.savingsMode === 'percentNet'
+	    ? (s.householdEnabled ? 'Privat sparande (% av hushållets nettolön)' : 'Privat sparande (% av nettolön)')
+	    : (s.householdEnabled ? 'Hushållets privata sparande (kr/mån)' : 'Privat sparande (kr/mån)');
+	  document.getElementById('idx-on')?.classList.toggle('active', s.indexThresholds);
   document.getElementById('idx-off')?.classList.toggle('active', !s.indexThresholds);
   document.getElementById('derisk-on')?.classList.toggle('active', s.deRiskEnabled);
   document.getElementById('derisk-off')?.classList.toggle('active', !s.deRiskEnabled);
@@ -2399,7 +3033,10 @@ function syncUI() {
 	  document.getElementById('derisk-pension-off')?.classList.toggle('active', !s.deRiskPensions);
 	  document.getElementById('salary-exchange-itp-on')?.classList.toggle('active', s.salaryExchangePreserveITP);
 	  document.getElementById('salary-exchange-itp-off')?.classList.toggle('active', !s.salaryExchangePreserveITP);
-	  renderPensionSourcesEditor();
+	  document.getElementById('partner-salary-exchange-itp-on')?.classList.toggle('active', p.salaryExchangePreserveITP);
+	  document.getElementById('partner-salary-exchange-itp-off')?.classList.toggle('active', !p.salaryExchangePreserveITP);
+		  renderPensionSourcesEditor();
+		  renderPrivateSavingsEditor();
   [1,2,3].forEach(i =>
     document.getElementById('sc-'+i)?.classList.toggle('active', i === s.strategy));
   ['nominal','real'].forEach(m =>
@@ -2410,56 +3047,134 @@ function syncUI() {
   if (sensEl) sensEl.value = s.sensitivityMetric;
 }
 
-function renderPensionSourcesEditor() {
-  const list = document.getElementById('occupational-pension-list');
-  if (!list) return;
-  const typeLabel = {
-    itp1: 'Nuvarande ITP1',
-    capital: 'Kapital / fribrev',
-    fixed: 'Fast brutto/mån'
-  };
-  const autoSourceId = contributionPensionSourceId(state.occupationalPensions || []);
-  const duplicateAuto = (state.occupationalPensions || []).filter(source => source.type === 'itp1').length > 1;
-  const sources = state.occupationalPensions || [];
-  if (sources.length === 0) {
-    list.innerHTML = '<div class="pension-info">Ingen tjänstepension tillagd. Lägg till en källa om du vill modellera tjänstepension eller fribrev.</div>';
-    return;
-  }
+function renderPensionSourceList(listId, owner = 'primary') {
+	  const list = document.getElementById(listId);
+	  if (!list) return;
+	  const person = pensionSourceContext(owner);
+	  if (!person) return;
+	  const typeLabel = {
+	    itp1: 'Nuvarande ITP1',
+	    capital: 'Kapital / fribrev',
+	    fixed: 'Fast brutto/mån'
+	  };
+	  const autoSourceId = contributionPensionSourceId(person.occupationalPensions || []);
+	  const duplicateAuto = (person.occupationalPensions || []).filter(source => source.type === 'itp1').length > 1;
+	  const sources = person.occupationalPensions || [];
+	  const ownerArg = owner === 'partner' ? ", 'partner'" : '';
+	  if (sources.length === 0) {
+	    list.innerHTML = '<div class="pension-info">Ingen tjänstepension tillagd. Lägg till en källa om du vill modellera tjänstepension eller fribrev.</div>';
+	    return;
+	  }
   list.innerHTML = sources.map(source => {
     const id = source.id;
     const isFixed = source.type === 'fixed';
     const sourceNote = source.type === 'itp1' && duplicateAuto && source.id !== autoSourceId
       ? '<div style="font-size:10px;color:var(--text-dim);margin-top:6px">Framtida ITP1-intjäning räknas bara på första nuvarande ITP1-källan.</div>'
       : '';
+	    return `
+	        <div class="pension-source">
+	          <div class="pension-source-head">
+	            <input class="text-input" value="${escapeHTML(source.name)}" onchange="updatePensionSource('${id}', 'name', this.value${ownerArg})">
+	          <button class="icon-btn" onclick="removePensionSource('${id}'${ownerArg})">×</button>
+	        </div>
+	        <div class="mini-grid">
+	          <div class="mini-field">
+	            <label class="has-tip" data-tip="Välj hur källan ska modelleras: aktiv ITP1 med framtida intjäning, kapital/fribrev utan ny intjäning, eller fast brutto/mån.">Typ</label>
+	            <select class="select-input" style="width:100%" onchange="updatePensionSource('${id}', 'type', this.value${ownerArg})">
+	              ${Object.keys(typeLabel).map(type => `<option value="${type}" ${source.type === type ? 'selected' : ''}>${typeLabel[type]}</option>`).join('')}
+	            </select>
+	          </div>
+	          <div class="mini-field">
+	            <label class="has-tip" data-tip="Ålder när just denna pensionskälla börjar betalas ut. Optimizer kan tillfälligt testa gemensam startålder.">Startålder</label>
+	            <input class="mini-input" type="number" min="${Math.min(Math.max(ITP1_MIN_AGE, person.fireAge), person.lifeExp - 1)}" max="${person.lifeExp - 1}" value="${source.startAge}" onchange="updatePensionSource('${id}', 'startAge', this.value${ownerArg})">
+	          </div>
+	          <div class="mini-field">
+	            <label class="has-tip" data-tip="${isFixed ? 'Fast bruttobelopp per månad från startålder. Beloppet påverkas inte av marknadsavkastning.' : 'Nuvarande kapital för källan. Växer med pensionskapitalets avkastning och minskar under utbetalning.'}">${isFixed ? 'Brutto/mån' : 'Kapital'}</label>
+	            <input class="mini-input" type="number" min="0" step="${isFixed ? 500 : 25000}" value="${isFixed ? source.monthlyAmount : source.capital}" onchange="updatePensionSource('${id}', '${isFixed ? 'monthlyAmount' : 'capital'}', this.value${ownerArg})">
+	          </div>
+	          <div class="mini-field">
+	            <label class="has-tip" data-tip="Antal år kapitalbaserad tjänstepension betalas ut. Livsvar. sprider kapitalet över återstående livslängd i modellen.">Utbetalning</label>
+	            <select class="select-input" style="width:100%" onchange="updatePensionSource('${id}', 'payout', this.value${ownerArg})">
+	              ${[5, 10, 15, 20, 'lifetime'].map(p => `<option value="${p}" ${source.payout === p ? 'selected' : ''}>${p === 'lifetime' ? 'Livsvar.' : p + ' år'}</option>`).join('')}
+	            </select>
+          </div>
+        </div>
+        ${sourceNote}
+      </div>`;
+	  }).join('');
+	}
+
+function renderPensionSourcesEditor() {
+	  renderPensionSourceList('occupational-pension-list', 'primary');
+	  renderPensionSourceList('partner-occupational-pension-list', 'partner');
+	}
+
+function renderPrivateSavingsEditor() {
+  const list = document.getElementById('private-savings-list');
+  if (!list) return;
+  const sources = state.privateSavings || [];
+  if (sources.length === 0) {
+    list.innerHTML = '<div class="pension-info">Ingen privat sparkälla tillagd. Framtida sparande modelleras ändå från lön, men nuvarande privat kapital är 0 kr.</div>';
+    return;
+  }
+  const typeLabel = { ISK: 'ISK', AF: 'Fondkonto', KF: 'KF' };
+  const orderOptionsFor = source => sources
+    .map((_, idx) => idx + 1)
+    .map(order => `<option value="${order}" ${source.withdrawalOrder === order ? 'selected' : ''}>${order}</option>`)
+    .join('');
+  list.innerHTML = sources.map(source => {
+    const id = source.id;
+    const ownerField = state.householdEnabled
+      ? `<div class="mini-field">
+          <label class="has-tip" data-tip="Ägare används för att beräkna personligt ISK/KF-grundavdrag i hushållsläge.">Ägare</label>
+          <select class="select-input" style="width:100%" onchange="updatePrivateSavingSource('${id}', 'owner', this.value)">
+            <option value="primary" ${privateSourceOwner(source) === 'primary' ? 'selected' : ''}>Person 1</option>
+            <option value="partner" ${privateSourceOwner(source) === 'partner' ? 'selected' : ''}>Person 2</option>
+          </select>
+        </div>`
+      : '';
+    const costBasisField = source.type === 'AF'
+      ? `<div class="mini-field">
+          <label class="has-tip" data-tip="Omkostnadsbelopp/anskaffningsvärde för just detta fondkonto. Används för 30 % skatt på realiserad kapitalvinst vid uttag.">Anskaffningsvärde</label>
+          <input class="mini-input" type="number" min="0" step="25000" value="${source.costBasis}" onchange="updatePrivateSavingSource('${id}', 'costBasis', this.value)">
+        </div>`
+      : `<div class="mini-field">
+          <label>Skatt</label>
+          <div style="font-size:11px;color:var(--text-muted);line-height:1.5">${source.type === 'KF' ? 'Schablon som ISK' : 'ISK-schablon'}</div>
+        </div>`;
     return `
-        <div class="pension-source">
-          <div class="pension-source-head">
-            <input class="text-input" value="${escapeHTML(source.name)}" onchange="updatePensionSource('${id}', 'name', this.value)">
-          <button class="icon-btn" onclick="removePensionSource('${id}')">×</button>
+      <div class="pension-source">
+        <div class="pension-source-head">
+          <input class="text-input" value="${escapeHTML(source.name)}" onchange="updatePrivateSavingSource('${id}', 'name', this.value)">
+          <button class="icon-btn" onclick="removePrivateSavingSource('${id}')">×</button>
         </div>
         <div class="mini-grid">
           <div class="mini-field">
-            <label class="has-tip" data-tip="Välj hur källan ska modelleras: aktiv ITP1 med framtida intjäning, kapital/fribrev utan ny intjäning, eller fast brutto/mån.">Typ</label>
-            <select class="select-input" style="width:100%" onchange="updatePensionSource('${id}', 'type', this.value)">
+            <label class="has-tip" data-tip="Kontotypen styr skatten. ISK/KF använder schablonskatt på samlat ISK/KF-underlag. Fondkonto använder årlig fondskatt och kapitalvinstskatt vid uttag.">Typ</label>
+            <select class="select-input" style="width:100%" onchange="updatePrivateSavingSource('${id}', 'type', this.value)">
               ${Object.keys(typeLabel).map(type => `<option value="${type}" ${source.type === type ? 'selected' : ''}>${typeLabel[type]}</option>`).join('')}
             </select>
           </div>
           <div class="mini-field">
-            <label class="has-tip" data-tip="Ålder när just denna pensionskälla börjar betalas ut. Optimizer kan tillfälligt testa gemensam startålder.">Startålder</label>
-            <input class="mini-input" type="number" min="${Math.max(ITP1_MIN_AGE, state.fireAge)}" max="${state.lifeExp - 1}" value="${source.startAge}" onchange="updatePensionSource('${id}', 'startAge', this.value)">
+            <label class="has-tip" data-tip="Nuvarande investerbart kapital i denna privata sparkälla.">Kapital</label>
+            <input class="mini-input" type="number" min="0" step="25000" value="${source.capital}" onchange="updatePrivateSavingSource('${id}', 'capital', this.value)">
+          </div>
+          ${ownerField}
+          ${costBasisField}
+          <div class="mini-field">
+            <label class="has-tip" data-tip="Den markerade sparkällan får nytt privat sparande före FIRE och eventuellt överskott efter FIRE. Bara en källa kan vara markerad.">Nytt sparande</label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text-muted);padding-top:7px">
+              <input type="checkbox" ${source.savingsTarget ? 'checked' : ''} onchange="setPrivateSavingTarget('${id}', this.checked)">
+              Hit
+            </label>
           </div>
           <div class="mini-field">
-            <label class="has-tip" data-tip="${isFixed ? 'Fast bruttobelopp per månad från startålder. Beloppet påverkas inte av marknadsavkastning.' : 'Nuvarande kapital för källan. Växer med pensionskapitalets avkastning och minskar under utbetalning.'}">${isFixed ? 'Brutto/mån' : 'Kapital'}</label>
-            <input class="mini-input" type="number" min="0" step="${isFixed ? 500 : 25000}" value="${isFixed ? source.monthlyAmount : source.capital}" onchange="updatePensionSource('${id}', '${isFixed ? 'monthlyAmount' : 'capital'}', this.value)">
-          </div>
-          <div class="mini-field">
-            <label class="has-tip" data-tip="Antal år kapitalbaserad tjänstepension betalas ut. Livsvar. sprider kapitalet över återstående livslängd i modellen.">Utbetalning</label>
-            <select class="select-input" style="width:100%" onchange="updatePensionSource('${id}', 'payout', this.value)">
-              ${[5, 10, 15, 20, 'lifetime'].map(p => `<option value="${p}" ${source.payout === p ? 'selected' : ''}>${p === 'lifetime' ? 'Livsvar.' : p + ' år'}</option>`).join('')}
+            <label class="has-tip" data-tip="Ordningen som privata konton används för portföljuttag. 1 töms först.">Uttagsordning</label>
+            <select class="select-input" style="width:100%" onchange="setPrivateSavingWithdrawalOrder('${id}', this.value)">
+              ${orderOptionsFor(source)}
             </select>
           </div>
         </div>
-        ${sourceNote}
       </div>`;
   }).join('');
 }
@@ -2661,15 +3376,23 @@ function targetMonthlyForRow(row) {
 }
 
 function baseTargetSpendMonthlyFromRows(rows) {
-  if (isAlreadyFire(state)) return state.spend;
-  const fireRow = rows.find(row => row.age === state.fireAge);
-  if (!fireRow?.targetSpendAnnual) return state.spend;
-  const fireYears = yearsUntilFire(state);
-  return fireRow.targetSpendAnnual / 12 / Math.pow(1 + state.infl / 100, fireYears);
-}
+	  if (isAlreadyFire(state)) return state.spend;
+	  const fireAge = householdFireAge(state);
+	  const fireRow = rows.find(row => row.age === fireAge);
+	  if (!fireRow?.targetSpendAnnual) return state.spend;
+	  const fireYears = householdFireIndex(state);
+	  return fireRow.targetSpendAnnual / 12 / Math.pow(1 + state.infl / 100, fireYears);
+	}
 
 function netIncomeComponents(row) {
-  const pensionGross = (row.almanBrutto || 0) + (row.itpBrutto || 0);
+	  if (isFinite(Number(row.almanNetAnnual)) || isFinite(Number(row.itpNetAnnual))) {
+	    return {
+	      portfolio: (row.portfolioNet || 0) / 12,
+	      alman: (row.almanNetAnnual || 0) / 12,
+	      itp: (row.itpNetAnnual || 0) / 12
+	    };
+	  }
+	  const pensionGross = (row.almanBrutto || 0) + (row.itpBrutto || 0);
   const pensionTax = pensionGross > 0
     ? calcIncomeTax(pensionGross, true, row.age, row.age - state.age)
     : 0;
@@ -2694,19 +3417,28 @@ function plannedPortfolioWithdrawal({
   pensionNet,
   privateCapital,
   costBasis,
-  savingType
+  savingType,
+  privateSources = null
 }) {
+  if (privateSources) {
+    privateCapital = privateCapitalTotal(privateSources);
+    costBasis = privateCostBasisTotal(privateSources);
+  }
   if (privateCapital <= 0) return 0;
 
   const netNeed = Math.max(0, annualSpend - Math.max(0, pensionNet));
-  const targetWithdrawal = grossWithdrawalForNet(netNeed, privateCapital, costBasis, savingType);
+  const targetWithdrawal = privateSources
+    ? estimateGrossWithdrawalForNetFromPrivateSources(netNeed, privateSources)
+    : grossWithdrawalForNet(netNeed, privateCapital, costBasis, savingType);
 
   if (strategy === 2) {
     const g = GUARDRAIL_WITHDRAWAL;
     const withdrawalRate = targetWithdrawal / Math.max(1, privateCapital);
     if (withdrawalRate > g.upperWR) return privateCapital * g.cappedWR;
     if (withdrawalRate < g.lowerWR && targetWithdrawal > 0) {
-      const fullSpendWithdrawal = grossWithdrawalForNet(annualSpend, privateCapital, costBasis, savingType);
+      const fullSpendWithdrawal = privateSources
+        ? estimateGrossWithdrawalForNetFromPrivateSources(annualSpend, privateSources)
+        : grossWithdrawalForNet(annualSpend, privateCapital, costBasis, savingType);
       return Math.min(targetWithdrawal * g.raiseFactor, fullSpendWithdrawal);
     }
   }
@@ -2715,16 +3447,16 @@ function plannedPortfolioWithdrawal({
 }
 
 function planMeetsTarget(rows) {
-  return rows.every(row => {
-    if (row.age < state.fireAge) return true;
-    return row.netMonthly + 1 >= targetMonthlyForRow(row);
-  });
-}
+	  return rows.every(row => {
+	    if (row.phase === 'accum') return true;
+	    return row.netMonthly + 1 >= targetMonthlyForRow(row);
+	  });
+	}
 
 function firstIncomeShortfallAge(rows) {
-  const row = rows.find(r => r.age >= state.fireAge && r.age < state.lifeExp && r.netMonthly + 1 < targetMonthlyForRow(r));
-  return row ? row.age : null;
-}
+	  const row = rows.find(r => r.phase !== 'accum' && r.netMonthly + 1 < targetMonthlyForRow(r));
+	  return row ? row.age : null;
+	}
 
 function calculateEvenIncomeMonthly() {
   const maxMonthly = MANUAL_LIMITS.spend.max;
@@ -2789,15 +3521,15 @@ function calcITP1Annual(grossSalary, yearIndex = 0) {
   return contrib;
 }
 
-function clonePensionSourceRuntime(source) {
-  return {
-    ...source,
-    capitalRuntime: source.type === 'fixed' ? 0 : source.capital,
-    monthlyRuntime: null,
-    annualPayoutRuntime: 0,
-    payoutEndAge: source.payout === 'lifetime' ? state.lifeExp : source.startAge + Number(source.payout)
-  };
-}
+function clonePensionSourceRuntime(source, lifeExp = state.lifeExp) {
+	  return {
+	    ...source,
+	    capitalRuntime: source.type === 'fixed' ? 0 : source.capital,
+	    monthlyRuntime: null,
+	    annualPayoutRuntime: 0,
+	    payoutEndAge: source.payout === 'lifetime' ? lifeExp : source.startAge + Number(source.payout)
+	  };
+	}
 
 function sourceRemainingPayoutYears(source, currentAge, lifeExp) {
   return source.payout === 'lifetime'
@@ -2813,20 +3545,24 @@ function salaryExchangeTargetSourceId(sources) {
   return contributionPensionSourceId(sources) || (sources || []).find(source => source.id === 'tp-salary-exchange')?.id || null;
 }
 
+function pensionSourcesForPerson(person, s = state) {
+	  const sources = (person.occupationalPensions || []).map(source => clonePensionSourceRuntime(source, person.lifeExp));
+	  if ((person.salaryExchangeMonthly || 0) > 0 && !contributionPensionSourceId(sources)) {
+	    sources.push(clonePensionSourceRuntime(makePensionSource({
+	      id: 'tp-salary-exchange',
+	      name: 'Löneväxling',
+	      type: 'capital',
+	      capital: 0,
+	      startAge: Math.max(ITP1_MIN_AGE, person.fireAge),
+	      payout: 'lifetime'
+	    }, person), person.lifeExp));
+	  }
+	  return sources;
+	}
+
 function pensionSourcesForSimulation(s = state) {
-  const sources = (s.occupationalPensions || []).map(clonePensionSourceRuntime);
-  if ((s.salaryExchangeMonthly || 0) > 0 && !contributionPensionSourceId(sources)) {
-    sources.push(clonePensionSourceRuntime(makePensionSource({
-      id: 'tp-salary-exchange',
-      name: 'Löneväxling',
-      type: 'capital',
-      capital: 0,
-      startAge: Math.max(ITP1_MIN_AGE, s.fireAge),
-      payout: 'lifetime'
-    })));
-  }
-  return sources;
-}
+	  return pensionSourcesForPerson(primaryPersonFromState(s), s);
+	}
 
 function sourceAnnualContribution(
   source,
@@ -2917,15 +3653,16 @@ const STRESS_SCENARIOS = [
 ];
 
 function stressYearParams(stressId, yearIndex, age, s, baseRet, basePret, baseInfl) {
-  let ret = baseRet;
-  let pret = basePret;
-  let infl = baseInfl;
-  if (stressId === 'lostDecade' && age >= s.fireAge && age < s.fireAge + 10) {
-    ret = Math.min(ret, 0);
-    pret = Math.min(pret, 0.02);
-  } else if (stressId === 'highInflation' && age >= s.fireAge && age < s.fireAge + 10) {
-    infl = Math.max(infl, 0.06);
-  } else if (stressId === 'lowReturns') {
+	  let ret = baseRet;
+	  let pret = basePret;
+	  let infl = baseInfl;
+	  const fireAge = householdFireAge(s);
+	  if (stressId === 'lostDecade' && age >= fireAge && age < fireAge + 10) {
+	    ret = Math.min(ret, 0);
+	    pret = Math.min(pret, 0.02);
+	  } else if (stressId === 'highInflation' && age >= fireAge && age < fireAge + 10) {
+	    infl = Math.max(infl, 0.06);
+	  } else if (stressId === 'lowReturns') {
     ret -= 0.02;
     pret -= 0.015;
   }
@@ -2933,27 +3670,373 @@ function stressYearParams(stressId, yearIndex, age, s, baseRet, basePret, baseIn
 }
 
 function stressShockFactors(stressId, age, s) {
-  if (stressId === 'fireCrash' && age === s.fireAge) {
-    return { privateCapital: 0.70, pensionCapital: 0.85 };
-  }
+	  if (stressId === 'fireCrash' && age === householdFireAge(s)) {
+	    return { privateCapital: 0.70, pensionCapital: 0.85 };
+	  }
   return { privateCapital: 1, pensionCapital: 1 };
 }
 
 function spendFactorsForScenario(years, stressId, s, baseRet, basePret, baseInfl) {
-  const factors = [1];
-  for (let i = 1; i < years; i++) {
-    const prevAge = s.age + i - 1;
-    const params = stressYearParams(stressId, i - 1, prevAge, s, baseRet, basePret, baseInfl);
-    factors[i] = factors[i - 1] * (1 + params.infl);
-  }
-  return factors;
-}
+	  const factors = [1];
+	  for (let i = 1; i < years; i++) {
+	    const prevAge = s.age + i - 1;
+	    const params = stressYearParams(stressId, i - 1, prevAge, s, baseRet, basePret, baseInfl);
+	    factors[i] = factors[i - 1] * (1 + params.infl);
+	  }
+	  return factors;
+	}
+
+function emptyTaxBreakdown() {
+	  return {
+	    kommunal: 0, statlig: 0, joba: 0, forvarv: 0,
+	    pensionFee: 0, pensionFeeReduction: 0, burialFee: 0,
+	    publicServiceFee: 0, fees: 0, total: 0
+	  };
+	}
+
+function addTaxBreakdown(total, part) {
+	  Object.keys(total).forEach(key => {
+	    total[key] += part[key] || 0;
+	  });
+	  return total;
+	}
+
+function createPersonRuntime(person, s = state) {
+	  const pensionSources = pensionSourcesForPerson(person, s);
+	  return {
+	    ...person,
+	    ipCapital: person.ipBalance,
+	    ppCapital: person.ppBalance,
+	    ipPensionMonthly: 0,
+	    ppPensionMonthly: 0,
+	    pensionSources,
+	    contributionSourceId: contributionPensionSourceId(pensionSources),
+	    exchangeSourceId: salaryExchangeTargetSourceId(pensionSources)
+	  };
+	}
+
+function personIsAlive(person, yearIndex) {
+	  return person.age + yearIndex < person.lifeExp;
+	}
+
+function householdSpendingMultiplier(runtimes, yearIndex, s = state) {
+	  if (!s.householdEnabled) return 1;
+	  const alive = runtimes.filter(person => personIsAlive(person, yearIndex)).length;
+	  if (alive <= 0) return 0;
+	  return alive === 1 ? clampNumber(s.survivorSpendPercent, 40, 100, 70) / 100 : 1;
+	}
+
+function householdAnnualPrivateSavings(workNetAnnual, s = state) {
+	  if (workNetAnnual <= 0) return 0;
+	  if (s.savingsMode === 'percentNet') return workNetAnnual * (s.savingsRate / 100);
+	  return s.savings * 12;
+	}
+
+function householdAllAlivePublicActive(runtimes, yearIndex) {
+	  const alive = runtimes.filter(person => personIsAlive(person, yearIndex));
+	  return alive.length > 0 && alive.every(person => person.age + yearIndex >= person.publicPensionStartAge);
+	}
+
+function simulateHousehold(options = {}) {
+	  const s = state;
+	  const years = projectionYears(s);
+	  const baseRet = s.ret / 100;
+	  const basePret = s.pret / 100;
+	  const baseInfl = s.infl / 100;
+	  const stressId = options.stressId || 'base';
+	  const spendFactors = spendFactorsForScenario(years, stressId, s, baseRet, basePret, baseInfl);
+	  const strategy = Number(options.strategyOverride ?? s.strategy);
+	  const targetSpendMonthly = isFinite(Number(options.targetSpendMonthly))
+	    ? Number(options.targetSpendMonthly)
+	    : strategy === 3 && !options.disableEvenIncomeOptimization
+	      ? calculateEvenIncomeMonthly()
+	      : s.spend;
+
+	  const runtimes = householdPeople(s).map(person => createPersonRuntime(person, s));
+	  const privateSources = privateSavingsForSimulation(s);
+	  let privateCapital = privateCapitalTotal(privateSources);
+	  const rows = [];
+
+	  for (let i = 0; i < years; i++) {
+	    const currentAge = s.age + i;
+	    const yearParams = stressYearParams(stressId, i, currentAge, s, baseRet, basePret, baseInfl);
+	    const privateReturn = effectivePrivateReturn(yearParams.ret, currentAge, s);
+	    const pensionReturn = effectivePensionReturn(yearParams.pret, currentAge, s);
+	    const ipIndexRate = Math.max(INKOMSTINDEX_RATE, yearParams.infl);
+	    const ipPayoutIndexRate = Math.max(0, ipIndexRate - IP_PAYOUT_ADVANCE_RATE);
+	    const ppPayoutIndexRate = ((1 + pensionReturn) / (1 + PP_PAYOUT_ADVANCE_RATE)) - 1;
+	    const shock = stressShockFactors(stressId, currentAge, s);
+	    if (shock.privateCapital !== 1 || shock.pensionCapital !== 1) {
+	      applyShockToPrivateSources(privateSources, shock.privateCapital);
+	      privateCapital = privateCapitalTotal(privateSources);
+	      runtimes.forEach(person => {
+	        person.pensionSources.forEach(source => {
+	          if (source.type !== 'fixed') source.capitalRuntime *= shock.pensionCapital;
+	        });
+	        person.ppCapital *= shock.pensionCapital;
+	      });
+	    }
+
+	    const privateSourcesAtYearStart = privateSources.map(source => ({ id: source.id, capitalRuntime: source.capitalRuntime }));
+	    const privateCapitalAtYearStart = privateCapitalTotal(privateSources);
+	    const privateCapitalPreWithdrawal = privateCapitalAtYearStart;
+	    const taxBreakdown = emptyTaxBreakdown();
+	    let workGrossAnnual = 0;
+	    let workNetAnnual = 0;
+	    let almanBrutto = 0;
+	    let itpBrutto = 0;
+	    let almanNetAnnual = 0;
+	    let itpNetAnnual = 0;
+	    let occupationalAccountTax = 0;
+	    let anyFired = false;
+	    let anyFireYear = false;
+	    let aliveCount = 0;
+	    const personDetails = [];
+
+	    runtimes.forEach(person => {
+	      const personAge = person.age + i;
+	      const alive = personIsAlive(person, i);
+	      const detail = {
+	        id: person.id,
+	        name: person.name || (person.id === 'partner' ? 'Person 2' : 'Person 1'),
+	        age: personAge,
+	        alive,
+	        fired: false,
+	        grossSalary: 0,
+	        workNetAnnual: 0,
+	        almanBrutto: 0,
+	        itpBrutto: 0,
+	        almanNetAnnual: 0,
+	        itpNetAnnual: 0,
+	        pensionGross: 0,
+	        pensionNetAnnual: 0,
+	        taxPaid: 0
+	      };
+	      personDetails.push(detail);
+	      if (!alive) return;
+	      aliveCount++;
+	      const fired = personAge >= person.fireAge;
+	      const pensionActive = personAge >= person.publicPensionStartAge;
+	      detail.fired = fired;
+	      anyFired = anyFired || fired;
+	      anyFireYear = anyFireYear || personAge === person.fireAge;
+
+	      if (!fired) {
+	        const currentSalary = salaryAtYear(i, person);
+	        const salaryExchangeAnnual = annualSalaryExchangeForYear(currentSalary, i, person);
+	        const cashSalary = salaryAfterExchange(currentSalary, salaryExchangeAnnual);
+	        const itpSalary = salaryForITPAfterExchange(currentSalary, salaryExchangeAnnual, person);
+	        const exchangePensionContribution = salaryExchangePensionContribution(salaryExchangeAnnual, person);
+	        const pensionableIncome = calcPensionableIncome(cashSalary, i);
+	        person.ipCapital = person.ipCapital * (1 + ipIndexRate) + pensionableIncome * 0.16;
+	        person.ppCapital = person.ppCapital * (1 + pensionReturn) + pensionableIncome * 0.025;
+
+	        person.pensionSources.forEach(source => {
+	          if (source.type === 'fixed') return;
+	          const grown = growOccupationalPensionCapital(source.capitalRuntime, pensionReturn, s);
+	          occupationalAccountTax += grown.tax;
+	          source.capitalRuntime = grown.capital + sourceAnnualContribution(
+	            source,
+	            itpSalary,
+	            person.contributionSourceId,
+	            i,
+	            exchangePensionContribution,
+	            person.exchangeSourceId
+	          );
+	        });
+
+	        const workTax = calcTaxBreakdown(cashSalary, false, personAge, i);
+	        addTaxBreakdown(taxBreakdown, workTax);
+	        workGrossAnnual += cashSalary;
+	        const personWorkNet = Math.max(0, cashSalary - workTax.total);
+	        workNetAnnual += personWorkNet;
+	        detail.grossSalary = cashSalary;
+	        detail.workNetAnnual = personWorkNet;
+	        detail.taxPaid += workTax.total;
+	        return;
+	      }
+
+	      if (!pensionActive) {
+	        person.ipCapital = person.ipCapital * (1 + ipIndexRate);
+	        person.ppCapital = person.ppCapital * (1 + pensionReturn);
+	      }
+
+	      let personAlmanBrutto = 0;
+	      let personItpBrutto = 0;
+	      if (pensionActive) {
+	        if (person.ipPensionMonthly === 0) {
+	          const pa = calcAlmanPension(person.ipCapital, person.ppCapital, person.publicPensionStartAge);
+	          person.ipPensionMonthly = pa.inkomstpension;
+	          person.ppPensionMonthly = pa.premiepension;
+	        } else {
+	          person.ipPensionMonthly *= (1 + ipPayoutIndexRate);
+	          person.ppPensionMonthly *= (1 + ppPayoutIndexRate);
+	        }
+	        personAlmanBrutto = (person.ipPensionMonthly + person.ppPensionMonthly) * 12;
+	        person.ipCapital = Math.max(0, person.ipCapital * (1 + ipIndexRate) - person.ipPensionMonthly * 12);
+	        person.ppCapital = Math.max(0, person.ppCapital * (1 + pensionReturn) - person.ppPensionMonthly * 12);
+	      }
+
+	      person.pensionSources.forEach(source => {
+	        source.annualPayoutRuntime = 0;
+	        if (personAge < source.startAge) {
+	          if (source.type !== 'fixed') {
+	            const grown = growOccupationalPensionCapital(source.capitalRuntime, pensionReturn, s);
+	            occupationalAccountTax += grown.tax;
+	            source.capitalRuntime = grown.capital;
+	          }
+	          return;
+	        }
+	        if (personAge >= source.payoutEndAge) return;
+	        if (source.type === 'fixed') {
+	          personItpBrutto += source.monthlyAmount * 12;
+	          return;
+	        }
+	        const grown = growOccupationalPensionCapital(source.capitalRuntime, pensionReturn, s);
+	        occupationalAccountTax += grown.tax;
+	        source.capitalRuntime = grown.capital;
+	        const annualPayout = source.capitalRuntime / sourceRemainingPayoutYears(source, personAge, person.lifeExp);
+	        source.monthlyRuntime = annualPayout / 12;
+	        source.annualPayoutRuntime = annualPayout;
+	        personItpBrutto += annualPayout;
+	      });
+
+	      const personPensionGross = personAlmanBrutto + personItpBrutto;
+	      detail.almanBrutto = personAlmanBrutto;
+	      detail.itpBrutto = personItpBrutto;
+	      detail.pensionGross = personPensionGross;
+	      if (personPensionGross > 0) {
+	        const pensionTax = calcTaxBreakdown(personPensionGross, true, personAge, i);
+	        addTaxBreakdown(taxBreakdown, pensionTax);
+	        const pensionNet = Math.max(0, personPensionGross - pensionTax.total);
+	        const personAlmanNet = pensionNet * (personAlmanBrutto / personPensionGross);
+	        const personItpNet = pensionNet * (personItpBrutto / personPensionGross);
+	        almanNetAnnual += personAlmanNet;
+	        itpNetAnnual += personItpNet;
+	        detail.almanNetAnnual = personAlmanNet;
+	        detail.itpNetAnnual = personItpNet;
+	        detail.pensionNetAnnual = pensionNet;
+	        detail.taxPaid += pensionTax.total;
+	      }
+	      almanBrutto += personAlmanBrutto;
+	      itpBrutto += personItpBrutto;
+	    });
+
+	    const itpCapitalPrePayout = runtimes.reduce((sum, person) => sum + sourceCapitalTotal(person.pensionSources), 0);
+	    const survivorMode = s.householdEnabled && aliveCount === 1;
+	    const targetSpendAnnual = annualSpendingTarget(targetSpendMonthly, spendFactors, i) * householdSpendingMultiplier(runtimes, i, s);
+	    const nonPortfolioNet = workNetAnnual + almanNetAnnual + itpNetAnnual;
+	    const phase = !anyFired ? 'accum' : householdAllAlivePublicActive(runtimes, i) ? 'full-pension' : 'early';
+	    let portfolioWithdrawal = 0;
+	    let portfolioNet = 0;
+	    let accountAndPortfolioTax = 0;
+	    let surplusSavings = 0;
+
+	    if (!anyFired) {
+	      growPrivateSources(privateSources, privateReturn);
+	      const netSalaryExtra = householdAnnualPrivateSavings(workNetAnnual, s);
+	      depositToPrivateSources(privateSources, netSalaryExtra, s.savingType);
+	      const accountTax = applyPrivateAccountTaxes(privateSources, i, privateSourcesAtYearStart);
+	      privateCapital = privateCapitalTotal(privateSources);
+	      accountAndPortfolioTax = accountTax;
+	    } else if (nonPortfolioNet >= targetSpendAnnual) {
+	      surplusSavings = nonPortfolioNet - targetSpendAnnual;
+	      depositToPrivateSources(privateSources, surplusSavings, s.savingType);
+	      const accountTax = applyPrivateAccountTaxes(privateSources, i, privateSourcesAtYearStart);
+	      growPrivateSources(privateSources, privateReturn);
+	      privateCapital = privateCapitalTotal(privateSources);
+	      accountAndPortfolioTax = accountTax;
+	    } else {
+	      portfolioWithdrawal = plannedPortfolioWithdrawal({
+	        strategy,
+	        annualSpend: targetSpendAnnual,
+	        pensionNet: nonPortfolioNet,
+	        privateSources,
+	        savingType: s.savingType
+	      });
+	      portfolioWithdrawal = Math.min(portfolioWithdrawal, Math.max(0, privateCapitalTotal(privateSources)));
+	      const withdrawalResult = withdrawFromPrivateSources(privateSources, portfolioWithdrawal);
+	      portfolioWithdrawal = withdrawalResult.gross;
+	      portfolioNet = withdrawalResult.net;
+	      const accountTax = applyPrivateAccountTaxes(privateSources, i, privateSourcesAtYearStart);
+	      growPrivateSources(privateSources, privateReturn);
+	      privateCapital = privateCapitalTotal(privateSources);
+	      accountAndPortfolioTax = withdrawalResult.tax + accountTax;
+	    }
+
+	    runtimes.forEach(person => {
+	      const personAge = person.age + i;
+	      person.pensionSources.forEach(source => {
+	        if (source.type !== 'fixed' && personAge >= source.startAge && personAge < source.payoutEndAge && source.annualPayoutRuntime > 0) {
+	          source.capitalRuntime = Math.max(0, source.capitalRuntime - source.annualPayoutRuntime);
+	        }
+	      });
+	    });
+
+	    const itpCapital = runtimes.reduce((sum, person) => sum + sourceCapitalTotal(person.pensionSources), 0);
+	    const ppCapital = runtimes.reduce((sum, person) => sum + Math.max(0, person.ppCapital), 0);
+	    const ipCapital = runtimes.reduce((sum, person) => sum + Math.max(0, person.ipCapital), 0);
+	    const ipPensionMonthly = runtimes.reduce((sum, person) => sum + (person.ipPensionMonthly || 0), 0);
+	    const ppPensionMonthly = runtimes.reduce((sum, person) => sum + (person.ppPensionMonthly || 0), 0);
+	    const pensionGross = almanBrutto + itpBrutto;
+	    const pensionNetAnnual = almanNetAnnual + itpNetAnnual;
+	    const taxPaid = taxBreakdown.total + accountAndPortfolioTax + occupationalAccountTax;
+	    const totalNetMonthly = Math.round((nonPortfolioNet + portfolioNet) / 12);
+	    const wr = privateCapitalPreWithdrawal > 0 ? (portfolioWithdrawal / privateCapitalPreWithdrawal) * 100 : 0;
+
+	    rows.push({
+	      age: currentAge,
+	      partnerAge: s.householdEnabled ? s.partner.age + i : null,
+	      people: personDetails,
+	      survivorMode,
+	      grossSalary: workGrossAnnual,
+	      privateCapital,
+	      privateCapitalPreWithdrawal,
+	      itpCapital,
+	      itpCapitalPrePayout,
+	      ipCapital,
+	      ppCapital,
+	      targetSpendAnnual,
+	      withdrawal: portfolioWithdrawal,
+	      surplusSavings,
+	      portfolioNet,
+	      workNetAnnual,
+	      almanBrutto,
+	      itpBrutto,
+	      almanNetAnnual,
+	      itpNetAnnual,
+	      pensionNetAnnual,
+	      pensionGross,
+	      ipPensionMonthly,
+	      ppPensionMonthly,
+	      itpMonthly: itpBrutto / 12,
+	      netMonthly: totalNetMonthly,
+	      taxPaid,
+	      taxKommunal: taxBreakdown.kommunal,
+	      taxStatlig: taxBreakdown.statlig,
+	      taxKapital: accountAndPortfolioTax + occupationalAccountTax,
+	      taxPensionCapital: occupationalAccountTax,
+	      taxFees: taxBreakdown.fees,
+	      taxPensionFee: taxBreakdown.pensionFee,
+	      taxPensionFeeReduction: taxBreakdown.pensionFeeReduction,
+	      taxJoba: taxBreakdown.joba + taxBreakdown.forvarv,
+	      wr,
+	      phase,
+	      isFireYear: anyFireYear,
+	      isPensionStartYear: runtimes.some(person => person.age + i === person.publicPensionStartAge),
+	      isOccupationalStartYear: runtimes.some(person => person.pensionSources.some(source => person.age + i === source.startAge))
+	    });
+	  }
+
+	  return rows;
+	}
 
 // ============================================================
 // MAIN SIMULATION
 // ============================================================
 function simulate(options = {}) {
-  const s = state;
+	  if (state.householdEnabled) return simulateHousehold(options);
+	  const s = state;
   const years = s.lifeExp - s.age;
   const baseRet = s.ret / 100;
   const basePret = s.pret / 100;
@@ -2971,14 +4054,14 @@ function simulate(options = {}) {
   const pensionStartAge = s.publicPensionStartAge;
 
 	  // Initial capital
-	  let privateCapital = s.wealth;
+	  const privateSources = privateSavingsForSimulation(s);
+	  let privateCapital = privateCapitalTotal(privateSources);
 	  const pensionSources = pensionSourcesForSimulation(s);
 	  const contributionSourceId = contributionPensionSourceId(pensionSources);
 	  const exchangeSourceId = salaryExchangeTargetSourceId(pensionSources);
 	  let itpCapital = sourceCapitalTotal(pensionSources);
   let ipCapital = s.ipBalance;
   let ppCapital = s.ppBalance;
-	  let costBasis = s.fundCostBasis;
   let ipPensionMonthly = 0;
   let ppPensionMonthly = 0;
 
@@ -3002,27 +4085,28 @@ function simulate(options = {}) {
     const ipIndexRate = Math.max(INKOMSTINDEX_RATE, yearParams.infl);
     const ipPayoutIndexRate = Math.max(0, ipIndexRate - IP_PAYOUT_ADVANCE_RATE);
     const ppPayoutIndexRate = ((1 + pensionReturn) / (1 + PP_PAYOUT_ADVANCE_RATE)) - 1;
-    const shock = stressShockFactors(stressId, currentAge, s);
+	    const shock = stressShockFactors(stressId, currentAge, s);
 	    if (shock.privateCapital !== 1 || shock.pensionCapital !== 1) {
-	      privateCapital *= shock.privateCapital;
+	      applyShockToPrivateSources(privateSources, shock.privateCapital);
+	      privateCapital = privateCapitalTotal(privateSources);
 	      pensionSources.forEach(source => {
 	        if (source.type !== 'fixed') source.capitalRuntime *= shock.pensionCapital;
 	      });
 	      ppCapital *= shock.pensionCapital;
 	    }
-	    const privateCapitalAtYearStart = privateCapital;
+	    const privateSourcesAtYearStart = privateSources.map(source => ({ id: source.id, capitalRuntime: source.capitalRuntime }));
+	    const privateCapitalAtYearStart = privateCapitalTotal(privateSources);
 	    let occupationalAccountTax = 0;
 
     // === ACCUMULATION PHASE ===
       if (!hasFired) {
         // Grow private capital
-        privateCapital *= (1 + privateReturn);
+        growPrivateSources(privateSources, privateReturn);
         // Annual savings (net from salary)
 	        const netSalaryExtra = annualPrivateSavings(cashSalary, currentAge, i, s);
-	        privateCapital += netSalaryExtra;
-	        costBasis += netSalaryExtra; // new contributions are at full cost basis
-	        const accountTax = calcAnnualAccountTax(privateCapital, s.savingType, i, privateCapitalAtYearStart);
-        privateCapital = Math.max(0, privateCapital - accountTax);
+	        depositToPrivateSources(privateSources, netSalaryExtra, s.savingType);
+	        const accountTax = applyPrivateAccountTaxes(privateSources, i, privateSourcesAtYearStart);
+        privateCapital = privateCapitalTotal(privateSources);
 
 	        // Grow occupational pension sources during work.
 	        pensionSources.forEach(source => {
@@ -3055,9 +4139,12 @@ function simulate(options = {}) {
 	          targetSpendAnnual: annualSpendingTarget(targetSpendMonthly, spendFactors, i),
 	          withdrawal: 0, portfolioNet: 0,
           almanBrutto: 0, itpBrutto: 0,
+          almanNetAnnual: 0, itpNetAnnual: 0,
+          pensionNetAnnual: 0,
           pensionGross: 0,
           ipPensionMonthly: 0, ppPensionMonthly: 0, itpMonthly: 0,
-          netMonthly: Math.round((currentSalary - workBreakdown.total) / 12),
+          pensionSourcePayouts: [],
+          netMonthly: Math.round((cashSalary - workBreakdown.total) / 12),
           taxPaid: workBreakdown.total + accountTax + occupationalAccountTax,
           taxKommunal: workBreakdown.kommunal,
           taxStatlig:  workBreakdown.statlig,
@@ -3084,6 +4171,7 @@ function simulate(options = {}) {
     // Pension income — track sources separately for reporting
     let almanBrutto = 0;
     let itpBrutto = 0;
+    const pensionSourcePayouts = [];
     if (pensionActive) {
       if (ipPensionMonthly === 0) {
         // First year of pension: lock in amounts based on accumulated capital
@@ -3114,7 +4202,17 @@ function simulate(options = {}) {
       }
       if (currentAge >= source.payoutEndAge) return;
       if (source.type === 'fixed') {
-        itpBrutto += source.monthlyAmount * 12;
+        const annualPayout = source.monthlyAmount * 12;
+        itpBrutto += annualPayout;
+        pensionSourcePayouts.push({
+          id: source.id,
+          name: source.name,
+          type: source.type,
+          startAge: source.startAge,
+          payout: source.payout,
+          annualGross: annualPayout,
+          capitalBeforePayout: 0
+        });
         return;
       }
       const grown = growOccupationalPensionCapital(source.capitalRuntime, pensionReturn, s);
@@ -3124,6 +4222,15 @@ function simulate(options = {}) {
       source.monthlyRuntime = annualPayout / 12;
       source.annualPayoutRuntime = annualPayout;
       itpBrutto += annualPayout;
+      pensionSourcePayouts.push({
+        id: source.id,
+        name: source.name,
+        type: source.type,
+        startAge: source.startAge,
+        payout: source.payout,
+        annualGross: annualPayout,
+        capitalBeforePayout: source.capitalRuntime
+      });
     });
 	    const itpCapitalPrePayout = sourceCapitalTotal(pensionSources);
 	    const pensionBrutto = almanBrutto + itpBrutto;
@@ -3140,36 +4247,37 @@ function simulate(options = {}) {
         strategy,
         annualSpend: inflSpend,
         pensionNet,
-        privateCapital,
-        costBasis,
-        savingType: s.savingType
+          privateCapital,
+          privateSources,
+          savingType: s.savingType
       });
 
 	    // Cap to available capital
-	    portfolioWithdrawal = Math.min(portfolioWithdrawal, Math.max(0, privateCapital));
-	    const privateCapitalPreWithdrawal = privateCapital;
+	    portfolioWithdrawal = Math.min(portfolioWithdrawal, Math.max(0, privateCapitalTotal(privateSources)));
+	    const privateCapitalPreWithdrawal = privateCapitalTotal(privateSources);
 
 	    // Net from portfolio
-	    const portfolioNet = netWithdrawal(portfolioWithdrawal, privateCapital, costBasis, s.savingType);
+	    const withdrawalResult = withdrawFromPrivateSources(privateSources, portfolioWithdrawal);
+	    portfolioWithdrawal = withdrawalResult.gross;
+	    const portfolioNet = withdrawalResult.net;
 
     // Total net monthly
     const totalNetMonthly = Math.round((pensionNet + portfolioNet) / 12);
 
     // Withdrawal rate
-    const wr = privateCapital > 0 ? (portfolioWithdrawal / privateCapital) * 100 : 0;
+    const wr = privateCapitalPreWithdrawal > 0 ? (portfolioWithdrawal / privateCapitalPreWithdrawal) * 100 : 0;
 
     // Tax paid this year — detailed breakdown
       const pensionBreakdown = calcTaxBreakdown(pensionBrutto, true, currentAge, i);
       const pensionTax   = pensionBreakdown.total;
-      const portfolioTax = portfolioWithdrawal - portfolioNet; // kapitalvinstskatt (0 för ISK/KF)
+      const almanNetAnnual = pensionBrutto > 0 ? pensionNet * (almanBrutto / pensionBrutto) : 0;
+      const itpNetAnnual = pensionBrutto > 0 ? pensionNet * (itpBrutto / pensionBrutto) : 0;
+      const portfolioTax = withdrawalResult.tax; // kapitalvinstskatt (0 för ISK/KF)
 
       // Update cost basis proportionally to withdrawal, then withdraw and grow
-      const withdrawFrac = privateCapital > 0 ? portfolioWithdrawal / privateCapital : 0;
-      costBasis = Math.max(0, costBasis * (1 - withdrawFrac));
-      privateCapital = Math.max(0, privateCapital - portfolioWithdrawal);
-	      const accountTax = calcAnnualAccountTax(privateCapital, s.savingType, i, privateCapitalAtYearStart);
-      privateCapital = Math.max(0, privateCapital - accountTax);
-      privateCapital *= (1 + privateReturn);
+	      const accountTax = applyPrivateAccountTaxes(privateSources, i, privateSourcesAtYearStart);
+      growPrivateSources(privateSources, privateReturn);
+      privateCapital = privateCapitalTotal(privateSources);
       const taxPaid = pensionTax + portfolioTax + accountTax + occupationalAccountTax;
 
 	    pensionSources.forEach(source => {
@@ -3190,8 +4298,11 @@ function simulate(options = {}) {
 	      withdrawal: portfolioWithdrawal,
       portfolioNet,
         almanBrutto, itpBrutto,
+        almanNetAnnual, itpNetAnnual,
+        pensionNetAnnual: pensionNet,
         pensionGross: pensionBrutto,
         ipPensionMonthly, ppPensionMonthly, itpMonthly: itpBrutto / 12,
+        pensionSourcePayouts,
         netMonthly: totalNetMonthly,
         taxPaid,
         taxKommunal: pensionBreakdown.kommunal,
@@ -3215,14 +4326,15 @@ function simulate(options = {}) {
 // COMPUTE DERIVED METRICS
 // ============================================================
 function computeMetrics(rows) {
-  const s = state;
-  const fireIn = yearsUntilFire(s);
-  const alreadyFire = isAlreadyFire(s);
+	  const s = state;
+	  const fireIn = yearsUntilFire(s);
+	  const alreadyFire = isAlreadyFire(s);
+	  const fireAge = householdFireAge(s);
 
-  // Find FIRE row
-  const fireRow = alreadyFire ? rows[0] : rows.find(r => r.age === s.fireAge) || rows[0];
-  const preFireRows = rows.filter(r => r.age < s.fireAge);
-  const wealthAtFire = preFireRows.length > 0 ? preFireRows[preFireRows.length - 1].privateCapital : s.wealth;
+	  // Find FIRE row
+	  const fireRow = alreadyFire ? rows[0] : rows.find(r => r.age === fireAge) || rows[0];
+	  const preFireRows = rows.filter(r => r.age < fireAge);
+	  const wealthAtFire = preFireRows.length > 0 ? preFireRows[preFireRows.length - 1].privateCapital : s.wealth;
 
 	  const annualSpendAtFire = fireRow?.targetSpendAnnual
 	    ?? s.spend * 12 * Math.pow(1 + s.infl/100, fireIn);
@@ -3233,10 +4345,14 @@ function computeMetrics(rows) {
 	  const fireTarget = annualSpendAtFire * 25;
   const gap = Math.max(0, fireTarget - wealthAtFire);
 
-    // Pension: use the locked monthly amounts from the simulation at each start age.
-    const pensionAge = s.publicPensionStartAge;
-    const itpAge = earliestOccupationalStartAge();
-    const pensionRow = rows.find(r => r.age === pensionAge) || rows.find(r => r.age > pensionAge);
+	    // Pension: use the locked monthly amounts from the first full-pension year.
+	    // In household mode that is later than the first person's pension start if ages differ.
+		    let pensionAge = householdPublicPensionAge(s);
+		    const itpAge = earliestOccupationalStartAge();
+	    const pensionRow = rows.find(r => r.phase === 'full-pension')
+	      || rows.find(r => r.age === pensionAge)
+	      || rows.find(r => r.age > pensionAge);
+	    if (pensionRow) pensionAge = pensionRow.age;
     const itpRow = rows.find(r => r.age === itpAge) || rows.find(r => r.age > itpAge);
     const paAtStart = pensionRow
       ? {
@@ -3265,10 +4381,11 @@ function computeMetrics(rows) {
   // Bound pension balances at FIRE. Inkomstpension is a notional base for a
   // lifelong monthly pension, so do not present it as capital. PPM is funded
   // capital before payout, but not freely withdrawable private wealth.
-  const firePreRow = preFireRows.length > 0 ? preFireRows[preFireRows.length - 1] : null;
-  const investablePensionAtFire = firePreRow
-    ? firePreRow.itpCapital + firePreRow.ppCapital
-    : pensionSourceCapitalTotal() + s.ppBalance;
+	  const firePreRow = preFireRows.length > 0 ? preFireRows[preFireRows.length - 1] : null;
+	  const ppBalanceTotal = householdPeople(s).reduce((sum, person) => sum + (person.ppBalance || 0), 0);
+	  const investablePensionAtFire = firePreRow
+	    ? firePreRow.itpCapital + firePreRow.ppCapital
+	    : pensionSourceCapitalTotal() + ppBalanceTotal;
   const totalWealthAtFire = firePreRow
     ? firePreRow.privateCapital + firePreRow.itpCapital
     : s.wealth + pensionSourceCapitalTotal();
@@ -3305,18 +4422,20 @@ function computeMetrics(rows) {
   // Pension coverage: pension net as % of spending at pension start
   const yearsToPS = pensionAge - s.age;
   const spendAtPS = targetMonthlyForRow(pensionRow) || s.spend * Math.pow(1 + s.infl/100, yearsToPS);
-    const pensionNetMonthly = totalPension63 - calcIncomeTax(totalPension63 * 12, true, pensionAge, yearsToPS) / 12;
+	    const pensionNetMonthly = pensionRow && isFinite(Number(pensionRow.pensionNetAnnual))
+	      ? pensionRow.pensionNetAnnual / 12
+	      : totalPension63 - calcIncomeTax(totalPension63 * 12, true, pensionAge, yearsToPS) / 12;
   const pensionCoverage = spendAtPS > 0 ? (pensionNetMonthly / spendAtPS) * 100 : 0;
 
   return {
-    wealthAtFire, wr, gap, totalPension63, finalCapital, depletionAge, verdict, verdictClass,
-    incomeAtFire: fireRow ? fireRow.netMonthly : 0,
-      pa63: paAtStart, itpMonthly63: occupationalMonthlyAtStart, annualSpendAtFire,
-    investablePensionAtFire, totalWealthAtFire, totalAccumTax, totalFireTax,
-    avgWorkIncome, avgEarlyFire, avgFullPension,
-    pensionCoverage, phaseData
-  };
-}
+	    wealthAtFire, wr, gap, totalPension63, finalCapital, depletionAge, verdict, verdictClass,
+	    incomeAtFire: fireRow ? fireRow.netMonthly : 0,
+	      pa63: paAtStart, itpMonthly63: occupationalMonthlyAtStart, annualSpendAtFire,
+	    investablePensionAtFire, totalWealthAtFire, totalAccumTax, totalFireTax,
+	    avgWorkIncome, avgEarlyFire, avgFullPension,
+	    pensionCoverage, pensionReferenceAge: pensionAge, phaseData
+	  };
+	}
 
 // ============================================================
 // RENDER
@@ -3350,10 +4469,10 @@ function scenarioStatus(rows, metrics) {
 }
 
 function renderStressScenarios(targetSpendMonthly = null) {
-  const tbody = document.getElementById('stress-table-body');
-  if (!tbody) return;
-  const fireYears = yearsUntilFire(state);
-  const endYears = state.lifeExp - 1 - state.age;
+	  const tbody = document.getElementById('stress-table-body');
+	  if (!tbody) return;
+	  const fireYears = yearsUntilFire(state);
+	  const endYears = projectionYears(state) - 1;
   tbody.innerHTML = STRESS_SCENARIOS.map(scenario => {
     const simOptions = { stressId: scenario.id };
     if (state.strategy === 3 && isFinite(Number(targetSpendMonthly))) {
@@ -3366,7 +4485,7 @@ function renderStressScenarios(targetSpendMonthly = null) {
       <td>${scenario.label}</td>
       <td>${fmtR(m.wealthAtFire, fireYears)}</td>
       <td>${fmtR(m.finalCapital, endYears)}</td>
-	      <td>${fmt(Math.round(toReal(m.totalPension63, Math.max(0, state.publicPensionStartAge - state.age))))} kr</td>
+		      <td>${fmt(Math.round(toReal(m.totalPension63, Math.max(0, (m.pensionReferenceAge || householdPublicPensionAge(state)) - state.age))))} kr</td>
       <td class="${status.cls}">${status.label}</td>
     </tr>`;
   }).join('');
@@ -3391,7 +4510,8 @@ function occupationalPayoutForOptimizer(s = state) {
 }
 
 function computePensionStartOptimizer(targetSpendMonthly = null) {
-  const publicMin = Math.max(calcPensionMinAgeFromBirthYear(state.birthYear), state.fireAge, state.age);
+	  if (state.householdEnabled) return [];
+	  const publicMin = Math.max(calcPensionMinAgeFromBirthYear(state.birthYear), state.fireAge, state.age);
   const publicMax = Math.min(75, state.lifeExp - 1);
   const occupationalMin = Math.max(ITP1_MIN_AGE, state.fireAge, state.age);
   const occupationalMax = Math.min(75, state.lifeExp - 1);
@@ -3480,21 +4600,23 @@ function keepOptimizerPreview() {
 function renderPensionStartOptimizer(targetSpendMonthly = null) {
   const tbody = document.getElementById('optimizer-table-body');
   if (!tbody) return;
+  const householdNote = document.getElementById('optimizer-household-note');
+  if (householdNote) householdNote.style.display = state.householdEnabled ? 'block' : 'none';
   const candidates = computePensionStartOptimizer(targetSpendMonthly);
   const best = candidates[0];
-  const endYears = state.lifeExp - 1 - state.age;
+	      const endYears = projectionYears(state) - 1;
   const setText = (id, value) => {
     const el = document.getElementById(id);
     if (el) el.textContent = value;
   };
-  if (!best) {
+	  if (!best) {
     setText('opt-public', '–');
     setText('opt-occupational', '–');
     setText('opt-payout', '–');
     setText('opt-final', '–');
     setText('opt-status', '–');
     setText('m-optimizer-choice', '–');
-    setText('m-optimizer-sub', 'saknar kandidater');
+	    setText('m-optimizer-sub', state.householdEnabled ? 'ej aktiv i hushållsläge' : 'saknar kandidater');
     tbody.innerHTML = '';
     const previewEl = document.getElementById('optimizer-preview');
     if (previewEl) previewEl.style.display = 'none';
@@ -3543,6 +4665,183 @@ function renderPensionStartOptimizer(targetSpendMonthly = null) {
   }).join('');
 }
 
+function renderPlanSummary(rows, metrics) {
+  const summary = document.getElementById('household-summary');
+  if (!summary) return;
+  summary.style.display = 'grid';
+  const setText = (id, value) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  };
+  const setLabel = (id, value) => setText(id, value);
+  const ageWithYear = age => {
+    if (age == null || !isFinite(Number(age))) return '–';
+    const years = Math.max(0, Math.round(age - state.age));
+    return `${Math.round(age)} år (${TAX_YEAR + years})`;
+  };
+  const fireDelay = yearsUntilFire(state);
+  const pensionAge = metrics.pensionReferenceAge || householdPublicPensionAge(state);
+  setLabel('hh-fire-year-label', 'FIRE-år');
+  if (state.householdEnabled) {
+    const survivorRow = rows.find(r => r.survivorMode);
+    setLabel('hh-primary-fire-age-label', 'Person 1 vid FIRE');
+    setLabel('hh-partner-fire-age-label', 'Person 2 vid FIRE');
+    setLabel('hh-years-to-fire-label', 'År till FIRE');
+    setLabel('hh-full-pension-year-label', 'Full pension från');
+    setLabel('hh-survivor-year-label', 'Efterlevande från');
+    setText('hh-fire-year', TAX_YEAR + fireDelay);
+    setText('hh-primary-fire-age', `${state.fireAge} år`);
+    setText('hh-partner-fire-age', `${state.partner.fireAge} år`);
+    setText('hh-years-to-fire', fireDelay === 0 ? 'Nu' : `${fireDelay} år`);
+    setText('hh-full-pension-year', pensionAge >= state.age ? TAX_YEAR + (pensionAge - state.age) : 'Pågår');
+    setText('hh-survivor-year', survivorRow ? TAX_YEAR + (survivorRow.age - state.age) : '–');
+    return;
+  }
+
+  const occupationalAge = hasModeledOccupationalPension(state) ? earliestOccupationalStartAge() : null;
+  setLabel('hh-primary-fire-age-label', 'Ålder vid FIRE');
+  setLabel('hh-partner-fire-age-label', 'År till FIRE');
+  setLabel('hh-years-to-fire-label', 'Allmän pension från');
+  setLabel('hh-full-pension-year-label', 'Tjänstepension från');
+  setLabel('hh-survivor-year-label', 'Slutålder');
+  setText('hh-fire-year', TAX_YEAR + fireDelay);
+  setText('hh-primary-fire-age', `${householdFireAge(state)} år`);
+  setText('hh-partner-fire-age', fireDelay === 0 ? 'Nu' : `${fireDelay} år`);
+  setText('hh-years-to-fire', ageWithYear(state.publicPensionStartAge));
+  setText('hh-full-pension-year', occupationalAge == null ? 'Saknas' : ageWithYear(occupationalAge));
+  setText('hh-survivor-year', `${projectionEndAge(state)} år`);
+}
+
+function renderHouseholdPensionBreakdown(rows, metrics) {
+  const card = document.getElementById('household-pension-breakdown-card');
+  const tbody = document.getElementById('household-pension-breakdown-body');
+  const sub = document.getElementById('household-pension-breakdown-sub');
+  const title = document.getElementById('pension-breakdown-title');
+  const head = document.getElementById('pension-breakdown-head');
+  if (!card || !tbody) return;
+  card.style.display = '';
+  const fmtMonthlyAnnual = (v, y) => v > 0 ? fmt(Math.round(toReal(v / 12, y))) + ' kr' : '–';
+
+  if (!state.householdEnabled) {
+    if (title) title.textContent = 'Pension per källa';
+    if (head) {
+      head.innerHTML = `<tr>
+        <th style="text-align:left">Källa</th>
+        <th>Typ</th>
+        <th>Start</th>
+        <th>Uttag</th>
+        <th>Brutto/mån</th>
+        <th>Netto/mån</th>
+        <th>Pensionsskatt/mån</th>
+      </tr>`;
+    }
+    const pensionAge = metrics.pensionReferenceAge || state.publicPensionStartAge;
+    const row = rows.find(r => r.age === pensionAge) || rows.find(r => r.phase === 'full-pension') || rows[rows.length - 1];
+    if (!row) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:left;color:var(--text-muted)">Ingen pensionsprojektion att visa.</td></tr>';
+      return;
+    }
+    const y = row.age - state.age;
+    if (sub) {
+      sub.textContent = `Brutto och uppskattat netto per månad vid ${row.age} år (${TAX_YEAR + y}). Pensionsskatt fördelas proportionellt mellan källorna.`;
+    }
+    const pensionGross = Math.max(0, row.pensionGross || 0);
+    const pensionNet = Math.max(0, row.pensionNetAnnual ?? (pensionGross - calcIncomeTax(pensionGross, true, row.age, y)));
+    const pensionTax = Math.max(0, pensionGross - pensionNet);
+    const taxFor = annualGross => pensionGross > 0 ? pensionTax * (annualGross / pensionGross) : 0;
+    const sourceRows = [];
+    if ((row.ipPensionMonthly || 0) > 0) {
+      sourceRows.push({
+        name: 'Inkomstpension',
+        type: 'Allmän',
+        start: state.publicPensionStartAge,
+        payout: 'Livsvar.',
+        annualGross: row.ipPensionMonthly * 12
+      });
+    }
+    if ((row.ppPensionMonthly || 0) > 0) {
+      sourceRows.push({
+        name: 'Premiepension',
+        type: 'Allmän',
+        start: state.publicPensionStartAge,
+        payout: 'Livsvar.',
+        annualGross: row.ppPensionMonthly * 12
+      });
+    }
+    const sourceTypeLabel = { itp1: 'ITP1', capital: 'Kapital', fixed: 'Fast' };
+    pensionSourcesForPerson(primaryPersonFromState(state), state).forEach(source => {
+      const payout = (row.pensionSourcePayouts || []).find(item => item.id === source.id);
+      sourceRows.push({
+        name: source.name || 'Tjänstepension',
+        type: sourceTypeLabel[source.type] || 'Tjänste',
+        start: source.startAge,
+        payout: pensionPayoutLabel(source.payout),
+        annualGross: payout?.annualGross || 0
+      });
+    });
+    if (!sourceRows.length) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:left;color:var(--text-muted)">Ingen pension har startat vid valt referensår.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = sourceRows.map(source => {
+      const tax = taxFor(source.annualGross);
+      const net = Math.max(0, source.annualGross - tax);
+      return `<tr>
+        <td style="text-align:left">${escapeHTML(source.name)}</td>
+        <td>${source.type}</td>
+        <td>${source.start} år</td>
+        <td>${source.payout}</td>
+        <td>${fmtMonthlyAnnual(source.annualGross, y)}</td>
+        <td class="${net > 0 ? 'positive' : ''}">${fmtMonthlyAnnual(net, y)}</td>
+        <td class="${tax > 0 ? 'negative' : ''}">${fmtMonthlyAnnual(tax, y)}</td>
+      </tr>`;
+    }).join('');
+    return;
+  }
+
+  if (title) title.textContent = 'Pension per person';
+  if (head) {
+    head.innerHTML = `<tr>
+      <th style="text-align:left">Person</th>
+      <th>Ålder</th>
+      <th>Allmän brutto/mån</th>
+      <th>Tjänste brutto/mån</th>
+      <th>Pension netto/mån</th>
+      <th>Pensionsskatt/mån</th>
+    </tr>`;
+  }
+  const pensionAge = metrics.pensionReferenceAge || householdPublicPensionAge(state);
+  const row = rows.find(r => r.age === pensionAge) || rows.find(r => r.phase === 'full-pension') || rows[rows.length - 1];
+  if (!row || !Array.isArray(row.people)) {
+    card.style.display = 'none';
+    tbody.innerHTML = '';
+    return;
+  }
+  card.style.display = '';
+  const y = row.age - state.age;
+  if (sub) {
+    const year = TAX_YEAR + y;
+    sub.textContent = `Brutto och netto per månad vid år ${year}, när hushållets fulla pensionsfas används i planen.`;
+  }
+  tbody.innerHTML = row.people.map(person => {
+    if (!person.alive) {
+      return `<tr>
+        <td style="text-align:left">${person.name}</td>
+        <td>${person.age}</td>
+        <td colspan="4" style="color:var(--text-muted)">Utanför planhorisonten</td>
+      </tr>`;
+    }
+    return `<tr>
+      <td style="text-align:left">${person.name}</td>
+      <td>${person.age}</td>
+      <td>${fmtMonthlyAnnual(person.almanBrutto, y)}</td>
+      <td>${fmtMonthlyAnnual(person.itpBrutto, y)}</td>
+      <td class="${person.pensionNetAnnual > 0 ? 'positive' : ''}">${fmtMonthlyAnnual(person.pensionNetAnnual, y)}</td>
+      <td class="${person.taxPaid > 0 ? 'negative' : ''}">${fmtMonthlyAnnual(person.taxPaid, y)}</td>
+    </tr>`;
+  }).join('');
+}
+
 function render() {
 	  normalizeState();
 	  syncUI();
@@ -3561,24 +4860,27 @@ function render() {
   verdTag.style.color = m.verdictClass === 'good' ? '#3dbfa0' : m.verdictClass === 'bad' ? '#e06b5a' : '#c9a84c';
 
 	    // Phase bar
-	    const pensionStartAge = s.publicPensionStartAge;
-	    const alreadyFire = isAlreadyFire(s);
-	    const phaseStartAge = Math.max(s.age, s.fireAge);
-	    document.getElementById('ph-accum').textContent = alreadyFire ? 'Avslutad' : s.age + '–' + (s.fireAge - 1);
-	    document.getElementById('ph-fire').textContent = alreadyFire
-	      ? (s.fireAge === s.age ? 'Nu' : 'Ålder ' + s.fireAge + ' (passerad)')
-	      : 'Ålder ' + s.fireAge;
+			    const pensionStartAge = m.pensionReferenceAge || householdPublicPensionAge(s);
+		    const alreadyFire = isAlreadyFire(s);
+		    const fireAge = householdFireAge(s);
+		    const phaseStartAge = Math.max(s.age, fireAge);
+		    document.getElementById('ph-accum').textContent = alreadyFire ? 'Avslutad' : s.age + '–' + (fireAge - 1);
+		    document.getElementById('ph-fire').textContent = alreadyFire
+		      ? (fireAge === s.age ? 'Nu' : 'Ålder ' + fireAge + ' (passerad)')
+		      : 'Ålder ' + fireAge;
 	    document.getElementById('ph-early').textContent = phaseStartAge < pensionStartAge ? phaseStartAge + '–' + (pensionStartAge - 1) : '–';
 	    document.getElementById('ph-full-label').textContent = 'Full pension (' + pensionStartAge + '+)';
 	    document.getElementById('ph-full').textContent = s.age >= pensionStartAge ? 'Pågår' : pensionStartAge + '+';
+	    renderPlanSummary(rows, m);
+	    renderHouseholdPensionBreakdown(rows, m);
 
 		  const fireYears = yearsUntilFire(s);
 	  const pensionStartYears = Math.max(0, pensionStartAge - s.age);
-	  const endYears = s.lifeExp - 1 - s.age;
+		  const endYears = projectionYears(s) - 1;
 	  const modeLabel = s.displayMode === 'real' ? ' (2026 kr)' : '';
 
 	  // Row 1 metric cards
-	  document.getElementById('m-fire-wealth-label').innerHTML = (alreadyFire ? 'Privat kapital nu' : 'Privat kapital vid FIRE') + ' <span class="value-badge capital">Kapital</span>';
+		  document.getElementById('m-fire-wealth-label').innerHTML = (alreadyFire ? 'Privat kapital nu' : (s.householdEnabled ? 'Privat kapital vid hushållets FIRE' : 'Privat kapital vid FIRE')) + ' <span class="value-badge capital">Kapital</span>';
 	  document.getElementById('m-fire-wealth').textContent = fmtR(m.wealthAtFire, fireYears);
 	  document.getElementById('m-fire-wealth').className = 'metric-value ' + (m.wealthAtFire > 0 ? 'good' : 'bad');
 	  document.getElementById('m-fire-wealth-sub').textContent = alreadyFire
@@ -3596,7 +4898,7 @@ function render() {
 	  if (m.depletionAge == null) {
 	    depletionEl.textContent = 'Ingen';
 	    depletionEl.className = 'metric-value good';
-	    document.getElementById('m-depletion-sub').textContent = `till ${s.lifeExp} år`;
+		    document.getElementById('m-depletion-sub').textContent = `till ${projectionEndAge(s)} år`;
 	  } else {
 	    depletionEl.textContent = m.depletionAge + ' år';
 	    depletionEl.className = 'metric-value bad';
@@ -3606,34 +4908,42 @@ function render() {
   const covEl = document.getElementById('m-coverage');
   covEl.textContent = fmtPct(m.pensionCoverage);
   covEl.className = 'metric-value ' + (m.pensionCoverage >= 100 ? 'good' : m.pensionCoverage >= 60 ? 'warn' : 'bad');
-  document.getElementById('m-coverage-sub').textContent = `netto vid ${pensionStartAge} år`;
+  document.getElementById('m-coverage-sub').textContent = s.householdEnabled
+    ? `netto vid full pension (${pensionStartAge} år)`
+    : `netto vid ${pensionStartAge} år`;
 
   // Row 2 metric cards
   const endCap = m.finalCapital;
   const endEl = document.getElementById('m-end-capital');
   endEl.textContent = fmtR(endCap, endYears);
   endEl.className = 'metric-value ' + (endCap > 0 ? 'good' : 'bad');
-  document.getElementById('m-life-label').textContent = s.lifeExp;
+		  document.getElementById('m-life-label').textContent = s.householdEnabled ? 'sista planår' : projectionEndAge(s);
 
 	  const pensionCapitalEl = document.getElementById('m-pension-capital');
-	  document.getElementById('m-pension-capital-label').innerHTML = (alreadyFire ? 'Bundet pensionskapital nu' : 'Bundet pensionskapital vid FIRE') + ' <span class="value-badge capital">Kapital</span>';
+		  document.getElementById('m-pension-capital-label').innerHTML = (alreadyFire ? 'Bundet pensionskapital nu' : (s.householdEnabled ? 'Bundet pensionskapital vid hushållets FIRE' : 'Bundet pensionskapital vid FIRE')) + ' <span class="value-badge capital">Kapital</span>';
 	  pensionCapitalEl.textContent = fmtR(m.investablePensionAtFire, fireYears);
 	  pensionCapitalEl.className = 'metric-value ' + (m.investablePensionAtFire > 0 ? 'good' : '');
 	  document.getElementById('m-pension-capital-sub').textContent = 'tjänstepension + PPM, ej fritt uttagbart';
 
-	  const salaryAtFire = salaryAtYear(Math.max(0, fireYears), s);
-	  document.getElementById('m-fire-salary-label').innerHTML = (alreadyFire ? 'Angiven månadslön' : 'Månadslön vid FIRE') + ' <span class="value-badge gross">Brutto</span>';
-	  document.getElementById('m-fire-salary').textContent = fmtR(salaryAtFire / 12, fireYears);
+			  const salaryAtFire = salaryAtYear(Math.max(0, fireYears), s);
+			  const salaryAtFireMonthly = s.householdEnabled
+			    ? householdPeople(s).reduce((sum, person) => {
+			        const includePerson = alreadyFire ? personFireIndex(person) > 0 : personFireIndex(person) >= fireYears;
+			        return includePerson ? sum + salaryAtYear(fireYears, person) : sum;
+			      }, 0) / 12
+			    : salaryAtFire / 12;
+		  document.getElementById('m-fire-salary-label').innerHTML = (alreadyFire ? (s.householdEnabled ? 'Aktiv hushållslön nu' : 'Angiven månadslön') : (s.householdEnabled ? 'Hushållets lön vid FIRE' : 'Månadslön vid FIRE')) + ' <span class="value-badge gross">Brutto</span>';
+		  document.getElementById('m-fire-salary').textContent = fmtR(salaryAtFireMonthly, fireYears);
 	  document.getElementById('m-fire-salary').className = 'metric-value';
 	  document.getElementById('m-fire-salary-sub').textContent = alreadyFire
-	    ? `påverkar inte prognosen efter FIRE${modeLabel}`
-	    : `månadslön före skatt${s.salaryExchangeMonthly > 0 ? ', före löneväxling' : ''} vid ${s.fireAge} år${modeLabel}`;
+		    ? (s.householdEnabled ? `personer som fortfarande arbetar${modeLabel}` : `påverkar inte prognosen efter FIRE${modeLabel}`)
+			    : `${s.householdEnabled ? 'samlad månadslön före skatt vid hushållets FIRE' : 'månadslön före skatt'}${s.salaryExchangeMonthly > 0 ? ', före löneväxling' : ''} vid ${fireAge} år${modeLabel}`;
 
   document.getElementById('m-optimizer-choice').textContent = 'Beräknar';
   document.getElementById('m-optimizer-choice').className = 'metric-value';
   document.getElementById('m-optimizer-sub').textContent = 'allmän / tjänste / uttag';
 
-	  const fireTaxYears = Math.max(0, (s.lifeExp - phaseStartAge) / 2);
+		  const fireTaxYears = Math.max(0, (projectionEndAge(s) - phaseStartAge) / 2);
 	  document.getElementById('m-total-tax').textContent = fmtR(m.totalFireTax, fireTaxYears);
 	  document.getElementById('m-tax-sub').textContent = `Ackum. skatt: ${fmtM(toReal(m.totalAccumTax, fireYears / 2))}`;
 
@@ -3685,17 +4995,24 @@ function render() {
 }
 
 function renderTable(rows) {
-  const tbody = document.getElementById('table-body');
-  const pensionMinAge = calcPensionMinAgeFromBirthYear(state.birthYear);
-  // Show every 5th year + fire year + last year for performance
-	  const filtered = rows.filter((r, i) =>
-	    i === 0 || r.age % 5 === 0 || r.isFireYear || r.age === state.lifeExp - 1 ||
-	    r.age === pensionMinAge || r.age === state.publicPensionStartAge || r.age === earliestOccupationalStartAge()
-	  );
+	  const tbody = document.getElementById('table-body');
+	  const note = document.getElementById('table-note');
+	  if (note) {
+	    note.textContent = state.householdEnabled
+	      ? 'Gulmarkerad rad = FIRE-år · korall = efterlevandefas'
+	      : 'Gulmarkerad rad = FIRE-år';
+	  }
+	  const pensionMinAge = calcPensionMinAgeFromBirthYear(state.birthYear);
+	  const endAge = projectionEndAge(state) - 1;
+	  // Show every 5th year + fire year + last year for performance
+		  const filtered = rows.filter((r, i) =>
+		    i === 0 || r.age % 5 === 0 || r.isFireYear || r.isPensionStartYear || r.isOccupationalStartYear ||
+		    r.age === endAge || r.age === pensionMinAge || r.age === householdPublicPensionAge(state) || r.age === earliestOccupationalStartAge()
+		  );
 
   tbody.innerHTML = filtered.map(r => {
     const y = r.age - state.age;
-    const cls = r.isFireYear ? 'fire-year' : '';
+    const cls = [r.isFireYear ? 'fire-year' : '', r.survivorMode ? 'survivor-row' : ''].filter(Boolean).join(' ');
     const wrStr = r.wr > 0 ? fmtPct(r.wr) : '–';
     const wrCls = r.wr > 6 ? 'negative' : r.wr > 4.5 ? '' : r.wr > 0 ? 'positive' : '';
     const targetMonthly = targetMonthlyForRow(r);
@@ -3703,8 +5020,51 @@ function renderTable(rows) {
 	    const displayedTargetMonthly = Math.round(toReal(targetMonthly, y));
 	    const netOk = displayedNetMonthly >= displayedTargetMonthly;
 	    const fmtMonthly = v => v > 0 ? fmt(Math.round(toReal(v, y))) + ' kr/mån' : '–';
+	    const fmtAnnualMonthly = v => v > 0 ? fmt(Math.round(toReal(v / 12, y))) + ' kr' : '–';
+	    const detailRows = state.householdEnabled && Array.isArray(r.people)
+	      ? `<tr class="household-detail-row"><td colspan="9">
+	          <details>
+	            <summary>Persondetaljer</summary>
+	            <table class="inline-detail-table">
+	              <thead>
+	                <tr>
+	                  <th style="text-align:left">Person</th>
+	                  <th>Ålder</th>
+	                  <th>Lön brutto/mån</th>
+	                  <th>Arbete netto/mån</th>
+	                  <th>Allmän brutto/mån</th>
+	                  <th>Tjänste brutto/mån</th>
+	                  <th>Pension netto/mån</th>
+	                  <th>Inkomstskatt/mån</th>
+	                </tr>
+	              </thead>
+	              <tbody>
+	                ${r.people.map(person => {
+	                  if (!person.alive) {
+	                    return `<tr>
+	                      <td style="text-align:left">${person.name}</td>
+	                      <td>${person.age}</td>
+	                      <td colspan="6" style="color:var(--text-muted)">Utanför planhorisonten</td>
+	                    </tr>`;
+	                  }
+	                  return `<tr>
+	                    <td style="text-align:left">${person.name}</td>
+	                    <td>${person.age}</td>
+	                    <td>${fmtAnnualMonthly(person.grossSalary)}</td>
+	                    <td>${fmtAnnualMonthly(person.workNetAnnual)}</td>
+	                    <td>${fmtAnnualMonthly(person.almanBrutto)}</td>
+	                    <td>${fmtAnnualMonthly(person.itpBrutto)}</td>
+	                    <td>${fmtAnnualMonthly(person.pensionNetAnnual)}</td>
+	                    <td class="${person.taxPaid > 0 ? 'negative' : ''}">${fmtAnnualMonthly(person.taxPaid)}</td>
+	                  </tr>`;
+	                }).join('')}
+	              </tbody>
+	            </table>
+	          </details>
+	        </td></tr>`
+	      : '';
 	    return `<tr class="${cls}">
-	      <td>${r.age}${r.isFireYear ? ' 🔥' : ''}</td>
+	      <td>${r.age}${r.isFireYear ? ' 🔥' : ''}${r.survivorMode ? '<span class="survivor-pill">efterlevande</span>' : ''}</td>
 	      <td>${fmtR(r.privateCapital, y)}</td>
 	      <td>${fmtR(r.itpCapital, y)}</td>
 	      <td>${r.withdrawal > 0 ? fmtR(r.withdrawal, y) : '–'}</td>
@@ -3713,7 +5073,7 @@ function renderTable(rows) {
 	      <td>${fmtMonthly(r.itpMonthly)}</td>
 	      <td class="${netOk ? 'positive' : 'negative'}">${fmt(displayedNetMonthly)} kr</td>
 	      <td class="${wrCls}">${wrStr}</td>
-    </tr>`;
+    </tr>${detailRows}`;
   }).join('');
 }
 
@@ -3761,9 +5121,7 @@ function renderTaxBreakdown(phaseData) {
     const joba     = avgR(r => r.taxJoba     / 12);
     const totalTax = avgR(r => r.taxPaid     / 12);
     // Gross income per month for effective rate denominator
-    const grossMonthly = p.isWork
-      ? avgR(r => (r.grossSalary || 0) / 12)
-      : avgR(r => (r.almanBrutto + r.itpBrutto + r.withdrawal) / 12);
+	    const grossMonthly = avgR(r => ((r.grossSalary || 0) + (r.almanBrutto || 0) + (r.itpBrutto || 0) + (r.withdrawal || 0)) / 12);
     const effRate = grossMonthly > 0 ? (totalTax / grossMonthly) * 100 : 0;
 
     const fmtKr = v => v > 0.5 ? fmt(Math.round(v)) : '–';
@@ -3856,7 +5214,7 @@ function renderSensitivityChart() {
       const m = computeMetrics(rows);
       const endYears = state.lifeExp - 1 - state.age;
       const fireYears = yearsUntilFire(state);
-      const fireRows = rows.filter(r => r.age >= state.fireAge);
+	      const fireRows = rows.filter(r => r.phase !== 'accum');
       const minCoverage = fireRows.reduce((min, row) => {
         const targetMonthly = targetMonthlyForRow(row);
         const coverage = targetMonthly > 0 ? (row.netMonthly / targetMonthly) * 100 : 100;
@@ -3970,7 +5328,8 @@ function renderWealthChart(rows) {
     : value;
   const startOfAgeValue = (i, endField, initialValue) =>
     i === 0 ? initialValue : rows[i - 1]?.[endField] ?? initialValue;
-  const initialOccupationalCapital = sourceCapitalTotal(pensionSourcesForSimulation(state));
+	  const initialOccupationalCapital = householdPeople(state).reduce((sum, person) =>
+	    sum + sourceCapitalTotal(pensionSourcesForPerson(person, state)), 0);
   const priv = rows.map((r, i) => {
     const usesPreWithdrawalPoint = r.phase !== 'accum' && r.privateCapitalPreWithdrawal != null;
     const value = usesPreWithdrawalPoint
@@ -3981,11 +5340,15 @@ function renderWealthChart(rows) {
   const occupational = rows.map((r, i) =>
     chartReal(Math.max(0, startOfAgeValue(i, 'itpCapital', initialOccupationalCapital)), i)
   );
-  const premiumPensionBeforeStart = rows.map((r, i) =>
-    r.age < state.publicPensionStartAge ? chartReal(Math.max(0, startOfAgeValue(i, 'ppCapital', state.ppBalance)), i) : null
-  );
-  const total = rows.map((_, i) => priv[i] + occupational[i]);
-  const fireIdx = state.fireAge <= state.age ? 0 : rows.findIndex(r => r.age === state.fireAge);
+	  const premiumPensionBeforeStart = rows.map((r, i) =>
+	    r.age < householdPublicPensionAge(state) ? chartReal(Math.max(0, startOfAgeValue(i, 'ppCapital', householdPeople(state).reduce((sum, person) => sum + (person.ppBalance || 0), 0))), i) : null
+	  );
+	  const total = rows.map((_, i) => priv[i] + occupational[i]);
+	  const fireAge = householdFireAge(state);
+	  const fireIdx = fireAge <= state.age ? 0 : rows.findIndex(r => r.age === fireAge);
+	  const survivorIdx = rows.findIndex(r => r.survivorMode);
+	  const survivorLegend = document.getElementById('survivor-legend-item');
+	  if (survivorLegend) survivorLegend.style.display = survivorIdx >= 0 ? '' : 'none';
   const ctx = document.getElementById('chartWealth');
   if (wealthChart) wealthChart.destroy();
   const ct = chartTheme();
@@ -4044,7 +5407,7 @@ function renderWealthChart(rows) {
       maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
-        fireLine: { fireIdx },
+        fireLine: { fireIdx, survivorIdx },
         tooltip: {
           mode: 'index',
           intersect: false,
@@ -4116,7 +5479,213 @@ function blendedMonteCarloReturns(meanPrivate, volPrivate, meanPension, volPensi
   };
 }
 
+function runMonteCarloHousehold(baseRows, nSims = 1000) {
+  const s = state;
+  const ret = s.ret / 100;
+  const pret = s.pret / 100;
+  const interestRet = s.interestRet / 100;
+  const interestVol = s.interestVol / 100;
+  const volP = s.volPrivate / 100;
+  const volI = s.volITP / 100;
+  const infl = s.infl / 100;
+  const years = projectionYears(s);
+  const ages = Array.from({ length: years }, (_, i) => s.age + i);
+  const fireIdx = householdFireIndex(s);
+  const pensionStartAge = baseRows.find(r => r.phase === 'full-pension')?.age || householdPublicPensionAge(s);
+  const baseFireRow = baseRows.find(r => r.age === householdFireAge(s));
+  const targetSpendMonthly = baseFireRow?.targetSpendAnnual
+    ? baseFireRow.targetSpendAnnual / 12 / Math.pow(1 + infl, fireIdx)
+    : s.spend;
+  const baseRowsByAge = new Map(baseRows.map(r => [r.age, r]));
+  const baseAlmanNetMonthlyByIdx = ages.map(age => {
+    const row = baseRowsByAge.get(age);
+    return row ? netIncomeComponents(row).alman : 0;
+  });
+
+  const allPriv = Array.from({ length: years }, () => new Float64Array(nSims));
+  const allITP = Array.from({ length: years }, () => new Float64Array(nSims));
+  const allIncome = Array.from({ length: years }, () => new Float64Array(nSims));
+  const failureAges = [];
+  let successCount = 0;
+
+  for (let sim = 0; sim < nSims; sim++) {
+    const privateSources = privateSavingsForSimulation(s);
+    let priv = privateCapitalTotal(privateSources);
+    const runtimes = householdPeople(s).map(person => createPersonRuntime(person, s));
+    let failed = false;
+    let failAge = null;
+
+    for (let i = 0; i < years; i++) {
+      const age = s.age + i;
+      const { privateReturn: rP, pensionReturn: rI } =
+        blendedMonteCarloReturns(
+          ret, volP, pret, volI, interestRet, interestVol, s.mcCorrelation,
+          interestShareForAge(age, s, true),
+          interestShareForAge(age, s, s.deRiskPensions)
+        );
+      const privateSourcesAtYearStart = privateSources.map(source => ({ id: source.id, capitalRuntime: source.capitalRuntime }));
+      let workNetAnnual = 0;
+      let occupationalIncome = 0;
+      let anyFired = false;
+
+      runtimes.forEach(person => {
+        if (!personIsAlive(person, i)) return;
+        const personAge = person.age + i;
+        const fired = personAge >= person.fireAge;
+        anyFired = anyFired || fired;
+        if (!fired) {
+          const currentSalary = salaryAtYear(i, person);
+          const salaryExchangeAnnual = annualSalaryExchangeForYear(currentSalary, i, person);
+          const cashSalary = salaryAfterExchange(currentSalary, salaryExchangeAnnual);
+          const itpSalary = salaryForITPAfterExchange(currentSalary, salaryExchangeAnnual, person);
+          const exchangePensionContribution = salaryExchangePensionContribution(salaryExchangeAnnual, person);
+          workNetAnnual += Math.max(0, cashSalary - calcIncomeTax(cashSalary, false, personAge, i));
+          person.pensionSources.forEach(source => {
+            if (source.type === 'fixed') return;
+            source.capitalRuntime = growOccupationalPensionCapital(source.capitalRuntime, rI, s).capital
+              + sourceAnnualContribution(source, itpSalary, person.contributionSourceId, i, exchangePensionContribution, person.exchangeSourceId);
+          });
+          return;
+        }
+
+        person.pensionSources.forEach(source => {
+          source.annualPayoutRuntime = 0;
+          if (personAge < source.startAge) {
+            if (source.type !== 'fixed') source.capitalRuntime = growOccupationalPensionCapital(source.capitalRuntime, rI, s).capital;
+            return;
+          }
+          if (personAge >= source.payoutEndAge) return;
+          if (source.type === 'fixed') {
+            occupationalIncome += source.monthlyAmount * 12;
+            return;
+          }
+          source.capitalRuntime = growOccupationalPensionCapital(source.capitalRuntime, rI, s).capital;
+          const annualPayout = source.capitalRuntime / sourceRemainingPayoutYears(source, personAge, person.lifeExp);
+          source.annualPayoutRuntime = annualPayout;
+          occupationalIncome += annualPayout;
+        });
+      });
+
+      let monthlyIncome = workNetAnnual / 12;
+      if (!anyFired) {
+        growPrivateSources(privateSources, rP);
+        const annualSavings = householdAnnualPrivateSavings(workNetAnnual, s);
+        depositToPrivateSources(privateSources, annualSavings, s.savingType);
+        applyPrivateAccountTaxes(privateSources, i, privateSourcesAtYearStart);
+        priv = privateCapitalTotal(privateSources);
+      } else {
+        const annualSpend = targetSpendMonthly * 12 * Math.pow(1 + infl, i) * householdSpendingMultiplier(runtimes, i, s);
+        const almanNetAnnual = (baseAlmanNetMonthlyByIdx[i] || 0) * 12;
+        const occupationalNetAnnual = occupationalIncome > 0
+          ? Math.max(0, occupationalIncome - calcIncomeTax(occupationalIncome, true, age, i))
+          : 0;
+        const nonPortfolioNet = workNetAnnual + almanNetAnnual + occupationalNetAnnual;
+
+        if (nonPortfolioNet >= annualSpend) {
+          const surplus = nonPortfolioNet - annualSpend;
+          depositToPrivateSources(privateSources, surplus, s.savingType);
+          applyPrivateAccountTaxes(privateSources, i, privateSourcesAtYearStart);
+          growPrivateSources(privateSources, rP);
+          priv = privateCapitalTotal(privateSources);
+          monthlyIncome = nonPortfolioNet / 12;
+        } else {
+          const targetNetNeed = annualSpend - nonPortfolioNet;
+          const withdrawNeeded = plannedPortfolioWithdrawal({
+            strategy: s.strategy,
+            annualSpend,
+            pensionNet: nonPortfolioNet,
+            privateSources,
+            savingType: s.savingType
+          });
+          const actualWithdraw = Math.min(withdrawNeeded, Math.max(0, privateCapitalTotal(privateSources)));
+          const withdrawalResult = withdrawFromPrivateSources(privateSources, actualWithdraw);
+          const netWithdraw = withdrawalResult.net;
+          applyPrivateAccountTaxes(privateSources, i, privateSourcesAtYearStart);
+          growPrivateSources(privateSources, rP);
+          priv = privateCapitalTotal(privateSources);
+          if (netWithdraw + 1 < targetNetNeed && !failed) {
+            failed = true;
+            failAge = age;
+          }
+          monthlyIncome = (nonPortfolioNet + netWithdraw) / 12;
+        }
+
+        runtimes.forEach(person => {
+          const personAge = person.age + i;
+          person.pensionSources.forEach(source => {
+            if (source.type !== 'fixed' && personAge >= source.startAge && personAge < source.payoutEndAge && source.annualPayoutRuntime > 0) {
+              source.capitalRuntime = Math.max(0, source.capitalRuntime - source.annualPayoutRuntime);
+            }
+          });
+        });
+      }
+
+      allPriv[i][sim] = priv;
+      allITP[i][sim] = runtimes.reduce((sum, person) => sum + sourceCapitalTotal(person.pensionSources), 0);
+      allIncome[i][sim] = monthlyIncome;
+    }
+
+    if (!failed) successCount++;
+    else failureAges.push(failAge ?? projectionEndAge(s));
+  }
+
+  const pct = (arr, p) => {
+    const sorted = Float64Array.from(arr).sort();
+    if (!sorted.length) return 0;
+    const idx = (p / 100) * (sorted.length - 1);
+    const lo = Math.floor(idx), hi = Math.ceil(idx);
+    return sorted[lo] + (sorted[hi] - sorted[lo]) * (idx - lo);
+  };
+
+  const pensionIdx = Math.max(0, Math.min(pensionStartAge - s.age, years - 1));
+  const finalPriv = allPriv[years - 1] || new Float64Array(nSims);
+  const decadeLen = Math.min(10, Math.max(1, years - fireIdx));
+  const worstDecadeIncome = new Float64Array(nSims);
+  for (let sim = 0; sim < nSims; sim++) {
+    let worst = Infinity;
+    for (let start = fireIdx; start <= years - decadeLen; start++) {
+      let sum = 0;
+      for (let j = start; j < start + decadeLen; j++) {
+        sum += s.displayMode === 'real' ? allIncome[j][sim] / Math.pow(1 + infl, j) : allIncome[j][sim];
+      }
+      worst = Math.min(worst, sum / decadeLen);
+    }
+    worstDecadeIncome[sim] = isFinite(worst) ? worst : 0;
+  }
+
+  return {
+    ages,
+    p10: Array.from(allPriv, a => pct(a, 10)),
+    p25: Array.from(allPriv, a => pct(a, 25)),
+    p50: Array.from(allPriv, a => pct(a, 50)),
+    p75: Array.from(allPriv, a => pct(a, 75)),
+    p90: Array.from(allPriv, a => pct(a, 90)),
+    itpP10: Array.from(allITP, a => pct(a, 10)),
+    itpP25: Array.from(allITP, a => pct(a, 25)),
+    itpP50: Array.from(allITP, a => pct(a, 50)),
+    itpP75: Array.from(allITP, a => pct(a, 75)),
+    itpP90: Array.from(allITP, a => pct(a, 90)),
+    incP10: Array.from(allIncome, a => pct(a, 10)),
+    incP25: Array.from(allIncome, a => pct(a, 25)),
+    incP50: Array.from(allIncome, a => pct(a, 50)),
+    incP75: Array.from(allIncome, a => pct(a, 75)),
+    incP90: Array.from(allIncome, a => pct(a, 90)),
+    baseAlmanNetMonthlyByIdx,
+    targetSpendMonthly,
+    successRate: (successCount / nSims) * 100,
+    medianFailureAge: failureAges.length ? pct(failureAges, 50) : null,
+    finalCapitalP10: pct(finalPriv, 10),
+    finalCapitalP50: pct(finalPriv, 50),
+    finalCapitalP90: pct(finalPriv, 90),
+    worstDecadeIncomeP10: pct(worstDecadeIncome, 10),
+    fireIdx,
+    pensionIdx,
+    infl
+  };
+}
+
 function runMonteCarlo(baseRows, nSims = 1000) {
+	  if (state.householdEnabled) return runMonteCarloHousehold(baseRows, nSims);
   const s = state;
   const ret      = s.ret / 100;
   const pret     = s.pret / 100;
@@ -4156,9 +5725,9 @@ function runMonteCarlo(baseRows, nSims = 1000) {
   let successCount = 0;
 
   for (let sim = 0; sim < nSims; sim++) {
-    let priv = s.wealth;
+    const privateSources = privateSavingsForSimulation(s);
+    let priv = privateCapitalTotal(privateSources);
 	    const pensionSources = pensionSourcesForSimulation(s);
-	    let costBasis = s.fundCostBasis;
     let failed = false;
     let failAge = null;
 
@@ -4182,15 +5751,15 @@ function runMonteCarlo(baseRows, nSims = 1000) {
 	      let occupationalIncome = 0;
 	
 	      let monthlyIncome;
-	      const privateCapitalAtYearStart = priv;
+	      const privateSourcesAtYearStart = privateSources.map(source => ({ id: source.id, capitalRuntime: source.capitalRuntime }));
 	
 	      if (!fired) {
         // Accumulation: grow → savings → account tax (same order as base simulation)
-        priv *= (1 + rP);
+        growPrivateSources(privateSources, rP);
 	        const annualSavings = annualPrivateSavings(cashSalary, age, i, s);
-	        priv += annualSavings;
-	        costBasis += annualSavings;
-	        priv = Math.max(0, priv - calcAnnualAccountTax(priv, s.savingType, i, privateCapitalAtYearStart));
+	        depositToPrivateSources(privateSources, annualSavings, s.savingType);
+	        applyPrivateAccountTaxes(privateSources, i, privateSourcesAtYearStart);
+	        priv = privateCapitalTotal(privateSources);
 
         pensionSources.forEach(source => {
           if (source.type === 'fixed') return;
@@ -4238,20 +5807,18 @@ function runMonteCarlo(baseRows, nSims = 1000) {
           strategy: s.strategy,
           annualSpend,
           pensionNet: pensionNetAnnual,
-          privateCapital: priv,
-          costBasis,
+          privateSources,
           savingType: s.savingType
         });
 
         // Cap withdrawal to what's available (portfolio can't go negative)
-        const actualWithdraw = Math.min(withdrawNeeded, Math.max(0, priv));
-        const netWithdraw = netWithdrawal(actualWithdraw, priv, costBasis, s.savingType);
+        const actualWithdraw = Math.min(withdrawNeeded, Math.max(0, privateCapitalTotal(privateSources)));
+        const withdrawalResult = withdrawFromPrivateSources(privateSources, actualWithdraw);
+        const netWithdraw = withdrawalResult.net;
 
-        const withdrawFrac = priv > 0 ? actualWithdraw / priv : 0;
-        costBasis = Math.max(0, costBasis * (1 - withdrawFrac));
-        priv -= actualWithdraw;
-	        priv = Math.max(0, priv - calcAnnualAccountTax(priv, s.savingType, i, privateCapitalAtYearStart));
-        priv *= (1 + rP);
+	        applyPrivateAccountTaxes(privateSources, i, privateSourcesAtYearStart);
+        growPrivateSources(privateSources, rP);
+        priv = privateCapitalTotal(privateSources);
 	        pensionSources.forEach(source => {
 	          if (source.type === 'fixed') return;
 	          if (age >= source.startAge && age < source.payoutEndAge && source.annualPayoutRuntime > 0) {
@@ -4525,11 +6092,11 @@ function renderFanChart(mcData) {
 }
 
 function renderIncomeChart(rows) {
-  const pensionStartAge = state.publicPensionStartAge;
-  const earlyStartAge = Math.max(state.age, state.fireAge);
-  const workRows    = rows.filter(r => r.age < state.fireAge);
-  const earlyRows   = rows.filter(r => r.age >= state.fireAge && r.age < pensionStartAge);
-  const pensionRows = rows.filter(r => r.age >= pensionStartAge);
+	  const pensionStartAge = rows.find(r => r.phase === 'full-pension')?.age || householdPublicPensionAge(state);
+	  const earlyStartAge = Math.max(state.age, householdFireAge(state));
+	  const workRows    = rows.filter(r => r.phase === 'accum');
+	  const earlyRows   = rows.filter(r => r.phase === 'early');
+	  const pensionRows = rows.filter(r => r.phase === 'full-pension');
 
   const avgReal = (arr, fn) => arr.length
     ? arr.reduce((sum, r) => sum + toReal(fn(r), r.age - state.age), 0) / arr.length
@@ -4605,10 +6172,11 @@ function renderIncomeChart(rows) {
 }
 
 function renderTaxChart(rows) {
-  // Show income split and granular tax burden at selected ages.
-  const pensionStartAge = state.publicPensionStartAge;
-  const sampleAges = [...new Set([state.fireAge, state.fireAge + 5, pensionStartAge, 70, 75])]
-    .filter(age => age >= state.age && age < state.lifeExp);
+	  // Show income split and granular tax burden at selected ages.
+	  const pensionStartAge = rows.find(r => r.phase === 'full-pension')?.age || householdPublicPensionAge(state);
+	  const fireAge = householdFireAge(state);
+	  const sampleAges = [...new Set([fireAge, fireAge + 5, pensionStartAge, 70, 75])]
+	    .filter(age => age >= state.age && age < projectionEndAge(state));
   const labels = [];
   const netArr = [];
   const kommunalArr = [];
@@ -4733,11 +6301,19 @@ function renderTaxChart(rows) {
 // ============================================================
 function setupSlider(id, displayId, formatter, onChange) {
   const slider = document.getElementById(id);
-  const display = document.getElementById(displayId);
-  let activeTouch = null;
-  const manualBounds = () => {
-    const limitId = id === 'savings' && state.savingsMode === 'percentNet' ? 'savings-rate' : id;
-    const limits = MANUAL_LIMITS[limitId] || {};
+	  const display = document.getElementById(displayId);
+	  let activeTouch = null;
+	  const manualBounds = () => {
+	    const limitAliases = {
+	      'partner-salary': 'salary',
+	      'partner-salary-growth': 'salary-growth',
+	      'partner-salary-exchange': 'salary-exchange',
+	      'partner-salary-exchange-topup': 'salary-exchange-topup',
+	      'partner-ip-balance': 'ip-balance',
+	      'partner-pp-balance': 'pp-balance'
+	    };
+	    const limitId = id === 'savings' && state.savingsMode === 'percentNet' ? 'savings-rate' : (limitAliases[id] || id);
+	    const limits = MANUAL_LIMITS[limitId] || {};
     const min = limits.min ?? parseFloat(slider.min);
     const max = limits.max ?? parseFloat(slider.max);
     return { min, max };
@@ -4867,10 +6443,14 @@ function setTheme(theme) {
 }
 
 function setSavingsMode(mode) {
-  const nextMode = mode === 'percentNet' ? 'percentNet' : 'fixed';
-  if (nextMode !== state.savingsMode) {
-    const currentSalary = salaryAtYear(0, state);
-    const netAnnual = Math.max(0, currentSalary - calcIncomeTax(currentSalary, false, state.age, 0));
+	  const nextMode = mode === 'percentNet' ? 'percentNet' : 'fixed';
+	  if (nextMode !== state.savingsMode) {
+	    const netAnnual = householdPeople(state).reduce((sum, person) => {
+	      const currentSalary = salaryAtYear(0, person);
+	      const exchange = annualSalaryExchangeForYear(currentSalary, 0, person);
+	      const cashSalary = salaryAfterExchange(currentSalary, exchange);
+	      return sum + Math.max(0, cashSalary - calcIncomeTax(cashSalary, false, person.age, 0));
+	    }, 0);
     if (nextMode === 'percentNet') {
       state.savingsRate = netAnnual > 0 ? clampNumber((state.savings * 12 / netAnnual) * 100, 0, 100, state.savingsRate) : state.savingsRate;
     } else {
@@ -4901,8 +6481,16 @@ function setSalaryExchangePreserveITP(enabled) {
   render();
 }
 
+function setPartnerSalaryExchangePreserveITP(enabled) {
+  state.partner.salaryExchangePreserveITP = !!enabled;
+  render();
+}
+
 function setSavingType(type) {
   state.savingType = type;
+  if (Array.isArray(state.privateSavings) && state.privateSavings.length === 1) {
+    state.privateSavings[0].type = type;
+  }
   ['ISK', 'AF', 'KF'].forEach(t => {
     document.getElementById('btn-' + t.toLowerCase()).classList.toggle('active', t === type);
   });
@@ -4922,29 +6510,82 @@ function setTaxPreset(preset) {
   render();
 }
 
-function addPensionSource() {
-  normalizePensionSources();
-  state.occupationalPensions.push(makePensionSource({
-    name: 'Ny tjänstepension',
-    type: 'capital',
+function setHouseholdMode(enabled) {
+	  state.householdEnabled = !!enabled;
+	  render();
+	}
+
+function addPrivateSavingSource() {
+  normalizePrivateSavings(state);
+  const nextOrder = (state.privateSavings || []).length + 1;
+  state.privateSavings.push(makePrivateSavingSource({
+    name: 'Ny sparkälla',
+    type: 'ISK',
+    owner: 'primary',
     capital: 0,
-    startAge: Math.max(ITP1_MIN_AGE, state.fireAge),
-    payout: 'lifetime'
+    costBasis: 0,
+    savingsTarget: !(state.privateSavings || []).some(source => source.savingsTarget),
+    withdrawalOrder: nextOrder
   }));
   render();
 }
 
-function removePensionSource(id) {
-  normalizePensionSources();
-  state.occupationalPensions = state.occupationalPensions.filter(source => source.id !== id);
+function removePrivateSavingSource(id) {
+  normalizePrivateSavings(state);
+  state.privateSavings = (state.privateSavings || []).filter(source => source.id !== id);
   render();
 }
 
-function updatePensionSource(id, field, value) {
-  normalizePensionSources();
-  state.occupationalPensions = (state.occupationalPensions || []).map(source => {
+function updatePrivateSavingSource(id, field, value) {
+  normalizePrivateSavings(state);
+  if (field === 'withdrawalOrder') {
+    setPrivateSavingWithdrawalOrder(id, value);
+    return;
+  }
+  state.privateSavings = (state.privateSavings || []).map(source => {
     if (source.id !== id) return source;
     const next = { ...source };
+    if (field === 'name') next.name = value;
+    else if (field === 'owner') next.owner = value === 'partner' ? 'partner' : 'primary';
+    else if (field === 'type') {
+      next.type = ['ISK', 'AF', 'KF'].includes(value) ? value : next.type;
+      if (next.type === 'AF' && !isFinite(Number(next.costBasis))) {
+        next.costBasis = Math.min(next.capital || 0, (next.capital || 0) * DEFAULT_FUND_COST_BASIS_SHARE);
+      }
+    } else {
+      next[field] = Number(value);
+    }
+    return next;
+  });
+  render();
+}
+
+function addPensionSource(owner = 'primary') {
+	  normalizePensionSources(owner);
+	  const person = pensionSourceContext(owner);
+	  person.occupationalPensions.push(makePensionSource({
+	    name: 'Ny tjänstepension',
+	    type: 'capital',
+	    capital: 0,
+	    startAge: Math.max(ITP1_MIN_AGE, person.fireAge),
+	    payout: 'lifetime'
+	  }, person));
+	  render();
+	}
+
+function removePensionSource(id, owner = 'primary') {
+	  normalizePensionSources(owner);
+	  const person = pensionSourceContext(owner);
+	  person.occupationalPensions = person.occupationalPensions.filter(source => source.id !== id);
+	  render();
+	}
+
+function updatePensionSource(id, field, value, owner = 'primary') {
+	  normalizePensionSources(owner);
+	  const person = pensionSourceContext(owner);
+	  person.occupationalPensions = (person.occupationalPensions || []).map(source => {
+	    if (source.id !== id) return source;
+	    const next = { ...source };
     if (field === 'name') next.name = value;
     else if (field === 'type') next.type = value;
     else if (field === 'payout') next.payout = value === 'lifetime' ? 'lifetime' : Number(value);
@@ -4958,6 +6599,36 @@ function updatePensionSource(id, field, value) {
     }
     return next;
   });
+  render();
+}
+
+function setPrivateSavingTarget(id, enabled) {
+  normalizePrivateSavings(state);
+  if (enabled) {
+    state.privateSavings = (state.privateSavings || []).map(source => ({
+      ...source,
+      savingsTarget: source.id === id
+    }));
+  } else {
+    const sources = state.privateSavings || [];
+    const fallback = sources.find(source => source.id !== id) || sources.find(source => source.id === id);
+    state.privateSavings = sources.map(source => ({
+      ...source,
+      savingsTarget: fallback ? source.id === fallback.id : false
+    }));
+  }
+  render();
+}
+
+function setPrivateSavingWithdrawalOrder(id, value) {
+  normalizePrivateSavings(state);
+  const sources = (state.privateSavings || []).slice().sort((a, b) => a.withdrawalOrder - b.withdrawalOrder);
+  const currentIdx = sources.findIndex(source => source.id === id);
+  if (currentIdx < 0) return;
+  const targetIdx = Math.round(clampNumber(value, 1, sources.length, sources[currentIdx].withdrawalOrder)) - 1;
+  const [moving] = sources.splice(currentIdx, 1);
+  sources.splice(targetIdx, 0, moving);
+  state.privateSavings = sources.map((source, idx) => ({ ...source, withdrawalOrder: idx + 1 }));
   render();
 }
 
@@ -4981,10 +6652,17 @@ setupSlider('birth-year', 'v-birth-year', v => v, v => { state.birthYear = v; st
 setupSlider('age', 'v-age', v => v, v => { state.age = v; state.birthYear = TAX_YEAR - v; render(); });
 setupSlider('fire-age', 'v-fire-age', v => v, v => { state.fireAge = v; render(); });
 setupSlider('life-exp', 'v-life-exp', v => v, v => { state.lifeExp = v; render(); });
+setupSlider('partner-birth-year', 'v-partner-birth-year', v => v, v => { state.partner.birthYear = v; state.partner.age = TAX_YEAR - v; render(); });
+setupSlider('partner-age', 'v-partner-age', v => v, v => { state.partner.age = v; state.partner.birthYear = TAX_YEAR - v; render(); });
+setupSlider('partner-life-exp', 'v-partner-life-exp', v => v, v => { state.partner.lifeExp = v; render(); });
 setupSlider('salary', 'v-salary', v => fmt(v), v => { state.salary = v; render(); });
 setupSlider('salary-growth', 'v-salary-growth', v => v.toFixed(1), v => { state.salaryGrowth = v; render(); });
+setupSlider('partner-salary', 'v-partner-salary', v => fmt(v), v => { state.partner.salary = v; render(); });
+setupSlider('partner-salary-growth', 'v-partner-salary-growth', v => v.toFixed(1), v => { state.partner.salaryGrowth = v; render(); });
 setupSlider('salary-exchange', 'v-salary-exchange', v => fmt(v), v => { state.salaryExchangeMonthly = v; render(); });
 setupSlider('salary-exchange-topup', 'v-salary-exchange-topup', v => v.toFixed(1), v => { state.salaryExchangeTopup = v; render(); });
+setupSlider('partner-salary-exchange', 'v-partner-salary-exchange', v => fmt(v), v => { state.partner.salaryExchangeMonthly = v; render(); });
+setupSlider('partner-salary-exchange-topup', 'v-partner-salary-exchange-topup', v => v.toFixed(1), v => { state.partner.salaryExchangeTopup = v; render(); });
 setupSlider('savings', 'v-savings',
   v => state.savingsMode === 'percentNet' ? v.toFixed(0) : fmt(v),
   v => {
@@ -5001,7 +6679,11 @@ setupSlider('occ-pension-tax', 'v-occ-pension-tax', v => Number(v).toFixed(3).re
 setupSlider('ip-balance', 'v-ip-bal', v => fmt(v), v => { state.ipBalance = v; render(); });
 setupSlider('pp-balance', 'v-pp-bal', v => fmt(v), v => { state.ppBalance = v; render(); });
 setupSlider('public-pension-start', 'v-public-start', v => v, v => { state.publicPensionStartAge = v; render(); });
+setupSlider('partner-ip-balance', 'v-partner-ip-bal', v => fmt(v), v => { state.partner.ipBalance = v; render(); });
+setupSlider('partner-pp-balance', 'v-partner-pp-bal', v => fmt(v), v => { state.partner.ppBalance = v; render(); });
+setupSlider('partner-public-pension-start', 'v-partner-public-start', v => v, v => { state.partner.publicPensionStartAge = v; render(); });
 setupSlider('spend', 'v-spend', v => fmt(v), v => { state.spend = v; render(); });
+setupSlider('survivor-spend', 'v-survivor-spend', v => v.toFixed(0), v => { state.survivorSpendPercent = v; render(); });
 setupSlider('infl', 'v-infl', v => v.toFixed(1), v => { state.infl = v; render(); });
 setupSlider('ret', 'v-ret', v => v.toFixed(1), v => { state.ret = v; render(); });
 setupSlider('pret', 'v-pret', v => v.toFixed(1), v => { state.pret = v; render(); });
