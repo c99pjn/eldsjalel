@@ -1183,14 +1183,62 @@
       <input type="range" id="tax-burial" min="0" max="0.5" value="0.07" step="0.001">
     </div>
 
-    <div class="field">
-      <label>Public service max (kr/år) <span class="val" id="v-tax-public">1 184</span></label>
-      <input type="range" id="tax-public" min="0" max="3000" value="1184" step="10">
-    </div>
+	    <div class="field">
+	      <label>Public service max (kr/år) <span class="val" id="v-tax-public">1 184</span></label>
+	      <input type="range" id="tax-public" min="0" max="3000" value="1184" step="10">
+	    </div>
 
-    <div class="field">
-      <label>Avkastningsskatt tjänstepension (%) <span class="val" id="v-occ-pension-tax">0.354</span>%</label>
-      <input type="range" id="occ-pension-tax" min="0" max="1" value="0.354" step="0.001">
+	    <div class="subsection-title">Övriga avdrag och reduktioner</div>
+
+	    <div class="field">
+	      <label>Kyrko-/trossamfundsavgift (%) <span class="val" id="v-church-fee">0.00</span>%</label>
+	      <input type="range" id="church-fee" min="0" max="2" value="0" step="0.01">
+	    </div>
+
+	    <div class="field">
+	      <label>Ränteutgifter med säkerhet (kr/år) <span class="val" id="v-secured-interest">0</span></label>
+	      <input type="range" id="secured-interest" min="0" max="300000" value="0" step="5000">
+	    </div>
+
+	    <div class="field">
+	      <label>Övrigt kapitalnetto (kr/år) <span class="val" id="v-other-capital-net">0</span></label>
+	      <input type="range" id="other-capital-net" min="-300000" max="300000" value="0" step="5000">
+	    </div>
+
+	    <div class="field">
+	      <label>Övrig skattereduktion (kr/år) <span class="val" id="v-other-tax-credit">0</span></label>
+	      <input type="range" id="other-tax-credit" min="0" max="100000" value="0" step="1000">
+	    </div>
+
+	    <div id="partner-tax-adjustments-section" class="household-panel" style="display:none">
+	      <div class="subsection-title">Person 2: övriga avdrag</div>
+
+	      <div class="field">
+	        <label>Kyrko-/trossamfundsavgift (%) <span class="val" id="v-partner-church-fee">0.00</span>%</label>
+	        <input type="range" id="partner-church-fee" min="0" max="2" value="0" step="0.01">
+	      </div>
+
+	      <div class="field">
+	        <label>Ränteutgifter med säkerhet (kr/år) <span class="val" id="v-partner-secured-interest">0</span></label>
+	        <input type="range" id="partner-secured-interest" min="0" max="300000" value="0" step="5000">
+	      </div>
+
+	      <div class="field">
+	        <label>Övrigt kapitalnetto (kr/år) <span class="val" id="v-partner-other-capital-net">0</span></label>
+	        <input type="range" id="partner-other-capital-net" min="-300000" max="300000" value="0" step="5000">
+	      </div>
+
+	      <div class="field">
+	        <label>Övrig skattereduktion (kr/år) <span class="val" id="v-partner-other-tax-credit">0</span></label>
+	        <input type="range" id="partner-other-tax-credit" min="0" max="100000" value="0" step="1000">
+	      </div>
+	    </div>
+
+	    <div class="pension-info" style="margin-bottom:14px">Ränteutgifter och övrigt kapitalnetto anges per person och år. Negativt kapitalnetto ger skattereduktion för underskott av kapital, positivt kapitalnetto beskattas som kapital.</div>
+
+	    <div class="field">
+	      <label>Avkastningsskatt tjänstepension (%) <span class="val" id="v-occ-pension-tax">0.354</span>%</label>
+	      <input type="range" id="occ-pension-tax" min="0" max="1" value="0.354" step="0.001">
     </div>
 
     <div class="field">
@@ -1890,6 +1938,9 @@ const STATE_TAX_RATE = 0.20;    // Statlig inkomstskatt (20 % över skiktgränse
 const PUBLIC_SERVICE_FEE_RATE = 0.01;
 const DEFAULT_PUBLIC_SERVICE_FEE_MAX = Math.floor(1.42 * IBB * PUBLIC_SERVICE_FEE_RATE);
 const CAPITAL_TAX_RATE = 0.30;  // Kapitalskattesats (30 %)
+const CAPITAL_DEFICIT_FULL_RATE_LIMIT = 100000;
+const CAPITAL_DEFICIT_FULL_RATE = 0.30;
+const CAPITAL_DEFICIT_REDUCED_RATE = 0.21;
 const SENIOR_TAX_AGE = 67;      // Förhöjt grundavdrag från året man fyller 67 enligt 2026-regler
 const PUBLIC_PENSION_FEE_RATE = 0.07;
 const PUBLIC_PENSION_MIN_INCOME = 0.423 * PBB;
@@ -1935,6 +1986,13 @@ const TAX_PRESETS = {
   }
 };
 
+const DEFAULT_TAX_ADJUSTMENTS = {
+  churchFee: 0,
+  securedInterest: 0,
+  otherCapitalNet: 0,
+  otherTaxCredit: 0
+};
+
 // ============================================================
 // STATE
 // ============================================================
@@ -1952,6 +2010,7 @@ const DEFAULT_PARTNER = {
   ipBalance: 500000,
   ppBalance: 150000,
   publicPensionStartAge: 66,
+  taxAdjustments: cloneSettings(DEFAULT_TAX_ADJUSTMENTS),
   occupationalPensions: []
 };
 
@@ -1966,8 +2025,9 @@ let state = {
 	  fundCostBasis: 1000000,
   savingType: 'ISK',
   privateSavings: cloneSettings(DEFAULT_PRIVATE_SAVINGS),
-	  taxPreset: 'stockholm', municipalTax: 30.55, burialFee: 0.07, publicServiceMax: DEFAULT_PUBLIC_SERVICE_FEE_MAX, indexThresholds: true,
-	  occupationalPensionTax: DEFAULT_OCC_PENSION_AVKASTNINGSSKATT,
+		  taxPreset: 'stockholm', municipalTax: 30.55, burialFee: 0.07, publicServiceMax: DEFAULT_PUBLIC_SERVICE_FEE_MAX, indexThresholds: true,
+  taxAdjustments: cloneSettings(DEFAULT_TAX_ADJUSTMENTS),
+		  occupationalPensionTax: DEFAULT_OCC_PENSION_AVKASTNINGSSKATT,
 	  ipBalance: 1000000, ppBalance: 350000,
   itp: 1000000, itpStartAge: 55, privPension: 0, itpPayout: 10,
   occupationalPensions: [
@@ -2290,10 +2350,18 @@ function setupHelpTooltips() {
 	    ['savings', 'Privat sparande fram till FIRE. Kan vara fast kr/mån eller procent av beräknad nettolön.'],
 	    ['wealth', 'Privat investerbart kapital idag, utanför allmän pension och tjänstepension.'],
 	    ['fund-cost-basis', 'Fondkontots omkostnadsbelopp/anskaffningsvärde för dagens privata kapital. Används för att uppskatta realiserad kapitalvinst och 30 % skatt vid uttag. Nya insättningar läggs till med fullt anskaffningsvärde. Förlustavdrag modelleras inte.'],
-	    ['tax-muni', 'Kommun- och regionskatt som används i inkomst- och pensionsskatten. Stockholm-profilen låser detta värde.'],
-    ['tax-burial', 'Begravningsavgift som ingår i skatteberäkningen.'],
-    ['tax-public', 'Maximal public service-avgift per år.'],
-    ['occ-pension-tax', 'Årlig avkastningsskatt som dras från kapitalbaserad tjänstepension. 2026-approximationen är 2,36 % × 15 % = 0,354 %.'],
+		    ['tax-muni', 'Kommun- och regionskatt som används i inkomst- och pensionsskatten. Stockholm-profilen låser detta värde.'],
+	    ['tax-burial', 'Begravningsavgift som ingår i skatteberäkningen.'],
+	    ['tax-public', 'Maximal public service-avgift per år.'],
+	    ['church-fee', 'Kyrkoavgift eller avgift till trossamfund som procent av beskattningsbar förvärvsinkomst. Läggs som avgift och reduceras inte av jobbskatteavdrag.'],
+	    ['secured-interest', 'Årliga ränteutgifter för lån som ger rätt till avdrag. Minskar kapitalnettot innan eventuell skattereduktion för underskott av kapital beräknas.'],
+	    ['other-capital-net', 'Övrigt kapitalnetto utanför verktyget per år. Positivt värde beskattas med 30 %. Negativt värde behandlas som underskott av kapital.'],
+	    ['other-tax-credit', 'Övrig årlig skattereduktion, till exempel ROT/RUT, gåvor eller grön teknik. Begränsas av kvarvarande skatt i modellen.'],
+	    ['partner-church-fee', 'Person 2:s kyrkoavgift eller avgift till trossamfund.'],
+	    ['partner-secured-interest', 'Person 2:s årliga ränteutgifter för lån som ger rätt till avdrag.'],
+	    ['partner-other-capital-net', 'Person 2:s övriga kapitalnetto utanför verktyget per år.'],
+	    ['partner-other-tax-credit', 'Person 2:s övriga årliga skattereduktion.'],
+	    ['occ-pension-tax', 'Årlig avkastningsskatt som dras från kapitalbaserad tjänstepension. 2026-approximationen är 2,36 % × 15 % = 0,354 %.'],
 	    ['ip-balance', 'Inkomstpensionens pensionsbehållning. Den visas som månadsinkomst, inte som fritt uttagbart kapital.'],
 	    ['pp-balance', 'Premiepensionssaldo. Modelleras som bundet kapital fram till allmän pensionsstart och omräknas sedan till månadsbelopp. Det är inte fritt uttagbart kapital.'],
 	    ['public-pension-start', 'Ålder när allmän pension börjar tas ut. Senare start ger högre beräknad månadsutbetalning.'],
@@ -2545,9 +2613,13 @@ const MANUAL_LIMITS = {
 	  wealth:       { min: 0,     max: 500000000 },
 	  'fund-cost-basis': { min: 0, max: 500000000 },
 	  'tax-muni':   { min: 0,     max: 60 },
-  'tax-burial': { min: 0,     max: 5 },
-  'tax-public': { min: 0,     max: 10000 },
-  'occ-pension-tax': { min: 0, max: 5 },
+	  'tax-burial': { min: 0,     max: 5 },
+	  'tax-public': { min: 0,     max: 10000 },
+	  'church-fee': { min: 0,     max: 5 },
+	  'secured-interest': { min: 0, max: 5000000 },
+	  'other-capital-net': { min: -5000000, max: 5000000 },
+	  'other-tax-credit': { min: 0, max: 1000000 },
+	  'occ-pension-tax': { min: 0, max: 5 },
   'ip-balance': { min: 0,     max: 100000000 },
   'pp-balance': { min: 0,     max: 100000000 },
   itp:          { min: 0,     max: 100000000 },
@@ -2584,6 +2656,48 @@ function makePrivateSavingSource(data = {}) {
       MANUAL_LIMITS['fund-cost-basis'].max,
       Math.min(capital, capital * DEFAULT_FUND_COST_BASIS_SHARE)
     )
+  };
+}
+
+function normalizeTaxAdjustments(target, fallback = DEFAULT_TAX_ADJUSTMENTS) {
+  if (!target || typeof target !== 'object') return;
+  const raw = target.taxAdjustments && typeof target.taxAdjustments === 'object' && !Array.isArray(target.taxAdjustments)
+    ? target.taxAdjustments
+    : {};
+  target.taxAdjustments = {
+    churchFee: clampNumber(raw.churchFee, MANUAL_LIMITS['church-fee'].min, MANUAL_LIMITS['church-fee'].max, fallback.churchFee),
+    securedInterest: clampNumber(raw.securedInterest, MANUAL_LIMITS['secured-interest'].min, MANUAL_LIMITS['secured-interest'].max, fallback.securedInterest),
+    otherCapitalNet: clampNumber(raw.otherCapitalNet, MANUAL_LIMITS['other-capital-net'].min, MANUAL_LIMITS['other-capital-net'].max, fallback.otherCapitalNet),
+    otherTaxCredit: clampNumber(raw.otherTaxCredit, MANUAL_LIMITS['other-tax-credit'].min, MANUAL_LIMITS['other-tax-credit'].max, fallback.otherTaxCredit)
+  };
+}
+
+function taxAdjustmentOwner(owner = 'primary') {
+  return owner === 'partner' && state.householdEnabled ? state.partner : state;
+}
+
+function taxAdjustmentsForOwner(owner = 'primary') {
+  const source = taxAdjustmentOwner(owner);
+  return source?.taxAdjustments || DEFAULT_TAX_ADJUSTMENTS;
+}
+
+function externalCapitalTaxAdjustment(owner = 'primary') {
+  const adj = taxAdjustmentsForOwner(owner);
+  const netCapital = (Number(adj.otherCapitalNet) || 0) - Math.max(0, Number(adj.securedInterest) || 0);
+  if (netCapital >= 0) {
+    return {
+      netCapital,
+      capitalTax: netCapital * CAPITAL_TAX_RATE,
+      capitalDeficitReduction: 0
+    };
+  }
+  const deficit = Math.abs(netCapital);
+  return {
+    netCapital,
+    capitalTax: 0,
+    capitalDeficitReduction:
+      Math.min(deficit, CAPITAL_DEFICIT_FULL_RATE_LIMIT) * CAPITAL_DEFICIT_FULL_RATE +
+      Math.max(0, deficit - CAPITAL_DEFICIT_FULL_RATE_LIMIT) * CAPITAL_DEFICIT_REDUCED_RATE
   };
 }
 
@@ -2787,10 +2901,12 @@ function normalizeState() {
 	  state.survivorSpendPercent = clampNumber(state.survivorSpendPercent, 40, 100, d.survivorSpendPercent);
 	  if (!state.partner || typeof state.partner !== 'object' || Array.isArray(state.partner)) {
 	    state.partner = cloneSettings(d.partner || DEFAULT_PARTNER);
-	  } else {
-	    state.partner = { ...cloneSettings(d.partner || DEFAULT_PARTNER), ...state.partner };
-	  }
-	  const p = state.partner;
+		  } else {
+		    state.partner = { ...cloneSettings(d.partner || DEFAULT_PARTNER), ...state.partner };
+		  }
+		  normalizeTaxAdjustments(state, d.taxAdjustments || DEFAULT_TAX_ADJUSTMENTS);
+		  const p = state.partner;
+		  normalizeTaxAdjustments(p, d.partner?.taxAdjustments || DEFAULT_TAX_ADJUSTMENTS);
 	  if (isFinite(Number(p.age)) && p.birthYear === (d.partner?.birthYear ?? DEFAULT_PARTNER.birthYear) && Number(p.age) !== (d.partner?.age ?? DEFAULT_PARTNER.age)) {
 	    p.birthYear = TAX_YEAR - Number(p.age);
 	  }
@@ -2984,10 +3100,18 @@ function syncUI() {
 	  setSlider('fund-cost-basis', 'v-fund-cost-basis', s.fundCostBasis, fmt);
 	  const fundCostBasisField = document.getElementById('fund-cost-basis-field');
 	  if (fundCostBasisField) fundCostBasisField.style.display = 'none';
-	  setSlider('tax-muni',     'v-tax-muni',  s.municipalTax, v => Number(v).toFixed(2));
-  setSlider('tax-burial',   'v-tax-burial', s.burialFee,   v => Number(v).toFixed(3).replace(/0+$/, '').replace(/\.$/, ''));
-		  setSlider('tax-public',   'v-tax-public', s.publicServiceMax, fmt);
-	  setSlider('occ-pension-tax', 'v-occ-pension-tax', s.occupationalPensionTax, v => Number(v).toFixed(3).replace(/0+$/, '').replace(/\.$/, ''));
+		  setSlider('tax-muni',     'v-tax-muni',  s.municipalTax, v => Number(v).toFixed(2));
+	  setSlider('tax-burial',   'v-tax-burial', s.burialFee,   v => Number(v).toFixed(3).replace(/0+$/, '').replace(/\.$/, ''));
+			  setSlider('tax-public',   'v-tax-public', s.publicServiceMax, fmt);
+		  setSlider('church-fee', 'v-church-fee', s.taxAdjustments.churchFee, v => Number(v).toFixed(2));
+		  setSlider('secured-interest', 'v-secured-interest', s.taxAdjustments.securedInterest, fmt);
+		  setSlider('other-capital-net', 'v-other-capital-net', s.taxAdjustments.otherCapitalNet, fmt);
+		  setSlider('other-tax-credit', 'v-other-tax-credit', s.taxAdjustments.otherTaxCredit, fmt);
+		  setSlider('partner-church-fee', 'v-partner-church-fee', p.taxAdjustments.churchFee, v => Number(v).toFixed(2));
+		  setSlider('partner-secured-interest', 'v-partner-secured-interest', p.taxAdjustments.securedInterest, fmt);
+		  setSlider('partner-other-capital-net', 'v-partner-other-capital-net', p.taxAdjustments.otherCapitalNet, fmt);
+		  setSlider('partner-other-tax-credit', 'v-partner-other-tax-credit', p.taxAdjustments.otherTaxCredit, fmt);
+		  setSlider('occ-pension-tax', 'v-occ-pension-tax', s.occupationalPensionTax, v => Number(v).toFixed(3).replace(/0+$/, '').replace(/\.$/, ''));
 	  setSlider('ip-balance',   'v-ip-bal',    s.ipBalance,   fmt);
 	  setSlider('pp-balance',   'v-pp-bal',    s.ppBalance,   fmt);
 	  setSlider('public-pension-start', 'v-public-start', s.publicPensionStartAge);
@@ -3015,7 +3139,7 @@ function syncUI() {
 	    document.getElementById('btn-savings-'+(m === 'fixed' ? 'fixed' : 'percent'))?.classList.toggle('active', m === s.savingsMode));
 	  document.getElementById('household-on')?.classList.toggle('active', s.householdEnabled);
 	  document.getElementById('household-off')?.classList.toggle('active', !s.householdEnabled);
-	  ['partner-personal-section', 'partner-income-section', 'partner-pension-section', 'survivor-spend-field'].forEach(id => {
+		  ['partner-personal-section', 'partner-income-section', 'partner-pension-section', 'partner-tax-adjustments-section', 'survivor-spend-field'].forEach(id => {
 	    const el = document.getElementById(id);
 	    if (el) el.style.display = s.householdEnabled ? '' : 'none';
 	  });
@@ -3266,6 +3390,10 @@ function calcBurialFee(taxableIncome) {
   return Math.floor(Math.max(0, taxableIncome) * (state.burialFee / 100));
 }
 
+function calcChurchFee(taxableIncome, owner = 'primary') {
+  return Math.floor(Math.max(0, taxableIncome) * (taxAdjustmentsForOwner(owner).churchFee / 100));
+}
+
 // Jobbskatteavdrag 2026. Calculated against municipal tax only.
 function calcJOBA(earnedIncome, grundavdrag, senior = false, yearIndex = 0) {
   if (earnedIncome <= 0) return 0;
@@ -3299,33 +3427,45 @@ function calcEarnedIncomeReduction(taxableIncome) {
 
 // Inkomstskatt 2026. `age` controls the senior grundavdrag; pension before that age
 // uses ordinary grundavdrag and no jobbskatteavdrag.
-function calcIncomeTax(grossAnnual, isPension = false, age = null, yearIndex = 0) {
-  return calcTaxBreakdown(grossAnnual, isPension, age, yearIndex).total;
+function calcIncomeTax(grossAnnual, isPension = false, age = null, yearIndex = 0, owner = 'primary') {
+  return calcTaxBreakdown(grossAnnual, isPension, age, yearIndex, owner).total;
 }
 
 // Detaljerad skatteuppdelning (kr/år)
-function calcTaxBreakdown(grossAnnual, isPension = false, age = null, yearIndex = 0) {
-  if (grossAnnual <= 0) {
-    return { kommunal: 0, statlig: 0, joba: 0, forvarv: 0, pensionFee: 0, pensionFeeReduction: 0, burialFee: 0, publicServiceFee: 0, fees: 0, total: 0 };
-  }
+function calcTaxBreakdown(grossAnnual, isPension = false, age = null, yearIndex = 0, owner = 'primary') {
+  const annualGross = Math.max(0, Number(grossAnnual) || 0);
   const rules = rulesForYear(yearIndex);
   const senior = age == null ? isPension : age >= SENIOR_TAX_AGE;
-  const ga = calcGrundavdrag(grossAnnual, senior, yearIndex);
-  const taxable = Math.max(0, grossAnnual - ga);
+  const ga = calcGrundavdrag(annualGross, senior, yearIndex);
+  const taxable = Math.max(0, annualGross - ga);
   const kommunal = taxable * (state.municipalTax / 100);
   const statlig = taxable > rules.stateTaxThreshold
     ? (taxable - rules.stateTaxThreshold) * STATE_TAX_RATE : 0;
-  const pensionFee = isPension ? 0 : calcGeneralPensionFee(grossAnnual, yearIndex);
+  const pensionFee = isPension ? 0 : calcGeneralPensionFee(annualGross, yearIndex);
   const pensionFeeReduction = Math.min(pensionFee, kommunal + statlig);
-  const jobaRaw = isPension ? 0 : calcJOBA(grossAnnual, ga, senior, yearIndex);
+  const jobaRaw = isPension ? 0 : calcJOBA(annualGross, ga, senior, yearIndex);
   const joba = Math.min(jobaRaw, Math.max(0, kommunal - pensionFeeReduction));
   const forvarvRaw = calcEarnedIncomeReduction(taxable);
   const forvarv = Math.min(forvarvRaw, Math.max(0, kommunal - pensionFeeReduction - joba));
   const burialFee = calcBurialFee(taxable);
   const publicServiceFee = calcPublicServiceFee(taxable, yearIndex);
-  const fees = burialFee + publicServiceFee;
-  const total = Math.max(0, kommunal + statlig + pensionFee + fees - pensionFeeReduction - joba - forvarv);
-  return { kommunal, statlig, joba, forvarv, pensionFee, pensionFeeReduction, burialFee, publicServiceFee, fees, total };
+  const churchFee = calcChurchFee(taxable, owner);
+  const fees = burialFee + publicServiceFee + churchFee;
+  const externalCapital = externalCapitalTaxAdjustment(owner);
+  const otherTaxCredit = Math.max(0, taxAdjustmentsForOwner(owner).otherTaxCredit || 0);
+  const customReductionRaw = externalCapital.capitalDeficitReduction + otherTaxCredit;
+  const customReductionBase = Math.max(0, kommunal + statlig + externalCapital.capitalTax - pensionFeeReduction - joba - forvarv);
+  const customReduction = Math.min(customReductionRaw, customReductionBase);
+  const total = Math.max(0, kommunal + statlig + pensionFee + fees + externalCapital.capitalTax - pensionFeeReduction - joba - forvarv - customReduction);
+  return {
+    kommunal, statlig, joba, forvarv, pensionFee, pensionFeeReduction,
+    burialFee, publicServiceFee, churchFee, fees,
+    externalCapitalTax: externalCapital.capitalTax,
+    capitalDeficitReduction: externalCapital.capitalDeficitReduction,
+    otherTaxCredit,
+    customReduction,
+    total
+  };
 }
 
 // ISK/KF: 2026 tax on the capital base above the shared tax-free allowance.
@@ -3687,12 +3827,14 @@ function spendFactorsForScenario(years, stressId, s, baseRet, basePret, baseInfl
 	}
 
 function emptyTaxBreakdown() {
-	  return {
-	    kommunal: 0, statlig: 0, joba: 0, forvarv: 0,
-	    pensionFee: 0, pensionFeeReduction: 0, burialFee: 0,
-	    publicServiceFee: 0, fees: 0, total: 0
-	  };
-	}
+		  return {
+		    kommunal: 0, statlig: 0, joba: 0, forvarv: 0,
+		    pensionFee: 0, pensionFeeReduction: 0, burialFee: 0,
+		    publicServiceFee: 0, churchFee: 0, fees: 0,
+		    externalCapitalTax: 0, capitalDeficitReduction: 0,
+		    otherTaxCredit: 0, customReduction: 0, total: 0
+		  };
+		}
 
 function addTaxBreakdown(total, part) {
 	  Object.keys(total).forEach(key => {
@@ -3783,10 +3925,11 @@ function simulateHousehold(options = {}) {
 	    const taxBreakdown = emptyTaxBreakdown();
 	    let workGrossAnnual = 0;
 	    let workNetAnnual = 0;
-	    let almanBrutto = 0;
-	    let itpBrutto = 0;
-	    let almanNetAnnual = 0;
-	    let itpNetAnnual = 0;
+		    let almanBrutto = 0;
+		    let itpBrutto = 0;
+		    let almanNetAnnual = 0;
+		    let itpNetAnnual = 0;
+		    let otherNetAnnual = 0;
 	    let occupationalAccountTax = 0;
 	    let anyFired = false;
 	    let anyFireYear = false;
@@ -3845,7 +3988,7 @@ function simulateHousehold(options = {}) {
 	          );
 	        });
 
-	        const workTax = calcTaxBreakdown(cashSalary, false, personAge, i);
+		        const workTax = calcTaxBreakdown(cashSalary, false, personAge, i, person.id);
 	        addTaxBreakdown(taxBreakdown, workTax);
 	        workGrossAnnual += cashSalary;
 	        const personWorkNet = Math.max(0, cashSalary - workTax.total);
@@ -3905,19 +4048,25 @@ function simulateHousehold(options = {}) {
 	      detail.almanBrutto = personAlmanBrutto;
 	      detail.itpBrutto = personItpBrutto;
 	      detail.pensionGross = personPensionGross;
-	      if (personPensionGross > 0) {
-	        const pensionTax = calcTaxBreakdown(personPensionGross, true, personAge, i);
-	        addTaxBreakdown(taxBreakdown, pensionTax);
-	        const pensionNet = Math.max(0, personPensionGross - pensionTax.total);
-	        const personAlmanNet = pensionNet * (personAlmanBrutto / personPensionGross);
-	        const personItpNet = pensionNet * (personItpBrutto / personPensionGross);
-	        almanNetAnnual += personAlmanNet;
-	        itpNetAnnual += personItpNet;
-	        detail.almanNetAnnual = personAlmanNet;
-	        detail.itpNetAnnual = personItpNet;
-	        detail.pensionNetAnnual = pensionNet;
-	        detail.taxPaid += pensionTax.total;
-	      }
+		      const pensionTax = calcTaxBreakdown(personPensionGross, true, personAge, i, person.id);
+		      if (personPensionGross > 0 || pensionTax.total > 0) {
+		        addTaxBreakdown(taxBreakdown, pensionTax);
+		        const pensionNet = personPensionGross - pensionTax.total;
+		        if (personPensionGross <= 0) {
+		          otherNetAnnual += pensionNet;
+		          detail.pensionNetAnnual = pensionNet;
+		          detail.taxPaid += pensionTax.total;
+		        } else {
+		        const personAlmanNet = pensionNet * (personAlmanBrutto / personPensionGross);
+		        const personItpNet = pensionNet * (personItpBrutto / personPensionGross);
+		        almanNetAnnual += personAlmanNet;
+		        itpNetAnnual += personItpNet;
+		        detail.almanNetAnnual = personAlmanNet;
+		        detail.itpNetAnnual = personItpNet;
+		        detail.pensionNetAnnual = pensionNet;
+		        detail.taxPaid += pensionTax.total;
+		        }
+		      }
 	      almanBrutto += personAlmanBrutto;
 	      itpBrutto += personItpBrutto;
 	    });
@@ -3925,7 +4074,7 @@ function simulateHousehold(options = {}) {
 	    const itpCapitalPrePayout = runtimes.reduce((sum, person) => sum + sourceCapitalTotal(person.pensionSources), 0);
 	    const survivorMode = s.householdEnabled && aliveCount === 1;
 	    const targetSpendAnnual = annualSpendingTarget(targetSpendMonthly, spendFactors, i) * householdSpendingMultiplier(runtimes, i, s);
-	    const nonPortfolioNet = workNetAnnual + almanNetAnnual + itpNetAnnual;
+		    const nonPortfolioNet = workNetAnnual + almanNetAnnual + itpNetAnnual + otherNetAnnual;
 	    const phase = !anyFired ? 'accum' : householdAllAlivePublicActive(runtimes, i) ? 'full-pension' : 'early';
 	    let portfolioWithdrawal = 0;
 	    let portfolioNet = 0;
@@ -4014,12 +4163,13 @@ function simulateHousehold(options = {}) {
 	      taxPaid,
 	      taxKommunal: taxBreakdown.kommunal,
 	      taxStatlig: taxBreakdown.statlig,
-	      taxKapital: accountAndPortfolioTax + occupationalAccountTax,
-	      taxPensionCapital: occupationalAccountTax,
-	      taxFees: taxBreakdown.fees,
-	      taxPensionFee: taxBreakdown.pensionFee,
-	      taxPensionFeeReduction: taxBreakdown.pensionFeeReduction,
-	      taxJoba: taxBreakdown.joba + taxBreakdown.forvarv,
+		      taxKapital: accountAndPortfolioTax + occupationalAccountTax + taxBreakdown.externalCapitalTax,
+		      taxPensionCapital: occupationalAccountTax,
+		      taxFees: taxBreakdown.fees,
+		      taxPensionFee: taxBreakdown.pensionFee,
+		      taxPensionFeeReduction: taxBreakdown.pensionFeeReduction,
+		      taxJoba: taxBreakdown.joba + taxBreakdown.forvarv + taxBreakdown.customReduction,
+		      taxCustomReduction: taxBreakdown.customReduction,
 	      wr,
 	      phase,
 	      isFireYear: anyFireYear,
@@ -4148,12 +4298,13 @@ function simulate(options = {}) {
           taxPaid: workBreakdown.total + accountTax + occupationalAccountTax,
           taxKommunal: workBreakdown.kommunal,
           taxStatlig:  workBreakdown.statlig,
-          taxKapital:  accountTax + occupationalAccountTax,
-          taxPensionCapital: occupationalAccountTax,
-          taxFees:     workBreakdown.fees,
-          taxPensionFee: workBreakdown.pensionFee,
-          taxPensionFeeReduction: workBreakdown.pensionFeeReduction,
-          taxJoba:     workBreakdown.joba + workBreakdown.forvarv,
+	          taxKapital:  accountTax + occupationalAccountTax + workBreakdown.externalCapitalTax,
+	          taxPensionCapital: occupationalAccountTax,
+	          taxFees:     workBreakdown.fees,
+	          taxPensionFee: workBreakdown.pensionFee,
+	          taxPensionFeeReduction: workBreakdown.pensionFeeReduction,
+	          taxJoba:     workBreakdown.joba + workBreakdown.forvarv + workBreakdown.customReduction,
+	          taxCustomReduction: workBreakdown.customReduction,
           wr: 0,
           phase: 'accum',
           isFireYear
@@ -4307,12 +4458,13 @@ function simulate(options = {}) {
         taxPaid,
         taxKommunal: pensionBreakdown.kommunal,
         taxStatlig:  pensionBreakdown.statlig,
-        taxKapital:  portfolioTax + accountTax + occupationalAccountTax,
-        taxPensionCapital: occupationalAccountTax,
-        taxFees:     pensionBreakdown.fees,
-        taxPensionFee: pensionBreakdown.pensionFee,
-        taxPensionFeeReduction: pensionBreakdown.pensionFeeReduction,
-        taxJoba:     pensionBreakdown.forvarv,
+	        taxKapital:  portfolioTax + accountTax + occupationalAccountTax + pensionBreakdown.externalCapitalTax,
+	        taxPensionCapital: occupationalAccountTax,
+	        taxFees:     pensionBreakdown.fees,
+	        taxPensionFee: pensionBreakdown.pensionFee,
+	        taxPensionFeeReduction: pensionBreakdown.pensionFeeReduction,
+	        taxJoba:     pensionBreakdown.forvarv + pensionBreakdown.customReduction,
+	        taxCustomReduction: pensionBreakdown.customReduction,
       wr: wr,
       phase: pensionActive ? 'full-pension' : 'early',
       isFireYear
@@ -4444,21 +4596,33 @@ function renderTaxSettingsText() {
   const taxScope = state.taxPreset === 'stockholm' ? 'Stockholm kommun + region' : 'Anpassad kommun + region';
   const muni = fmtDec(state.municipalTax, 2);
   const burial = fmtDec(state.burialFee, 3).replace(/0+$/, '').replace(/,$/, '');
-  const ps = fmt(state.publicServiceMax);
-  const occPensionTax = fmtDec(state.occupationalPensionTax, 3).replace(/0+$/, '').replace(/,$/, '');
+	  const ps = fmt(state.publicServiceMax);
+	  const occPensionTax = fmtDec(state.occupationalPensionTax, 3).replace(/0+$/, '').replace(/,$/, '');
+	  const hasExtraTax = [state, state.householdEnabled ? state.partner : null]
+	    .filter(Boolean)
+	    .some(person => {
+	      const adj = person.taxAdjustments || DEFAULT_TAX_ADJUSTMENTS;
+	      return (adj.churchFee || 0) > 0 ||
+	        (adj.securedInterest || 0) > 0 ||
+	        (adj.otherCapitalNet || 0) !== 0 ||
+	        (adj.otherTaxCredit || 0) > 0;
+	    });
+	  const extraText = hasExtraTax
+	    ? ' Övriga avdrag/reduktioner enligt inställningarna ingår per person.'
+	    : '';
 
-  const taxNote = document.getElementById('tax-breakdown-note');
-  if (taxNote) {
-    taxNote.textContent = `Skattereduktion omfattar jobbskatteavdrag och skattereduktion för förvärvsinkomst. Kommunalskatt: ${taxScope} ${muni} %. Avgifter: begravningsavgift ${burial} % och public service max ${ps} kr/år. Avkastningsskatt tjänstepension: ${occPensionTax} %/år.`;
-  }
+	  const taxNote = document.getElementById('tax-breakdown-note');
+	  if (taxNote) {
+	    taxNote.textContent = `Skattereduktion omfattar jobbskatteavdrag, skattereduktion för förvärvsinkomst och konfigurerade reduktioner. Kommunalskatt: ${taxScope} ${muni} %. Avgifter: begravningsavgift ${burial} %, eventuell kyrko-/trossamfundsavgift och public service max ${ps} kr/år. Avkastningsskatt tjänstepension: ${occPensionTax} %/år.${extraText}`;
+	  }
 
   const disclaimer = document.getElementById('tax-disclaimer-note');
   if (disclaimer) {
     const indexingText = state.indexThresholds
       ? ' Beloppsgränser indexeras framåt: prisbaserade gränser med inflation och inkomstbaserade pensionsgränser med inkomstindex.'
       : ' Framtida beloppsgränser hålls nominellt på 2026 års nivå.';
-    disclaimer.textContent = `Skatteberäkningar baseras på 2026 års regler: IBB 83 400 kr · PBB 59 200 kr · skiktgräns 643 000 kr · ${taxScope} ${muni} % · begravningsavgift ${burial} % och public service max ${ps} kr/år · ISK/KF-skatt 1,065 % på kapitalunderlag över 300 000 kr · avkastningsskatt tjänstepension ${occPensionTax} %/år.${indexingText}`;
-  }
+	    disclaimer.textContent = `Skatteberäkningar baseras på 2026 års regler: IBB 83 400 kr · PBB 59 200 kr · skiktgräns 643 000 kr · ${taxScope} ${muni} % · begravningsavgift ${burial} % och public service max ${ps} kr/år · ISK/KF-skatt 1,065 % på kapitalunderlag över 300 000 kr · underskott av kapital 30 % upp till 100 000 kr och 21 % däröver · avkastningsskatt tjänstepension ${occPensionTax} %/år.${indexingText}${extraText}`;
+	  }
 }
 
 function scenarioStatus(rows, metrics) {
@@ -5539,7 +5703,7 @@ function runMonteCarloHousehold(baseRows, nSims = 1000) {
           const cashSalary = salaryAfterExchange(currentSalary, salaryExchangeAnnual);
           const itpSalary = salaryForITPAfterExchange(currentSalary, salaryExchangeAnnual, person);
           const exchangePensionContribution = salaryExchangePensionContribution(salaryExchangeAnnual, person);
-          workNetAnnual += Math.max(0, cashSalary - calcIncomeTax(cashSalary, false, personAge, i));
+	          workNetAnnual += Math.max(0, cashSalary - calcIncomeTax(cashSalary, false, personAge, i, person.id));
           person.pensionSources.forEach(source => {
             if (source.type === 'fixed') return;
             source.capitalRuntime = growOccupationalPensionCapital(source.capitalRuntime, rI, s).capital
@@ -6306,10 +6470,14 @@ function setupSlider(id, displayId, formatter, onChange) {
 	  const manualBounds = () => {
 	    const limitAliases = {
 	      'partner-salary': 'salary',
-	      'partner-salary-growth': 'salary-growth',
-	      'partner-salary-exchange': 'salary-exchange',
-	      'partner-salary-exchange-topup': 'salary-exchange-topup',
-	      'partner-ip-balance': 'ip-balance',
+		      'partner-salary-growth': 'salary-growth',
+		      'partner-salary-exchange': 'salary-exchange',
+		      'partner-salary-exchange-topup': 'salary-exchange-topup',
+		      'partner-church-fee': 'church-fee',
+		      'partner-secured-interest': 'secured-interest',
+		      'partner-other-capital-net': 'other-capital-net',
+		      'partner-other-tax-credit': 'other-tax-credit',
+		      'partner-ip-balance': 'ip-balance',
 	      'partner-pp-balance': 'pp-balance'
 	    };
 	    const limitId = id === 'savings' && state.savingsMode === 'percentNet' ? 'savings-rate' : (limitAliases[id] || id);
@@ -6390,7 +6558,7 @@ function setupSlider(id, displayId, formatter, onChange) {
     if (display.classList.contains('editing')) return;
     display.classList.add('editing');
     // Parse actual displayed value (may be out of slider range; strip locale separators)
-    const dispRaw = display.textContent.replace(/[^\d.\-]/g, "");
+	    const dispRaw = display.textContent.replace(/−/g, '-').replace(/[^\d.\-]/g, "");
     const prev = isNaN(parseFloat(dispRaw)) ? parseFloat(slider.value) : parseFloat(dispRaw);
     const input = document.createElement('input');
     input.type = 'text';
@@ -6405,7 +6573,7 @@ function setupSlider(id, displayId, formatter, onChange) {
     const commit = () => {
       if (done) return;
       done = true;
-      const raw = input.value.replace(/[\s ]/g, '').replace(',', '.');
+	      const raw = input.value.replace(/−/g, '-').replace(/[\s ]/g, '').replace(',', '.');
       const val = parseFloat(raw);
       display.classList.remove('editing');
       if (!isNaN(val) && val !== prev) {
@@ -6675,6 +6843,14 @@ setupSlider('fund-cost-basis', 'v-fund-cost-basis', v => fmt(v), v => { state.fu
 setupSlider('tax-muni', 'v-tax-muni', v => Number(v).toFixed(2), v => { state.taxPreset = 'custom'; state.municipalTax = v; render(); });
 setupSlider('tax-burial', 'v-tax-burial', v => Number(v).toFixed(3).replace(/0+$/, '').replace(/\.$/, ''), v => { state.taxPreset = 'custom'; state.burialFee = v; render(); });
 setupSlider('tax-public', 'v-tax-public', v => fmt(v), v => { state.taxPreset = 'custom'; state.publicServiceMax = v; render(); });
+setupSlider('church-fee', 'v-church-fee', v => Number(v).toFixed(2), v => { state.taxAdjustments.churchFee = v; render(); });
+setupSlider('secured-interest', 'v-secured-interest', v => fmt(v), v => { state.taxAdjustments.securedInterest = v; render(); });
+setupSlider('other-capital-net', 'v-other-capital-net', v => fmt(v), v => { state.taxAdjustments.otherCapitalNet = v; render(); });
+setupSlider('other-tax-credit', 'v-other-tax-credit', v => fmt(v), v => { state.taxAdjustments.otherTaxCredit = v; render(); });
+setupSlider('partner-church-fee', 'v-partner-church-fee', v => Number(v).toFixed(2), v => { state.partner.taxAdjustments.churchFee = v; render(); });
+setupSlider('partner-secured-interest', 'v-partner-secured-interest', v => fmt(v), v => { state.partner.taxAdjustments.securedInterest = v; render(); });
+setupSlider('partner-other-capital-net', 'v-partner-other-capital-net', v => fmt(v), v => { state.partner.taxAdjustments.otherCapitalNet = v; render(); });
+setupSlider('partner-other-tax-credit', 'v-partner-other-tax-credit', v => fmt(v), v => { state.partner.taxAdjustments.otherTaxCredit = v; render(); });
 setupSlider('occ-pension-tax', 'v-occ-pension-tax', v => Number(v).toFixed(3).replace(/0+$/, '').replace(/\.$/, ''), v => { state.occupationalPensionTax = v; render(); });
 setupSlider('ip-balance', 'v-ip-bal', v => fmt(v), v => { state.ipBalance = v; render(); });
 setupSlider('pp-balance', 'v-pp-bal', v => fmt(v), v => { state.ppBalance = v; render(); });
